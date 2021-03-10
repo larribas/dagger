@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: hello-world-
+  namespace: default
+spec:
+  entrypoint: main
+  serviceAccountName: default
+  templates:
+  - name: say_hello_world
+    container:
+      image: argo_workflows_sdk
+      command: [hello-world]
+      args:
+      - --node-name=say_hello_world
+  - name: main
+    dag:
+      tasks:
+      - name: say_hello_world
+        template: say_hello_world
+        dependencies: []

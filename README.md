@@ -14,3 +14,11 @@ The purpose of this project is to provide a set of abstractions to define comple
 ## Current status
 
 At this point, we're exploring different APIs and abstractions. The project is still unusable.
+
+
+## Useful commands
+
+- `make install` - Install the project's dependencies
+- `make build` - Build the project's WHEEL and a docker image around it
+- `make run-hello-world` - Run the example hello world pipeline
+- `make run-example-name` - Run any example DAG of those defined in `argo_workflows_sdk/examples`

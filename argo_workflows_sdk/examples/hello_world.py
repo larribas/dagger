@@ -7,6 +7,7 @@ def say_hello_world():
 
 
 dag = DAG(
+    "hello_world",
     [
         Node("say_hello_world", say_hello_world),
     ],
