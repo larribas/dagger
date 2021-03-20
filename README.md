@@ -22,3 +22,20 @@ At this point, we're exploring different APIs and abstractions. The project is s
 - `make build` - Build the project's WHEEL and a docker image around it
 - `make run-hello-world` - Run the example hello world pipeline
 - `make run-example-name` - Run any example DAG of those defined in `argo_workflows_sdk/examples`
+
+
+## Roadmap
+
+- [ ] Support passing inputs/outputs as parameters, and infer dependencies automatically based on those
+- [ ] Support passing inputs/outputs as artifacts
+- [ ] Support timeouts
+- [ ] Support failFast in DAGs
+- [ ] Support composite DAGs
+- [ ] Support exit handlers
+- [ ] Support retry policies
+- [ ] Support setting resource requests/limits
+- [ ] Support conditional executions
+- [ ] Support dynamic fan-outs
+- [ ] Support dynamic fan-ins
+- [ ] Support recursion
+- [ ] Support custom metrics

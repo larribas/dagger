@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: passing-parameters-
+spec:
+  entrypoint: main
+  templates:
+  - name: main
+    dag:
+      tasks:
+      - name: generate_random_number
+        template: generate_random_number
+      - name: echo_number
+        template: echo_number
+        dependencies: [generate_random_number]
+        arguments:
+          parameters:
+          - name: number
+            value: "{{steps.generate_random_number.outputs.parameters.number}}"
+
+  - name: generate_random_number
+    container:
+      image: argo_workflows_sdk:0.1.0
+      command: [passing-parameters]
+      args:
+      - --node-name=generate_random_number
+    outputs:
+      parameters:
+      - name: number
+        valueFrom:
+          path: /tmp/generate_random_number.number.txt
+
+  - name: echo_number
+    inputs:
+      parameters:
+      - name: number
+    container:
+      image: argo_workflows_sdk:0.1.0
+      command: [passing-parameters]
+      args:
+      - --node-name=echo_number
+      - --param-number="{{ inputs.parameters.number }}"

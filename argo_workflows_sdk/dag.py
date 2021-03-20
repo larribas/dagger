@@ -1,7 +1,10 @@
 import logging
+import re
 from typing import List, Optional
 
 from argo_workflows_sdk.node import Node
+
+VALID_NAME = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9-]{0,128}$")
 
 
 class DAG:
@@ -10,11 +13,13 @@ class DAG:
         name: str,
         nodes: List[Node],
     ):
+        # TODO: Guarantee this is a valid name
         self.name = name
         # TODO: When we allow specifying inputs/outputs, perform a topological sort
         # TODO: When we allow composing DAGs, flatten the nodes and arrange for all the names to be unique
         self.nodes = nodes
 
+    # TODO: Allow calling this from Python code without attempting to parse any arguments
     def __call__(self):
         import argparse
 
