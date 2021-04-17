@@ -8,35 +8,41 @@ spec:
   - name: main
     dag:
       tasks:
-      - name: generate_random_number
-        template: generate_random_number
-      - name: echo_number
-        template: echo_number
-        dependencies: [generate_random_number]
+      - name: generate-random-number
+        template: generate-random-number
+      - name: echo-number
+        template: echo-number
+        dependencies: [generate-random-number]
         arguments:
           parameters:
           - name: number
-            value: "{{steps.generate_random_number.outputs.parameters.number}}"
+            value: "{{tasks.generate-random-number.outputs.parameters.number}}"
 
-  - name: generate_random_number
+  - name: generate-random-number
     container:
-      image: argo_workflows_sdk:0.1.0
+      image: 524837408336.dkr.ecr.eu-west-1.amazonaws.com/workflow-poc:latest
       command: [passing-parameters]
       args:
-      - --node-name=generate_random_number
+      - --node-name=generate-random-number
+      volumeMounts:
+      - name: tmp
+        mountPath: /tmp
     outputs:
       parameters:
       - name: number
         valueFrom:
-          path: /tmp/generate_random_number.number.txt
+          path: /tmp/generate-random-number.number.txt
+    volumes:
+      - name: tmp
+        emptyDir: {}
 
-  - name: echo_number
+  - name: echo-number
     inputs:
       parameters:
       - name: number
     container:
-      image: argo_workflows_sdk:0.1.0
+      image: 524837408336.dkr.ecr.eu-west-1.amazonaws.com/workflow-poc:latest
       command: [passing-parameters]
       args:
-      - --node-name=echo_number
+      - --node-name=echo-number
       - --param-number="{{ inputs.parameters.number }}"

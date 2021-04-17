@@ -1,39 +1,47 @@
-import random
-
 import argo_workflows_sdk.inputs as inputs
 import argo_workflows_sdk.outputs as outputs
-import argo_workflows_sdk.serializers as serializers
-from argo_workflows_sdk import DAG, Node
+from argo_workflows_sdk import DAG, DAGOutput, Node
 
 
-def generate_random_number() -> int:
-    number = random.randint(1, 1000)
-    print(f"I've generated the number {number}")
-    return number
+def multiply_by_2(number: int) -> int:
+    print(f"Multiplying number {number} by 2")
+    return number * 2
 
 
-def echo_number(number: int):
-    print(f"I received the number {number}!")
+def square(number: int) -> int:
+    print(f"Squaring number {number}")
+    return number ** 2
 
 
 dag = DAG(
-    "passing_parameters",
-    [
-        Node(
-            "generate-random-number",
-            generate_random_number,
-            outputs={
-                "number": outputs.Param(serializers.JSON()),
-            },
-        ),
-        Node(
-            "echo-number",
-            echo_number,
+    nodes={
+        "multiply-by-2": Node(
+            multiply_by_2,
             inputs={
-                "number": inputs.FromOutput(
-                    node="generate-random-number", output="number"
-                )
+                "number": inputs.FromParam(),
+            },
+            outputs={
+                "multiplied-number": outputs.FromReturnValue(),
             },
         ),
-    ],
+        "square": Node(
+            square,
+            inputs={
+                "number": inputs.FromNodeOutput(
+                    node="multiply-by-2", output="multiplied-number"
+                ),
+            },
+            outputs={
+                "squared-number": outputs.FromReturnValue(),
+            },
+        ),
+    },
+    inputs={
+        "number": inputs.FromParam(),
+    },
+    outputs={
+        "number-multiplied-by-2-and-squared": DAGOutput(
+            node="square", output="squared-number"
+        ),
+    },
 )

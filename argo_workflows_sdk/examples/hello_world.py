@@ -6,8 +6,7 @@ def say_hello_world():
 
 
 dag = DAG(
-    "hello-world",
-    [
-        Node("say-hello-world", say_hello_world),
-    ],
+    nodes={
+        "say-hello-world": Node(say_hello_world),
+    },
 )

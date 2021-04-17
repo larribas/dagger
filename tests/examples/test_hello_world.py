@@ -1,19 +1,28 @@
+from typing import Callable, Dict
+
 from argo_workflows_sdk import __version__
-from argo_workflows_sdk.argo import as_workflow
 from argo_workflows_sdk.examples.hello_world import dag
-from tests.examples.test_utils import assert_deep_equal, load_yaml
+from tests.examples.utils import validate_example
 
 
-def test_on_argo():
-    # Given
-    manifest = as_workflow(
+def test():
+    validate_example(
         dag,
-        name_prefix="hello-world-",
-        container_image=f"argo_workflows_sdk:{__version__}",
-        container_dag_entrypoint=["hello-world"],
+        params={},
+        validate_results=lambda _results: None,
     )
-    # Then
-    assert_deep_equal(
-        manifest,
-        load_yaml("argo/hello_world"),
-    )
+
+
+# def test_on_argo():
+#     # Given
+#     manifest = as_workflow(
+#         dag,
+#         name_prefix="hello-world-",
+#         container_image=f"argo_workflows_sdk:{__version__}",
+#         container_dag_entrypoint=["hello-world"],
+#     )
+#     # Then
+#     assert_deep_equal(
+#         manifest,
+#         load_yaml("argo/hello_world"),
+#     )

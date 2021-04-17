@@ -1,6 +1,8 @@
 import os
-from typing import List, Optional
+from typing import Dict, List, Optional
 
+import argo_workflows_sdk.inputs as inputs
+import argo_workflows_sdk.outputs as outputs
 from argo_workflows_sdk import DAG, Node
 
 API_VERSION = "argoproj.io/v1alpha1"
@@ -26,10 +28,10 @@ def as_workflow(
             "templates": [
                 {
                     "name": "main",
-                    "dag": {"tasks": [_node_task(node) for node in dag.nodes]},
+                    "dag": {"tasks": [__node_task(node) for node in dag.nodes]},
                 },
                 *[
-                    _node_template(
+                    __node_template(
                         node,
                         container_image=container_image,
                         container_command=container_dag_entrypoint,
@@ -49,7 +51,7 @@ def as_workflow(
     return manifest
 
 
-def _node_template(
+def __node_template(
     node: Node,
     container_image: str,
     container_command: List[str],
@@ -63,39 +65,68 @@ def _node_template(
         },
     }
 
-    if node.output_params:
+    if node.outputs:
         if "outputs" not in manifest:
             manifest["outputs"] = {}
 
-        manifest["outputs"]["parameters"] = [
-            {
-                "name": output_name,
-                "valueFrom": {
-                    "path": os.path.join(
-                        DEFAULT_PARAM_FILE_PATH,
-                        f"{node.name}.{output_serializer.extension}",
-                    )
-                },
-            }
-            for output_name, output_serializer in node.output_params.items()
-        ]
+        output_parameters = {
+            k: v for k, v in node.outputs.items() if isinstance(v, outputs.Param)
+        }
+        if output_parameters:
+            manifest["outputs"]["parameters"] = __output_parameters(
+                node_name, output_parameters
+            )
 
-    if node.input_params:
+    if node.inputs:
         if "inputs" not in manifest:
             manifest["inputs"] = {}
 
-        manifest["inputs"]["parameters"] = [
-            {
-                "name": input_name,
-            }
-            for input_name in node.output_params.keys()
-        ]
+        input_parameters = {
+            k: v
+            for k, v in node.inputs.items()
+            if isinstance(v, inputs.FromOutputParam)
+        }
+        if input_parameters:
+            manifest["inputs"]["parameters"] = __input_parameters(
+                input_parameters.keys()
+            )
 
     return manifest
 
 
-def _node_task(node: Node):
-    return {
+def __input_parameters(input_names: List[str]):
+    return [
+        {
+            "name": input_name,
+        }
+        for input_name in input_names
+    ]
+
+
+def __output_parameters(node_name: str, params: Dict[str, outputs.Param]):
+    return [
+        {
+            "name": output_name,
+            "valueFrom": {
+                "path": os.path.join(
+                    DEFAULT_PARAM_FILE_PATH,
+                    f"{node_name}.{output_name}.{param.serializer.extension}",
+                )
+            },
+        }
+        for output_name, param in params.items()
+    ]
+
+
+def __argument_parameters():
+    return []
+
+
+def __node_task(node: Node):
+    task = {
         "name": node.name,
         "template": node.name,
     }
+
+    if node.inputs:
+        task["arguments"] = {}

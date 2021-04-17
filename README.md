@@ -27,10 +27,14 @@ At this point, we're exploring different APIs and abstractions. The project is s
 ## Roadmap
 
 - [ ] Support passing inputs/outputs as parameters, and infer dependencies automatically based on those
+- [x] Support multiple outputs in a function (via dictionaries or dataclasses)
+- [ ] Add black + isort + flake8 to the codebase
+- [ ] Run a Continuous Integration workflow via GitHub Actions
+- [ ] Support DAG inputs/outputs
 - [ ] Support passing inputs/outputs as artifacts
 - [ ] Support timeouts
-- [ ] Support failFast in DAGs
 - [ ] Support composite DAGs
+- [ ] Support failFast in DAGs
 - [ ] Support exit handlers
 - [ ] Support retry policies
 - [ ] Support setting resource requests/limits
