@@ -24,5 +24,4 @@ profile = "black"
 multi_line_output = 3
 
 [tool.poetry.scripts]
-hello-world = "argo_workflows_sdk.examples.hello_world:dag"
-passing-parameters = "argo_workflows_sdk.examples.passing_parameters:dag"
+hello-world = "argo_workflows_sdk.examples.hello_world:run_from_cli"

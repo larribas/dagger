@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Dict
+from typing import Callable, Dict, List
 
 import yaml
 from deepdiff import DeepDiff
@@ -7,16 +7,18 @@ from deepdiff import DeepDiff
 from argo_workflows_sdk import DAG
 
 
-def load_yaml(name: str):
-    example_yamls_path = Path(__file__).parent
-    with open(f"{example_yamls_path}/{name}.yaml", "r") as f:
-        return yaml.load(f)
+def load_argo_manifest(filename: str):
+    path = Path(__file__).parent / "argo" / filename
+    with open(path, "r") as f:
+        return yaml.safe_load(f)
 
 
 def assert_deep_equal(a, b):
     """
-    Compare the supplied data strcture against each other, and assert their equality.
-    The motivation for this function is to produce a succint summary of the differences between both structures as an assertion message.
+    Compare the supplied data strcture against each other, and assert
+    their equality.
+    The motivation for this function is to produce a succint summary
+    of the differences between both structures as an assertion message.
     """
     diff = DeepDiff(a, b, ignore_order=True)
     assert not diff
@@ -26,6 +28,8 @@ def validate_example(
     dag: DAG,
     params: Dict[str, bytes],
     validate_results: Callable[[Dict[str, bytes]], None],
+    argo_workflow_yaml_filename: str,
+    container_entrypoint: List[str],
 ):
     validate_example_with_local_runtime(
         dag,
@@ -36,6 +40,12 @@ def validate_example(
         dag,
         params=params,
         validate_results=validate_results,
+    )
+    validate_example_with_argo_runtime(
+        dag,
+        params=params,
+        expected_manifest=load_argo_manifest(argo_workflow_yaml_filename),
+        container_entrypoint=container_entrypoint,
     )
 
 
@@ -87,3 +97,21 @@ def validate_example_with_cli_runtime(
                 results[output_name] = f.read()
 
         validate_results(results)
+
+
+def validate_example_with_argo_runtime(
+    dag: DAG,
+    params: Dict[str, bytes],
+    expected_manifest: dict,
+    container_entrypoint: List[str],
+):
+    from argo_workflows_sdk.runtime.argo import workflow_manifest
+
+    generated_manifest = workflow_manifest(
+        dag,
+        name="some-name",
+        container_image="local.registry/dagger",
+        container_entrypoint_to_dag_cli=container_entrypoint,
+    )
+
+    assert_deep_equal(expected_manifest["spec"], generated_manifest["spec"])

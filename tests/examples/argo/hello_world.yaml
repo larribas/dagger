@@ -12,7 +12,7 @@ spec:
         template: say-hello-world
   - name: say-hello-world
     container:
-      image: argo_workflows_sdk:0.1.0
+      image: local.registry/dagger
       command: [hello-world]
       args:
       - --node-name=say-hello-world
