@@ -9,7 +9,7 @@ from argo_workflows_sdk.runtime.cli.node import invoke as invoke_node
 
 def invoke(
     dag: DAG,
-    argv: List[str] = sys.argv,
+    argv: List[str] = sys.argv[1:],
 ):
     parser = call_arg_parser()
     args = parser.parse_args(argv)

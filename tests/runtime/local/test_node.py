@@ -3,7 +3,7 @@ import pytest
 import argo_workflows_sdk.inputs as inputs
 import argo_workflows_sdk.outputs as outputs
 from argo_workflows_sdk import Node
-from argo_workflows_sdk.runtime.local.node import invoke, serialize_outputs
+from argo_workflows_sdk.runtime.local.node import invoke
 from argo_workflows_sdk.serializers import SerializationError
 
 #

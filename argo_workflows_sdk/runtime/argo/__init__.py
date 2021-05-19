@@ -1,1 +1,1 @@
-from argo_workflows_sdk.argo.v1alpha1 import as_workflow
+from argo_workflows_sdk.runtime.argo.v1alpha1 import workflow_manifest
