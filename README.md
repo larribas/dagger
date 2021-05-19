@@ -16,12 +16,16 @@ The purpose of this project is to provide a set of abstractions to define comple
 At this point, we're exploring different APIs and abstractions. The project is still unusable.
 
 
-## Useful commands
+## Development
+
+Useful commands:
 
 - `make install` - Install the project's dependencies
 - `make build` - Build the project's WHEEL and a docker image around it
-- `make run-hello-world` - Run the example hello world pipeline
-- `make run-example-name` - Run any example DAG of those defined in `argo_workflows_sdk/examples`
+- `make run-example-name` - Run any example DAG of those defined in "argo_workflows_sdk/examples" (for instance, `make run-hello-world`)
+- `make set-up-argo` - Creates a k3d cluster for the project and installs Argo 3.0 in it.
+- `make push-local` - Build and push the project's Docker image to the local k3d registry.
+- `make tear-down-argo` - Destroys the k3d cluster and registry where we deployed Argo.
 
 
 ## Roadmap
