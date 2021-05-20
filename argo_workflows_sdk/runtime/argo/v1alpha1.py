@@ -1,19 +1,24 @@
-import os
+import itertools
 from typing import Dict, List, Optional
 
 import argo_workflows_sdk.inputs as inputs
-import argo_workflows_sdk.outputs as outputs
-from argo_workflows_sdk.dag import DAG
+from argo_workflows_sdk.dag import DAG, validate_parameters
 from argo_workflows_sdk.node import Node
+from argo_workflows_sdk.node import SupportedInputs as SupportedNodeInputs
+from argo_workflows_sdk.runtime.argo.errors import IncompatibilityError
 
 API_VERSION = "argoproj.io/v1alpha1"
 DEFAULT_PARAM_FILE_PATH = "/tmp"
+
+
+# TODO: Modularize, document and link to the official documentation. The code is quite simple, but it may look daunting at first. We need to make it look inoffensive
 
 
 def workflow_manifest(
     dag: DAG,
     name: str,
     container_image: str,
+    params: Optional[Dict[str, bytes]] = None,
     container_entrypoint_to_dag_cli: Optional[List[str]] = None,
     generate_name_from_prefix: bool = False,
     namespace: Optional[str] = None,
@@ -21,7 +26,10 @@ def workflow_manifest(
     labels: Optional[Dict[str, str]] = None,
     service_account: Optional[str] = None,
 ):
+    params = params or {}
     container_entrypoint_to_dag_cli = container_entrypoint_to_dag_cli or []
+
+    validate_parameters(inputs=dag.inputs, params=params)
 
     manifest = {
         "apiVersion": API_VERSION,
@@ -36,15 +44,7 @@ def workflow_manifest(
         "spec": {
             "entrypoint": "main",
             "templates": [
-                {
-                    "name": "main",
-                    "dag": {
-                        "tasks": [
-                            __node_task(node_name, node)
-                            for node_name, node in dag.nodes.items()
-                        ]
-                    },
-                },
+                __main_template(dag),
                 *[
                     __node_template(
                         node_name,
@@ -57,6 +57,14 @@ def workflow_manifest(
             ],
         },
     }
+
+    if params:
+        manifest["spec"]["arguments"] = {
+            "artifacts": [
+                {"name": param_name, "raw": {"data": param_value}}
+                for param_name, param_value in params.items()
+            ],
+        }
 
     if namespace:
         manifest["metadata"]["namespace"] = namespace
@@ -90,6 +98,39 @@ def __workflow_metadata(
     return metadata
 
 
+def __main_template(
+    dag: DAG,
+):
+    template = {
+        "name": "main",
+        "dag": {
+            "tasks": [
+                __node_task(node_name, node) for node_name, node in dag.nodes.items()
+            ]
+        },
+    }
+
+    if dag.inputs:
+        template["inputs"] = {
+            "artifacts": [{"name": input_name} for input_name in dag.inputs.keys()]
+        }
+
+    if dag.outputs:
+        template["outputs"] = {
+            "artifacts": [
+                {
+                    "name": output_name,
+                    "from": "{{"
+                    + f"tasks.{output.node}.outputs.artifacts.{output.output}"
+                    + "}}",
+                }
+                for output_name, output in dag.outputs.items()
+            ]
+        }
+
+    return template
+
+
 def __node_template(
     node_name: str,
     node: Node,
@@ -100,62 +141,60 @@ def __node_template(
         "name": node_name,
         "container": {
             "image": container_image,
-            "command": container_command,
-            "args": [f"--node-name={node_name}"],
+            "command": container_command[:],
+            "args": ["--node-name", node_name],
         },
     }
 
-    # if node.outputs:
-    #     if "outputs" not in manifest:
-    #         manifest["outputs"] = {}
+    if node.inputs:
+        manifest["inputs"] = {
+            "artifacts": [
+                {
+                    "name": input_name,
+                    "path": f"/tmp/inputs/{input_name}.{input.serializer.extension}",
+                }
+                for input_name, input in node.inputs.items()
+            ]
+        }
+        manifest["container"]["args"] += itertools.chain(
+            *[
+                [
+                    "--input",
+                    input_name,
+                    "{{" + f"inputs.artifacts.{input_name}.path" + "}}",
+                ]
+                for input_name in node.inputs.keys()
+            ],
+        )
 
-    #     output_parameters = {
-    #         k: v for k, v in node.outputs.items() if isinstance(v, outputs.Param)
-    #     }
-    #     if output_parameters:
-    #         manifest["outputs"]["parameters"] = __output_parameters(
-    #             node_name, output_parameters
-    #         )
-
-    # if node.inputs:
-    #     if "inputs" not in manifest:
-    #         manifest["inputs"] = {}
-
-    #     input_parameters = {
-    #         k: v
-    #         for k, v in node.inputs.items()
-    #         if isinstance(v, inputs.FromOutputParam)
-    #     }
-    #     if input_parameters:
-    #         manifest["inputs"]["parameters"] = __input_parameters(
-    #             input_parameters.keys()
-    #         )
+    if node.outputs:
+        manifest["outputs"] = {
+            "artifacts": [
+                {
+                    "name": output_name,
+                    "path": f"/tmp/outputs/{output_name}.{output.serializer.extension}",
+                }
+                for output_name, output in node.outputs.items()
+            ]
+        }
+        manifest["container"]["args"] += itertools.chain(
+            *[
+                [
+                    "--output",
+                    output_name,
+                    "{{" + f"outputs.artifacts.{output_name}.path" + "}}",
+                ]
+                for output_name in node.outputs.keys()
+            ],
+        )
+        manifest["volumes"] = [
+            {"name": "outputs", "emptyDir": {}},
+        ]
+        manifest["container"]["volumeMounts"] = [
+            {"name": "outputs", "mountPath": "/tmp/outputs"},
+        ]
 
     return manifest
-
-
-# def __input_parameters(input_names: List[str]):
-#     return [
-#         {
-#             "name": input_name,
-#         }
-#         for input_name in input_names
-#     ]
-
-
-# def __output_parameters(node_name: str, params: Dict[str, outputs.Param]):
-#     return [
-#         {
-#             "name": output_name,
-#             "valueFrom": {
-#                 "path": os.path.join(
-#                     DEFAULT_PARAM_FILE_PATH,
-#                     f"{node_name}.{output_name}.{param.serializer.extension}",
-#                 )
-#             },
-#         }
-#         for output_name, param in params.items()
-#     ]
 
 
 def __argument_parameters():
@@ -168,7 +207,44 @@ def __node_task(node_name: str, node: Node):
         "template": node_name,
     }
 
+    dependencies = [
+        input.node
+        for input in node.inputs.values()
+        if isinstance(input, inputs.FromNodeOutput)
+    ]
+
+    if dependencies:
+        task["dependencies"] = dependencies
+
     if node.inputs:
-        task["arguments"] = {}
+        task["arguments"] = {
+            "artifacts": [
+                {
+                    "name": input_name,
+                    "from": __node_task_artifact_from(
+                        node_name=node_name,
+                        input_name=input_name,
+                        input=input,
+                    ),
+                }
+                for input_name, input in node.inputs.items()
+            ]
+        }
 
     return task
+
+
+def __node_task_artifact_from(
+    node_name: str,
+    input_name: str,
+    input: SupportedNodeInputs,
+):
+    # TODO: Test this function in isolation
+    if isinstance(input, inputs.FromParam):
+        return "{{" + f"inputs.artifacts.{input_name}" + "}}"
+    elif isinstance(input, inputs.FromNodeOutput):
+        return "{{" + f"tasks.{input.node}.outputs.artifacts.{input.output}" + "}}"
+    else:
+        raise IncompatibilityError(
+            f"Whoops. You have declared an input of type '{type(input)}' for node '{node_name}'. While the input is valid, the current version of the Argo runtime does not support it. Please, check the GitHub project to see if this issue has already been reported and addressed in a newer version. Otherwise, please report this as a bug in our GitHub tracker. Sorry for the inconvenience."
+        )

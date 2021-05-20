@@ -34,9 +34,11 @@ class Node:
 
         for input_name in inputs:
             validate_input_name(input_name)
+            # TODO: Validate the inputs are part of the set of supported inputs
 
         for output_name in outputs:
             validate_output_name(output_name)
+            # TODO: Validate the outputs are part of the set of supported outputs
 
         validate_callable_inputs_match_defined_inputs(func, list(inputs.keys()))
 

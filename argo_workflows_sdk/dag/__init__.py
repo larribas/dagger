@@ -11,7 +11,6 @@ from argo_workflows_sdk.node import Node
 from argo_workflows_sdk.node import SupportedInputs as SupportedNodeInputs
 from argo_workflows_sdk.node import validate_name as validate_node_name
 from argo_workflows_sdk.outputs import validate_name as validate_output_name
-from argo_workflows_sdk.serializers import SerializationError
 
 VALID_NAME_REGEX = r"^[a-zA-Z0-9][a-zA-Z0-9-]{0,128}$"
 VALID_NAME = re.compile(VALID_NAME_REGEX)
@@ -67,12 +66,25 @@ class DAG:
         return self.__node_execution_order
 
 
+def validate_parameters(
+    inputs: Dict[str, SupportedInputs],
+    params: Dict[str, bytes],
+):
+    for input_name in inputs.keys():
+        if input_name not in params:
+            raise ValueError(
+                f"The parameters supplied to this DAG were supposed to contain a parameter named '{input_name}', but only the following parameters were actually supplied: {list(params.keys())}"
+            )
+
+
 __all__ = [
     DAG,
     DAGOutput,
     SupportedInputs,
     # Exceptions
     CyclicDependencyError,
+    # Validation,
+    validate_parameters,
 ]
 
 

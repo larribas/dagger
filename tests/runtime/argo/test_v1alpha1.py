@@ -1,4 +1,4 @@
-import itertools
+import pytest
 
 import argo_workflows_sdk.inputs as inputs
 import argo_workflows_sdk.outputs as outputs
@@ -60,6 +60,36 @@ def test__workflow_manifest__simplest_dag():
             ],
         },
     }
+
+
+def test__workflow_manifest__with_invalid_parameters():
+    workflow_name = "my-workflow"
+    container_image = "my-image"
+    container_entrypoint = ["my-dag-entrypoint"]
+    dag = DAG(
+        nodes={
+            "double": Node(
+                lambda x: x * 2,
+                inputs={"x": inputs.FromParam()},
+                outputs={"2x": outputs.FromReturnValue()},
+            ),
+        },
+        inputs={"x": inputs.FromParam()},
+        outputs={"2x": DAGOutput(node="double", output="2x")},
+    )
+
+    with pytest.raises(ValueError) as e:
+        workflow_manifest(
+            dag,
+            name=workflow_name,
+            container_image=container_image,
+            container_entrypoint_to_dag_cli=container_entrypoint,
+        )
+
+    assert (
+        str(e.value)
+        == "The parameters supplied to this DAG were supposed to contain a parameter named 'x', but only the following parameters were actually supplied: []"
+    )
 
 
 def test__workflow_manifest__setting_namespace():

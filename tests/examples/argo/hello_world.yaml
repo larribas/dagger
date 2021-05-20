@@ -14,5 +14,6 @@ spec:
     container:
       image: local.registry/dagger
       command: [hello-world]
-      args:
-      - --node-name=say-hello-world
+      args: [
+        --node-name, say-hello-world
+      ]

@@ -3,46 +3,81 @@ kind: Workflow
 metadata:
   generateName: passing-parameters-
 spec:
+  arguments:
+    artifacts:
+    - name: number
+      raw:
+        data: !!binary "NQ=="
   entrypoint: main
   templates:
   - name: main
+    inputs:
+      artifacts:
+      - name: number
+    outputs:
+      artifacts:
+      - name: number-doubled-and-squared
+        from: "{{tasks.square.outputs.artifacts.squared-number}}"
     dag:
       tasks:
-      - name: generate-random-number
-        template: generate-random-number
-      - name: echo-number
-        template: echo-number
-        dependencies: [generate-random-number]
+      - name: double
+        template: double
         arguments:
-          parameters:
+          artifacts:
           - name: number
-            value: "{{tasks.generate-random-number.outputs.parameters.number}}"
+            from: "{{inputs.artifacts.number}}"
+      - name: square
+        template: square
+        dependencies: [double]
+        arguments:
+          artifacts:
+          - name: number
+            from: "{{tasks.double.outputs.artifacts.doubled-number}}"
 
-  - name: generate-random-number
-    container:
-      image: 524837408336.dkr.ecr.eu-west-1.amazonaws.com/workflow-poc:latest
-      command: [passing-parameters]
-      args:
-      - --node-name=generate-random-number
-      volumeMounts:
-      - name: tmp
-        mountPath: /tmp
-    outputs:
-      parameters:
-      - name: number
-        valueFrom:
-          path: /tmp/generate-random-number.number.txt
-    volumes:
-      - name: tmp
-        emptyDir: {}
-
-  - name: echo-number
+  - name: double
     inputs:
-      parameters:
+      artifacts:
       - name: number
+        path: /tmp/inputs/number.json
+    outputs:
+      artifacts:
+      - name: doubled-number
+        path: /tmp/outputs/doubled-number.json
     container:
-      image: 524837408336.dkr.ecr.eu-west-1.amazonaws.com/workflow-poc:latest
+      image: local.registry/dagger
       command: [passing-parameters]
-      args:
-      - --node-name=echo-number
-      - --param-number="{{ inputs.parameters.number }}"
+      args: [
+        --node-name, double,
+        --input, number, "{{inputs.artifacts.number.path}}",
+        --output, doubled-number, "{{outputs.artifacts.doubled-number.path}}"
+      ]
+      volumeMounts:
+      - name: outputs
+        mountPath: /tmp/outputs
+    volumes:
+    - name: outputs
+      emptyDir: {}
+
+  - name: square
+    inputs:
+      artifacts:
+      - name: number
+        path: /tmp/inputs/number.json
+    outputs:
+      artifacts:
+      - name: squared-number
+        path: /tmp/outputs/squared-number.json
+    container:
+      image: local.registry/dagger
+      command: [passing-parameters]
+      args: [
+        --node-name, square,
+        --input, number, "{{inputs.artifacts.number.path}}",
+        --output, squared-number, "{{outputs.artifacts.squared-number.path}}"
+      ]
+      volumeMounts:
+      - name: outputs
+        mountPath: /tmp/outputs
+    volumes:
+    - name: outputs
+      emptyDir: {}

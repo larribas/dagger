@@ -1,7 +1,7 @@
 import itertools
-from typing import Any, Dict, List, Optional
+from typing import Dict, Optional
 
-from argo_workflows_sdk.dag import DAG, SupportedInputs
+from argo_workflows_sdk.dag import DAG, validate_parameters
 from argo_workflows_sdk.inputs import FromNodeOutput, FromParam
 from argo_workflows_sdk.runtime.local.node import invoke as invoke_node
 from argo_workflows_sdk.serializers import SerializationError
@@ -16,7 +16,7 @@ def invoke(
     params = params or {}
     outputs = {}
 
-    validate_parameters_match_dag_inputs(dag.inputs, params)
+    validate_parameters(dag.inputs, params)
 
     # TODO: Support both sequential and parallel execution
     sequential_node_order = itertools.chain(*dag.node_execution_order)
@@ -43,14 +43,3 @@ def invoke(
         dag_outputs[output_name] = outputs[output.node][output.output]
 
     return dag_outputs
-
-
-def validate_parameters_match_dag_inputs(
-    inputs: Dict[str, SupportedInputs],
-    params: Dict[str, bytes],
-):
-    for input_name in inputs.keys():
-        if input_name not in params:
-            raise ValueError(
-                f"The parameters supplied to this DAG were supposed to contain a parameter named '{input_name}', but only the following parameters were actually supplied: {list(params.keys())}"
-            )

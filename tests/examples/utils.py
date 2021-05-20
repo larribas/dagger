@@ -13,17 +13,6 @@ def load_argo_manifest(filename: str):
         return yaml.safe_load(f)
 
 
-def assert_deep_equal(a, b):
-    """
-    Compare the supplied data strcture against each other, and assert
-    their equality.
-    The motivation for this function is to produce a succint summary
-    of the differences between both structures as an assertion message.
-    """
-    diff = DeepDiff(a, b, ignore_order=True)
-    assert not diff
-
-
 def validate_example(
     dag: DAG,
     params: Dict[str, bytes],
@@ -109,9 +98,19 @@ def validate_example_with_argo_runtime(
 
     generated_manifest = workflow_manifest(
         dag,
+        params=params,
         name="some-name",
         container_image="local.registry/dagger",
         container_entrypoint_to_dag_cli=container_entrypoint,
     )
 
-    assert_deep_equal(expected_manifest["spec"], generated_manifest["spec"])
+    diff = DeepDiff(
+        expected_manifest["spec"],
+        generated_manifest["spec"],
+        ignore_order=True,
+        view="tree",
+    )
+
+    print(f"Generated manifest is:\n{yaml.dump(generated_manifest)}")
+    print(diff.pretty())
+    assert not diff

@@ -3,32 +3,35 @@ import argo_workflows_sdk.outputs as outputs
 from argo_workflows_sdk import DAG, DAGOutput, Node
 
 
-def multiply_by_2(number: int) -> int:
-    print(f"Multiplying number {number} by 2")
-    return number * 2
+def double(number: int) -> int:
+    result = number * 2
+    print(f"Doubling number {number} = {result}")
+    return result
 
 
 def square(number: int) -> int:
-    print(f"Squaring number {number}")
-    return number ** 2
+    result = number ** 2
+    print(f"Squaring number {number} = {result}")
+    return result
 
 
 dag = DAG(
     nodes={
-        "multiply-by-2": Node(
-            multiply_by_2,
+        "double": Node(
+            double,
             inputs={
                 "number": inputs.FromParam(),
             },
             outputs={
-                "multiplied-number": outputs.FromReturnValue(),
+                "doubled-number": outputs.FromReturnValue(),
             },
         ),
         "square": Node(
             square,
             inputs={
                 "number": inputs.FromNodeOutput(
-                    node="multiply-by-2", output="multiplied-number"
+                    node="double",
+                    output="doubled-number",
                 ),
             },
             outputs={
@@ -40,8 +43,15 @@ dag = DAG(
         "number": inputs.FromParam(),
     },
     outputs={
-        "number-multiplied-by-2-and-squared": DAGOutput(
-            node="square", output="squared-number"
+        "number-doubled-and-squared": DAGOutput(
+            node="square",
+            output="squared-number",
         ),
     },
 )
+
+
+def run_from_cli():
+    from argo_workflows_sdk.runtime.cli import invoke
+
+    invoke(dag)

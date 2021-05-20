@@ -1,7 +1,6 @@
 from typing import Any, Dict, Optional
 
 from argo_workflows_sdk.node import Node, SupportedInputs, SupportedOutputs
-from argo_workflows_sdk.outputs import Output
 from argo_workflows_sdk.serializers import SerializationError
 
 
