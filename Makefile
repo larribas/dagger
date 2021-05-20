@@ -1,5 +1,5 @@
-DOCKER_IMAGE_NAME ?= argo_workflows_sdk
-VERSION ?= 0.1.0
+DOCKER_IMAGE_NAME ?= dagger
+VERSION ?= latest
 KUBE_NAMESPACE ?= argo
 
 K3D_CLUSTER_NAME ?= dagger
@@ -14,7 +14,7 @@ install:
 .PHONY: build
 build:
 	poetry build -f wheel
-	docker build . -t $(DOCKER_IMAGE_NAME):$(VERSION) --build-arg "WHEEL=argo_workflows_sdk-$(VERSION)-py3-none-any.whl"
+	docker build . -t $(DOCKER_IMAGE_NAME):$(VERSION) --build-arg "WHEEL=argo_workflows_sdk-`poetry version -s`-py3-none-any.whl"
 
 .PHONY: push-local
 push-local: build
@@ -28,7 +28,7 @@ run-%: build
 .PHONY: set-up-argo
 set-up-argo:
 	k3d registry create $(K3D_REGISTRY_NAME) --port $(K3D_REGISTRY_PORT)
-	k3d cluster create $(K3D_CLUSTER_NAME) --registry-use "k3d-$(K3D_REGISTRY_NAME):$(K3D_REGISTRY_PORT)" --registry-config registries.yaml
+	k3d cluster create $(K3D_CLUSTER_NAME) --registry-use "k3d-$(K3D_REGISTRY_NAME):$(K3D_REGISTRY_PORT)" --registry-config k3d/registries.yaml
 	kubectl create ns $(KUBE_NAMESPACE)
 	echo "Waiting for a while for the cluster and the namespace to stabilize"
 	sleep 10
