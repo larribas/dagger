@@ -5,12 +5,11 @@ from argo_workflows_sdk.inputs.from_node_output import FromNodeOutput
 from argo_workflows_sdk.inputs.from_param import FromParam
 from argo_workflows_sdk.serializers import Serializer
 
-VALID_NAME_REGEX = r"^[a-zA-Z0-9][a-zA-Z0-9-_]{0,128}$"
+VALID_NAME_REGEX = r"^[a-zA-Z0-9][a-zA-Z0-9-_]{0,63}$"
 VALID_NAME = re.compile(VALID_NAME_REGEX)
 
 
 class Input(Protocol):
-    name: str
     serializer: Serializer
 
 

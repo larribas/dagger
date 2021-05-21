@@ -1,6 +1,6 @@
 import pytest
 
-from argo_workflows_sdk.inputs import validate_name
+from argo_workflows_sdk.outputs import validate_name
 
 
 def test__validate_name__with_valid_names():
@@ -9,6 +9,7 @@ def test__validate_name__with_valid_names():
         "name-with-dashes",
         "name_with_underscores",
         "name-with-dashes_and_underscores_and_123",
+        "x" * 64,
     ]
 
     for name in valid_names:
@@ -20,7 +21,7 @@ def test__validate_name__with_invalid_names():
     invalid_names = [
         "",
         "name with spaces",
-        "too long" * 30,
+        "x" * 65,
         "with$ymßols",
     ]
 
@@ -30,5 +31,5 @@ def test__validate_name__with_invalid_names():
 
         assert (
             str(e.value)
-            == f"'{name}' is not a valid name for an input. Inputs must comply with the regex ^[a-zA-Z0-9][a-zA-Z0-9-_]{{0,128}}$"
+            == f"'{name}' is not a valid name for an output. Outputs must comply with the regex ^[a-zA-Z0-9][a-zA-Z0-9-_]{{0,63}}$"
         )

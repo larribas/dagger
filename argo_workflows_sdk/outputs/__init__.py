@@ -6,7 +6,7 @@ from argo_workflows_sdk.outputs.from_property import FromProperty
 from argo_workflows_sdk.outputs.from_return_value import FromReturnValue
 from argo_workflows_sdk.serializers import Serializer
 
-VALID_NAME_REGEX = r"^[a-zA-Z0-9][a-zA-Z0-9-_]{0,128}$"
+VALID_NAME_REGEX = r"^[a-zA-Z0-9][a-zA-Z0-9-_]{0,63}$"
 VALID_NAME = re.compile(VALID_NAME_REGEX)
 
 

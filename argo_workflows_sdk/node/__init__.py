@@ -1,12 +1,13 @@
 import re
 from typing import Callable, Dict, List, Union
+from typing import get_args as get_type_args
 
 from argo_workflows_sdk.inputs import FromNodeOutput, FromParam
 from argo_workflows_sdk.inputs import validate_name as validate_input_name
 from argo_workflows_sdk.outputs import FromKey, FromProperty, FromReturnValue
 from argo_workflows_sdk.outputs import validate_name as validate_output_name
 
-VALID_NAME_REGEX = r"^[a-zA-Z0-9][a-zA-Z0-9-]{0,128}$"
+VALID_NAME_REGEX = r"^[a-zA-Z0-9][a-zA-Z0-9-]{0,63}$"
 VALID_NAME = re.compile(VALID_NAME_REGEX)
 
 
@@ -32,13 +33,13 @@ class Node:
         inputs = inputs or {}
         outputs = outputs or {}
 
-        for input_name in inputs:
+        for input_name, input in inputs.items():
             validate_input_name(input_name)
-            # TODO: Validate the inputs are part of the set of supported inputs
+            validate_input_is_supported(input_name, input)
 
-        for output_name in outputs:
+        for output_name, output in outputs.items():
             validate_output_name(output_name)
-            # TODO: Validate the outputs are part of the set of supported outputs
+            validate_output_is_supported(output_name, output)
 
         validate_callable_inputs_match_defined_inputs(func, list(inputs.keys()))
 
@@ -52,6 +53,26 @@ def validate_name(name: str):
         raise ValueError(
             f"'{name}' is not a valid name for a node. Node names must comply with the regex {VALID_NAME_REGEX}"
         )
+
+
+def validate_input_is_supported(input_name, input):
+    if not is_type_supported(input, SupportedInputs):
+        raise ValueError(
+            f"Input '{input_name}' is of type '{type(input).__name__}'. However, nodes only support the following types of inputs: {[t.__name__ for t in get_type_args(SupportedInputs)]}"
+        )
+
+
+def validate_output_is_supported(output_name, output):
+    if not is_type_supported(output, SupportedOutputs):
+        raise ValueError(
+            f"Output '{output_name}' is of type '{type(output).__name__}'. However, nodes only support the following types of outputs: {[t.__name__ for t in get_type_args(SupportedOutputs)]}"
+        )
+
+
+def is_type_supported(obj, union: Union):
+    return any(
+        [isinstance(obj, supported_type) for supported_type in get_type_args(union)]
+    )
 
 
 def validate_callable_inputs_match_defined_inputs(

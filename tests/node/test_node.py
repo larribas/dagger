@@ -3,6 +3,21 @@ import pytest
 import argo_workflows_sdk.inputs as inputs
 import argo_workflows_sdk.outputs as outputs
 from argo_workflows_sdk.node import Node, validate_name
+from argo_workflows_sdk.serializers import DefaultSerializer
+
+
+class UnsupportedInput:
+    def __init__(self):
+        self.serializer = DefaultSerializer
+
+
+class UnsupportedOutput:
+    def __init__(self):
+        self.serializer = DefaultSerializer
+
+    def from_function_return_value(self, results):
+        return results
+
 
 #
 # Init
@@ -19,6 +34,21 @@ def test__init__with_an_invalid_input_name():
         )
 
 
+def test__init__with_an_unsupported_input():
+    with pytest.raises(ValueError) as e:
+        Node(
+            lambda x: 1,
+            inputs={
+                "x": UnsupportedInput(),
+            },
+        )
+
+    assert (
+        str(e.value)
+        == "Input 'x' is of type 'UnsupportedInput'. However, nodes only support the following types of inputs: ['FromParam', 'FromNodeOutput']"
+    )
+
+
 def test__init__with_an_invalid_output_name():
     with pytest.raises(ValueError):
         Node(
@@ -27,6 +57,21 @@ def test__init__with_an_invalid_output_name():
                 "invalid name": outputs.FromKey("name"),
             },
         )
+
+
+def test__init__with_an_unsupported_output():
+    with pytest.raises(ValueError) as e:
+        Node(
+            lambda: 1,
+            outputs={
+                "x": UnsupportedOutput(),
+            },
+        )
+
+    assert (
+        str(e.value)
+        == "Output 'x' is of type 'UnsupportedOutput'. However, nodes only support the following types of outputs: ['FromReturnValue', 'FromKey', 'FromProperty']"
+    )
 
 
 def test__init__with_input_and_signature_mismatch():
@@ -57,6 +102,7 @@ def test__validate_name__with_valid_names():
         "param",
         "name-with-dashes",
         "name-with-dashes-and-123",
+        "x" * 64,
     ]
 
     for name in valid_names:
@@ -68,7 +114,7 @@ def test__validate_name__with_invalid_names():
     invalid_names = [
         "",
         "name with spaces",
-        "too long" * 30,
+        "x" * 65,
         "with$ymßols",
         "with_underscores",
     ]
@@ -79,5 +125,5 @@ def test__validate_name__with_invalid_names():
 
         assert (
             str(e.value)
-            == f"'{name}' is not a valid name for a node. Node names must comply with the regex ^[a-zA-Z0-9][a-zA-Z0-9-]{{0,128}}$"
+            == f"'{name}' is not a valid name for a node. Node names must comply with the regex ^[a-zA-Z0-9][a-zA-Z0-9-]{{0,63}}$"
         )

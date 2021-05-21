@@ -12,7 +12,7 @@ from argo_workflows_sdk.node import SupportedInputs as SupportedNodeInputs
 from argo_workflows_sdk.node import validate_name as validate_node_name
 from argo_workflows_sdk.outputs import validate_name as validate_output_name
 
-VALID_NAME_REGEX = r"^[a-zA-Z0-9][a-zA-Z0-9-]{0,128}$"
+VALID_NAME_REGEX = r"^[a-zA-Z0-9][a-zA-Z0-9-]{0,63}$"
 VALID_NAME = re.compile(VALID_NAME_REGEX)
 
 
@@ -137,8 +137,8 @@ def validate_node_input_dependencies(
                 elif isinstance(input_type, FromNodeOutput):
                     validate_input_from_node_output(node_name, input_type, dag_nodes)
                 else:
-                    raise TypeError(
-                        f"Inputs of type '{type(input_type)}' are not supported at the moment"
+                    raise Exception(
+                        f"Whoops. The current version of the library doesn't seem to support inputs of type '{type(input_type)}'. This is most likely unintended. Please, check the GitHub project to see if this issue has already been reported and addressed in a newer version. Otherwise, please report this as a bug in our GitHub tracker. Sorry for the inconvenience."
                     )
 
             except (TypeError, ValueError) as e:

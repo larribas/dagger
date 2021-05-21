@@ -8,9 +8,9 @@ spec:
     - name: number
       raw:
         data: !!binary "NQ=="
-  entrypoint: main
+  entrypoint: dag
   templates:
-  - name: main
+  - name: dag
     inputs:
       artifacts:
       - name: number
@@ -21,20 +21,20 @@ spec:
     dag:
       tasks:
       - name: double
-        template: double
+        template: node-double
         arguments:
           artifacts:
           - name: number
             from: "{{inputs.artifacts.number}}"
       - name: square
-        template: square
+        template: node-square
         dependencies: [double]
         arguments:
           artifacts:
           - name: number
             from: "{{tasks.double.outputs.artifacts.doubled-number}}"
 
-  - name: double
+  - name: node-double
     inputs:
       artifacts:
       - name: number
@@ -53,12 +53,12 @@ spec:
       ]
       volumeMounts:
       - name: outputs
-        mountPath: /tmp/outputs
+        mountPath: /tmp/outputs/
     volumes:
     - name: outputs
       emptyDir: {}
 
-  - name: square
+  - name: node-square
     inputs:
       artifacts:
       - name: number
@@ -77,7 +77,7 @@ spec:
       ]
       volumeMounts:
       - name: outputs
-        mountPath: /tmp/outputs
+        mountPath: /tmp/outputs/
     volumes:
     - name: outputs
       emptyDir: {}

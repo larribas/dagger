@@ -3,14 +3,14 @@ kind: Workflow
 metadata:
   generateName: hello-world-
 spec:
-  entrypoint: main
+  entrypoint: dag
   templates:
-  - name: main
+  - name: dag
     dag:
       tasks:
       - name: say-hello-world
-        template: say-hello-world
-  - name: say-hello-world
+        template: node-say-hello-world
+  - name: node-say-hello-world
     container:
       image: local.registry/dagger
       command: [hello-world]

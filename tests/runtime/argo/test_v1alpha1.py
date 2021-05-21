@@ -33,21 +33,21 @@ def test__workflow_manifest__simplest_dag():
             "name": workflow_name,
         },
         "spec": {
-            "entrypoint": "main",
+            "entrypoint": "dag",
             "templates": [
                 {
-                    "name": "main",
+                    "name": "dag",
                     "dag": {
                         "tasks": [
                             {
                                 "name": "single-node",
-                                "template": "single-node",
+                                "template": "node-single-node",
                             },
                         ],
                     },
                 },
                 {
-                    "name": "single-node",
+                    "name": "node-single-node",
                     "container": {
                         "image": container_image,
                         "command": container_entrypoint,

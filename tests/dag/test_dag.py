@@ -70,26 +70,6 @@ def test__init__with_an_output_that_references_a_nonexistent_node_output():
     )
 
 
-def test__init__with_a_node_with_invalid_inputs():
-    class UnsupportedInput:
-        pass
-
-    with pytest.raises(TypeError) as e:
-        DAG(
-            {
-                "my-node": Node(
-                    lambda x: 1,
-                    inputs=dict(x=UnsupportedInput()),
-                ),
-            }
-        )
-
-    assert (
-        str(e.value)
-        == f"Error validating input 'x' of node 'my-node': Inputs of type '{type(UnsupportedInput())}' are not supported at the moment"
-    )
-
-
 def test__init__with_a_node_that_references_another_that_does_not_exist():
     with pytest.raises(ValueError) as e:
         DAG(
@@ -205,6 +185,7 @@ def test__validate_name__with_valid_names():
         "param",
         "name-with-dashes",
         "name-with-dashes-and-123",
+        "a" * 64,
     ]
 
     for name in valid_names:
@@ -216,7 +197,7 @@ def test__validate_name__with_invalid_names():
     invalid_names = [
         "",
         "name with spaces",
-        "too long" * 30,
+        "x" * 65,
         "with$ymßols",
         "with_underscores",
     ]
@@ -227,5 +208,5 @@ def test__validate_name__with_invalid_names():
 
         assert (
             str(e.value)
-            == f"'{name}' is not a valid name for a DAG. DAG names must comply with the regex ^[a-zA-Z0-9][a-zA-Z0-9-]{{0,128}}$"
+            == f"'{name}' is not a valid name for a DAG. DAG names must comply with the regex ^[a-zA-Z0-9][a-zA-Z0-9-]{{0,63}}$"
         )
