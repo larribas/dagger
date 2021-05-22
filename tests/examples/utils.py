@@ -94,12 +94,12 @@ def validate_example_with_argo_runtime(
     expected_manifest: dict,
     container_entrypoint: List[str],
 ):
-    from argo_workflows_sdk.runtime.argo import workflow_manifest
+    import argo_workflows_sdk.runtime.argo as argo
 
-    generated_manifest = workflow_manifest(
+    generated_manifest = argo.workflow_manifest(
         dag,
         params=params,
-        name="some-name",
+        metadata=argo.Metadata(name="some-name"),
         container_image="local.registry/dagger",
         container_entrypoint_to_dag_cli=container_entrypoint,
     )
