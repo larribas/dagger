@@ -1,0 +1,12 @@
+name: Git (Commits, Branches and PRs)
+
+on: [pull_request]
+
+jobs:
+  git:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: wagoid/commitlint-github-action@v3

@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict
 
 import dagger.runtime.local as local
 from dagger.node import Node
