@@ -1,6 +1,6 @@
 from typing import Dict
 
-from argo_workflows_sdk.examples.passing_parameters import dag
+from dagger.examples.passing_parameters import dag
 from tests.examples.utils import validate_example
 
 

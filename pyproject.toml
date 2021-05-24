@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "argo-workflows-sdk"
+name = "dagger"
 version = "0.1.0"
 description = ""
 authors = ["larribas <lorenzo.s.arribas@gmail.com>"]
@@ -24,6 +24,6 @@ profile = "black"
 multi_line_output = 3
 
 [tool.poetry.scripts]
-hello-world = "argo_workflows_sdk.examples.hello_world:run_from_cli"
-passing-parameters = "argo_workflows_sdk.examples.passing_parameters:run_from_cli"
-static-parallelization = "argo_workflows_sdk.examples.static_parallelization:run_from_cli"
+hello-world = "dagger.examples.hello_world:run_from_cli"
+passing-parameters = "dagger.examples.passing_parameters:run_from_cli"
+static-parallelization = "dagger.examples.static_parallelization:run_from_cli"

@@ -3,10 +3,10 @@ import tempfile
 
 import pytest
 
-import argo_workflows_sdk.inputs as inputs
-import argo_workflows_sdk.outputs as outputs
-from argo_workflows_sdk import Node
-from argo_workflows_sdk.runtime.cli.node import invoke
+import dagger.inputs as inputs
+import dagger.outputs as outputs
+from dagger import Node
+from dagger.runtime.cli.node import invoke
 
 #
 # Invoke
