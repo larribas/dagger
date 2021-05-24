@@ -21,10 +21,10 @@ def validate_name(name: str):
 
 
 __all__ = [
-    Input,
+    Input.__name__,
     # Functions
-    validate_name,
+    validate_name.__name__,
     # Out-of-the-box inputs
-    FromParam,
-    FromNodeOutput,
+    FromParam.__name__,
+    FromNodeOutput.__name__,
 ]

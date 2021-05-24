@@ -8,7 +8,7 @@ class Metadata:
     generate_name_from_prefix: bool = False
     namespace: Optional[str] = None
     annotations: Dict[str, str] = field(default_factory=dict)
-    labels: Dict[str, str] = field(default_factory=list)
+    labels: Dict[str, str] = field(default_factory=dict)
     # TODO: Validate names and namespaces upon initialization
 
 
@@ -17,7 +17,7 @@ def object_meta(metadata: Metadata) -> dict:
     Returns a minimal representation of an ObjectMeta with the supplied information
     https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#objectmeta
     """
-    meta = {}
+    meta: dict = {}
 
     if metadata.generate_name_from_prefix:
         meta["generateName"] = metadata.name

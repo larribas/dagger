@@ -25,11 +25,11 @@ def validate_name(name: str):
 
 
 __all__ = [
-    Output,
+    Output.__name__,
     # Functions
-    validate_name,
+    "validate_name",
     # Out-of-the-box outputs
-    FromReturnValue,
-    FromKey,
-    FromProperty,
+    FromReturnValue.__name__,
+    FromKey.__name__,
+    FromProperty.__name__,
 ]

@@ -75,13 +75,13 @@ def validate_parameters(
 
 
 __all__ = [
-    DAG,
-    DAGOutput,
-    SupportedInputs,
+    DAG.__name__,
+    DAGOutput.__name__,
+    "SupportedInputs",
     # Exceptions
-    CyclicDependencyError,
+    CyclicDependencyError.__name__,
     # Validation,
-    validate_parameters,
+    validate_parameters.__name__,
 ]
 
 
@@ -124,7 +124,7 @@ def validate_nodes_are_not_empty(nodes: Dict[str, Node]):
 
 def validate_node_input_dependencies(
     dag_nodes: Dict[str, Node],
-    dag_inputs: Dict[str, SupportedInputs] = None,
+    dag_inputs: Dict[str, SupportedInputs],
 ):
     for node_name, node in dag_nodes.items():
         for input_name, input_type in node.inputs.items():

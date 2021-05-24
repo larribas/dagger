@@ -1,6 +1,6 @@
 import itertools
 import os
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import dagger.inputs as inputs
 from dagger.dag import DAG, validate_parameters
@@ -101,12 +101,12 @@ def dag_template(
     return template
 
 
-def dag_task(node_name: str, node: Node) -> dict:
+def dag_task(node_name: str, node: Node) -> Dict[str, Any]:
     """
     Returns a minimal representation of a DAGTask for a specific node
     https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#dagtask
     """
-    task = {
+    task: dict = {
         "name": node_name,
         "template": node_template_name(node_name),
     }
@@ -185,7 +185,7 @@ def node_template(
     Returns a minimal representation of a Template that executes a specific Node
     https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#template
     """
-    template = {
+    template: dict = {
         "name": node_template_name(node_name),
         "container": {
             "image": container_image,
