@@ -1,0 +1,21 @@
+name: Documentation
+
+on: [push, pull_request]
+
+jobs:
+  check-documentation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8.7
+      - uses: Gr1N/setup-poetry@v4
+        with:
+          poetry-version: 1.1.5
+      - name: Poetry Install
+        run: |
+          poetry install
+      - name: Verify docstring documentation is standardized
+        run: |
+          poetry run pydocstyle .

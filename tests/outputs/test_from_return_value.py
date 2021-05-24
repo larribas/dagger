@@ -1,5 +1,3 @@
-import pytest
-
 from dagger.outputs.from_return_value import FromReturnValue
 from dagger.serializers import DefaultSerializer
 

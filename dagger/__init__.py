@@ -6,6 +6,7 @@ from dagger.node import Node
 
 __version__ = "0.1.0"
 
+
 LOG_FORMAT = "%(asctime)s %(levelname)s:%(name)s:%(message)s"
 logging.basicConfig(
     level=os.environ.get("LOG_LEVEL", "INFO"),
@@ -14,7 +15,7 @@ logging.basicConfig(
 )
 
 __all__ = [
-    DAG,
-    DAGOutput,
-    Node,
+    DAG.__name__,
+    DAGOutput.__name__,
+    Node.__name__,
 ]

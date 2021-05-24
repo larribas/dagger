@@ -1,5 +1,16 @@
 [flake8]
+count = True
+show-source = True
+statistics = True
+max-complexity = 20
+exclude =
+    .git,
+    __pycache__
 ignore =
   # The following are taken care of by "black" formatting
-  E501,  # Line length
-  W503,  # Line breaks
+  E2,
+  W2,
+  E3,
+  W3,
+  E5,
+  W5

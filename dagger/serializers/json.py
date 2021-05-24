@@ -9,7 +9,7 @@ class JSON:
     def __init__(
         self,
         indent: Optional[int] = None,
-        allow_nan: Optional[bool] = False,
+        allow_nan: bool = False,
     ):
         self.__indent = indent
         self.__allow_nan = allow_nan

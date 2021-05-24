@@ -14,7 +14,7 @@ def invoke(
 ) -> Dict[str, bytes]:
 
     params = params or {}
-    outputs = {}
+    outputs: Dict[str, Dict[str, bytes]] = {}
 
     validate_parameters(dag.inputs, params)
 
@@ -22,7 +22,7 @@ def invoke(
     sequential_node_order = itertools.chain(*dag.node_execution_order)
     for node_name in sequential_node_order:
         node = dag.nodes[node_name]
-        node_params = {}
+        node_params: Dict[str, bytes] = {}
         for input_name, input_type in node.inputs.items():
             if isinstance(input_type, FromParam):
                 node_params[input_name] = params[input_name]

@@ -19,10 +19,10 @@ DefaultSerializer = JSON()
 
 
 __all__ = [
-    Serializer,
-    SerializationError,
-    DeserializationError,
+    Serializer.__name__,
+    SerializationError.__name__,
+    DeserializationError.__name__,
     # Out-of-the-box serializers
-    DefaultSerializer,
-    JSON,
+    "DefaultSerializer",
+    JSON.__name__,
 ]

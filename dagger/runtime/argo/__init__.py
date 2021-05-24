@@ -5,12 +5,12 @@ from dagger.runtime.argo.v1alpha1 import cron_workflow_manifest, workflow_manife
 
 __all__ = [
     # Types
-    Metadata,
-    Cron,
-    CronConcurrencyPolicy,
+    Metadata.__name__,
+    Cron.__name__,
+    CronConcurrencyPolicy.__name__,
     # Manifest-generation functions
-    workflow_manifest,
-    cron_workflow_manifest,
+    workflow_manifest.__name__,
+    cron_workflow_manifest.__name__,
     # Errors
-    IncompatibilityError,
+    IncompatibilityError.__name__,
 ]

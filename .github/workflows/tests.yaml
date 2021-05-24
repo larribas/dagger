@@ -1,0 +1,21 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8.7
+      - uses: Gr1N/setup-poetry@v4
+        with:
+          poetry-version: 1.1.5
+      - name: Poetry Install
+        run: |
+          poetry install
+      - name: Unit tests
+        run: |
+          poetry run pytest --cov=dagger --cov-fail-under=95
