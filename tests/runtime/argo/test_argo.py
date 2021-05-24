@@ -1,6 +1,6 @@
-from argo_workflows_sdk.dag import DAG
-from argo_workflows_sdk.node import Node
-from argo_workflows_sdk.runtime.argo import (
+from dagger.dag import DAG
+from dagger.node import Node
+from dagger.runtime.argo import (
     Cron,
     CronConcurrencyPolicy,
     Metadata,

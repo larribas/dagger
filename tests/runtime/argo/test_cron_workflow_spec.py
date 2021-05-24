@@ -1,4 +1,4 @@
-from argo_workflows_sdk.runtime.argo.cron_workflow_spec import (
+from dagger.runtime.argo.cron_workflow_spec import (
     Cron,
     CronConcurrencyPolicy,
     cron_workflow_spec,

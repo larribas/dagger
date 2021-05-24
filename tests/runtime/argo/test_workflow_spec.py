@@ -1,11 +1,11 @@
 import pytest
 
-import argo_workflows_sdk.inputs as inputs
-import argo_workflows_sdk.outputs as outputs
-from argo_workflows_sdk.dag import DAG, DAGOutput
-from argo_workflows_sdk.node import Node
-from argo_workflows_sdk.runtime.argo.errors import IncompatibilityError
-from argo_workflows_sdk.runtime.argo.workflow_spec import (
+import dagger.inputs as inputs
+import dagger.outputs as outputs
+from dagger.dag import DAG, DAGOutput
+from dagger.node import Node
+from dagger.runtime.argo.errors import IncompatibilityError
+from dagger.runtime.argo.workflow_spec import (
     dag_task_argument_artifact_from,
     workflow_spec,
 )

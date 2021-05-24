@@ -1,7 +1,7 @@
 import pytest
 
-from argo_workflows_sdk.outputs.from_return_value import FromReturnValue
-from argo_workflows_sdk.serializers import DefaultSerializer
+from dagger.outputs.from_return_value import FromReturnValue
+from dagger.serializers import DefaultSerializer
 
 #
 # Init
