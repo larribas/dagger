@@ -1,20 +1,12 @@
-from argo_workflows_sdk.argo import as_workflow
 from argo_workflows_sdk.examples.hello_world import dag
-from tests.examples.test_utils import assert_deep_equal, load_yaml
+from tests.examples.utils import validate_example
 
 
-def test_on_argo():
-    # Given
-    manifest = as_workflow(
+def test():
+    validate_example(
         dag,
-        name_prefix="hello-world-",
-        namespace="default",
-        service_account="default",
-        container_image="argo_workflows_sdk",
-        container_dag_entrypoint=["hello-world"],
-    )
-    # Then
-    assert_deep_equal(
-        manifest,
-        load_yaml("argo/hello_world"),
+        params={},
+        validate_results=lambda _results: None,
+        argo_workflow_yaml_filename="hello_world.yaml",
+        container_entrypoint=["hello-world"],
     )

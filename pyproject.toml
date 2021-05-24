@@ -15,9 +15,6 @@ pre-commit = "^2.11.1"
 isort = "^5.7.0"
 deepdiff = "^5.2.3"
 
-[tool.poetry.scripts]
-hello-world = "argo_workflows_sdk.examples.hello_world:dag"
-
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
@@ -25,3 +22,8 @@ build-backend = "poetry.core.masonry.api"
 [tool.isort]
 profile = "black"
 multi_line_output = 3
+
+[tool.poetry.scripts]
+hello-world = "argo_workflows_sdk.examples.hello_world:run_from_cli"
+passing-parameters = "argo_workflows_sdk.examples.passing_parameters:run_from_cli"
+static-parallelization = "argo_workflows_sdk.examples.static_parallelization:run_from_cli"

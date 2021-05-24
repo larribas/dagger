@@ -1,5 +1,4 @@
 from argo_workflows_sdk import DAG, Node
-from argo_workflows_sdk.argo import as_workflow
 
 
 def say_hello_world():
@@ -7,8 +6,13 @@ def say_hello_world():
 
 
 dag = DAG(
-    "hello_world",
-    [
-        Node("say_hello_world", say_hello_world),
-    ],
+    nodes={
+        "say-hello-world": Node(say_hello_world),
+    },
 )
+
+
+def run_from_cli():
+    from argo_workflows_sdk.runtime.cli import invoke
+
+    invoke(dag)

@@ -1,7 +1,7 @@
 import logging
 import os
 
-from argo_workflows_sdk.dag import DAG
+from argo_workflows_sdk.dag import DAG, DAGOutput
 from argo_workflows_sdk.node import Node
 
 __version__ = "0.1.0"
@@ -12,3 +12,9 @@ logging.basicConfig(
     format=LOG_FORMAT,
     datefmt="%Y-%m-%d %H:%M:%S",
 )
+
+__all__ = [
+    DAG,
+    DAGOutput,
+    Node,
+]

@@ -1,0 +1,5 @@
+[flake8]
+ignore =
+  # The following are taken care of by "black" formatting
+  E501,  # Line length
+  W503,  # Line breaks
