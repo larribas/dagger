@@ -14,7 +14,7 @@ install:
 .PHONY: build
 build:
 	poetry build -f wheel
-	docker build . -t $(DOCKER_IMAGE_NAME):$(VERSION) --build-arg "WHEEL=argo_workflows_sdk-`poetry version -s`-py3-none-any.whl"
+	docker build . -t $(DOCKER_IMAGE_NAME):$(VERSION) --build-arg "WHEEL=dagger-`poetry version -s`-py3-none-any.whl"
 
 .PHONY: push-local
 push-local: build

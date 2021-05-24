@@ -1,10 +1,6 @@
 import pytest
 
-from argo_workflows_sdk.serializers import (
-    JSON,
-    DeserializationError,
-    SerializationError,
-)
+from dagger.serializers import JSON, DeserializationError, SerializationError
 
 
 def test_extension():

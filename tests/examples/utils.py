@@ -4,7 +4,7 @@ from typing import Callable, Dict, List
 import yaml
 from deepdiff import DeepDiff
 
-from argo_workflows_sdk import DAG
+from dagger import DAG
 
 
 def load_argo_manifest(filename: str):
@@ -43,7 +43,7 @@ def validate_example_with_local_runtime(
     params: Dict[str, bytes],
     validate_results: Callable[[Dict[str, bytes]], None],
 ):
-    from argo_workflows_sdk.runtime.local import invoke_dag
+    from dagger.runtime.local import invoke_dag
 
     results = invoke_dag(dag, params=params)
     validate_results(results)
@@ -58,7 +58,7 @@ def validate_example_with_cli_runtime(
     import os
     import tempfile
 
-    from argo_workflows_sdk.runtime.cli import invoke
+    from dagger.runtime.cli import invoke
 
     with tempfile.TemporaryDirectory() as tmp:
 
@@ -94,7 +94,7 @@ def validate_example_with_argo_runtime(
     expected_manifest: dict,
     container_entrypoint: List[str],
 ):
-    import argo_workflows_sdk.runtime.argo as argo
+    import dagger.runtime.argo as argo
 
     generated_manifest = argo.workflow_manifest(
         dag,

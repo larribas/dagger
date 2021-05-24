@@ -1,4 +1,4 @@
-from argo_workflows_sdk.examples.hello_world import dag
+from dagger.examples.hello_world import dag
 from tests.examples.utils import validate_example
 
 

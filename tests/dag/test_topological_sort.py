@@ -1,9 +1,6 @@
 import pytest
 
-from argo_workflows_sdk.dag.topological_sort import (
-    CyclicDependencyError,
-    topological_sort,
-)
+from dagger.dag.topological_sort import CyclicDependencyError, topological_sort
 
 #
 # Topological Sort

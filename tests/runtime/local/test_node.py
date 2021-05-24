@@ -1,10 +1,10 @@
 import pytest
 
-import argo_workflows_sdk.inputs as inputs
-import argo_workflows_sdk.outputs as outputs
-from argo_workflows_sdk import Node
-from argo_workflows_sdk.runtime.local.node import invoke
-from argo_workflows_sdk.serializers import SerializationError
+import dagger.inputs as inputs
+import dagger.outputs as outputs
+from dagger import Node
+from dagger.runtime.local.node import invoke
+from dagger.serializers import SerializationError
 
 #
 # Invoke

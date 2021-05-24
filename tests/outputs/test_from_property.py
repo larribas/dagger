@@ -2,8 +2,8 @@ from typing import NamedTuple
 
 import pytest
 
-from argo_workflows_sdk.outputs.from_property import FromProperty
-from argo_workflows_sdk.serializers import DefaultSerializer
+from dagger.outputs.from_property import FromProperty
+from dagger.serializers import DefaultSerializer
 
 #
 # Init

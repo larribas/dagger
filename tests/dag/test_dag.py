@@ -1,9 +1,9 @@
 import pytest
 
-import argo_workflows_sdk.inputs as inputs
-import argo_workflows_sdk.outputs as outputs
-from argo_workflows_sdk.dag import DAG, CyclicDependencyError, DAGOutput, validate_name
-from argo_workflows_sdk.node import Node
+import dagger.inputs as inputs
+import dagger.outputs as outputs
+from dagger.dag import DAG, CyclicDependencyError, DAGOutput, validate_name
+from dagger.node import Node
 
 #
 # Init

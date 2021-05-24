@@ -1,6 +1,6 @@
 from typing import Dict
 
-from argo_workflows_sdk.examples.static_parallelization import dag
+from dagger.examples.static_parallelization import dag
 from tests.examples.utils import validate_example
 
 

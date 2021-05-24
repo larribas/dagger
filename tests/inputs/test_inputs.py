@@ -1,6 +1,6 @@
 import pytest
 
-from argo_workflows_sdk.inputs import validate_name
+from dagger.inputs import validate_name
 
 
 def test__validate_name__with_valid_names():
