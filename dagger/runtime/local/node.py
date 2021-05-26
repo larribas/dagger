@@ -1,30 +1,62 @@
+"""Run nodes in memory."""
 from typing import Any, Dict, Optional
 
 from dagger.node import Node, SupportedInputs, SupportedOutputs
 from dagger.serializers import SerializationError
 
 
-def invoke(
+def invoke_node(
     node: Node,
     params: Optional[Dict[str, bytes]] = None,
 ) -> Dict[str, bytes]:
+    """
+    Invoke a node with a series of parameters.
 
+    Parameters
+    ----------
+    node : Node
+        Node to execute
+
+    params : Dictionary of str -> bytes
+        Inputs to the node.
+        Serialized into their binary format.
+        Indexed by input/parameter name.
+
+
+    Returns
+    -------
+    Dictionary of str -> bytes
+        Serialized outputs of the node.
+        Indexed by output name.
+
+
+    Raises
+    ------
+    ValueError
+        When any required parameters are missing
+
+    TypeError
+        When any of the outputs cannot be obtained from the return value of the node's function
+
+    SerializationError
+        When some of the outputs cannot be serialized with the specified Serializer
+    """
     params = params or {}
 
-    inputs = deserialize_inputs(
+    inputs = _deserialize_inputs(
         inputs=node.inputs,
         params=params,
     )
 
     return_value = node.func(**inputs)
 
-    return serialize_outputs(
+    return _serialize_outputs(
         outputs=node.outputs,
         return_value=return_value,
     )
 
 
-def deserialize_inputs(
+def _deserialize_inputs(
     inputs: Dict[str, SupportedInputs],
     params: Dict[str, bytes],
 ):
@@ -43,7 +75,7 @@ def deserialize_inputs(
     return deserialized_inputs
 
 
-def serialize_outputs(
+def _serialize_outputs(
     outputs: Dict[str, SupportedOutputs],
     return_value: Any,
 ) -> Dict[str, bytes]:

@@ -1,5 +1,7 @@
 """Sort nodes topologically by their dependencies and detect possible cyclic dependencies."""
-from typing import Any, Dict, Hashable, List, Set
+from typing import Any, Dict, List, Set, TypeVar
+
+T = TypeVar("T")
 
 
 class CyclicDependencyError(Exception):
@@ -8,9 +10,7 @@ class CyclicDependencyError(Exception):
     pass
 
 
-def topological_sort(
-    node_dependencies: Dict[Hashable, Set[Hashable]]
-) -> List[Set[Hashable]]:
+def topological_sort(node_dependencies: Dict[T, Set[T]]) -> List[Set[T]]:
     """
     Perform a topological sort of the provided set of dependencies.
 

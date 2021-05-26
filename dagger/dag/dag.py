@@ -126,7 +126,7 @@ def _node_dependencies(node_inputs: Dict[str, SupportedNodeInputs]) -> Set[str]:
 
 
 def _validate_outputs(
-    dag_nodes: Dict[str, Node],
+    dag_nodes: Dict[str, SupportedNodes],
     dag_outputs: Dict[str, DAGOutput],
 ):
     for output_name, output in dag_outputs.items():
@@ -148,7 +148,7 @@ def _validate_nodes_are_not_empty(nodes: dict):
 
 
 def _validate_node_input_dependencies(
-    dag_nodes: Dict[str, Node],
+    dag_nodes: Dict[str, SupportedNodes],
     dag_inputs: Dict[str, SupportedInputs],
 ):
     for node_name, node in dag_nodes.items():
@@ -182,7 +182,7 @@ def _validate_input_from_param(
 def _validate_input_from_node_output(
     node_name: str,
     input_type: FromNodeOutput,
-    dag_nodes: Dict[str, Node],
+    dag_nodes: Dict[str, SupportedNodes],
 ):
     if input_type.node not in dag_nodes:
         raise ValueError(
@@ -196,14 +196,14 @@ def _validate_input_from_node_output(
         )
 
 
-def _validate_input_is_supported(input_name: str, input: SupportedInputs):
+def _validate_input_is_supported(input_name: str, input):
     if not _is_type_supported(input, SupportedInputs):
         raise ValueError(
             f"Input '{input_name}' is of type '{type(input).__name__}'. However, DAGs only support the following types of inputs: {[t.__name__ for t in get_type_args(SupportedInputs)]}"
         )
 
 
-def _is_type_supported(obj, union: Union):
+def _is_type_supported(obj, union):
     return any(
         [isinstance(obj, supported_type) for supported_type in get_type_args(union)]
     )

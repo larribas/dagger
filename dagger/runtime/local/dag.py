@@ -1,18 +1,49 @@
+"""Run a DAG in memory."""
 import itertools
 from typing import Dict, Optional
 
 from dagger.dag import DAG, validate_parameters
 from dagger.inputs import FromNodeOutput, FromParam
-from dagger.runtime.local.node import invoke as invoke_node
+from dagger.runtime.local.node import invoke_node
 from dagger.serializers import SerializationError
 
 
-def invoke(
+def invoke_dag(
     dag: DAG,
-    # TODO: Allow passing plain unserialized parameters, here and in the node.invoke function
     params: Optional[Dict[str, bytes]] = None,
 ) -> Dict[str, bytes]:
+    """
+    Invoke a DAG with a series of parameters.
 
+    Parameters
+    ----------
+    dag : DAG
+        DAG to execute
+
+    params : Dictionary of str -> bytes
+        Inputs to the DAG.
+        Serialized into their binary format.
+        Indexed by input/parameter name.
+
+
+    Returns
+    -------
+    Dictionary of str -> bytes
+        Serialized outputs of the DAG.
+        Indexed by output name.
+
+
+    Raises
+    ------
+    ValueError
+        When any required parameters are missing
+
+    TypeError
+        When any of the outputs cannot be obtained from the return value of their node
+
+    SerializationError
+        When some of the outputs cannot be serialized with the specified Serializer
+    """
     params = params or {}
     outputs: Dict[str, Dict[str, bytes]] = {}
 
@@ -34,7 +65,10 @@ def invoke(
                 )
 
         try:
-            outputs[node_name] = invoke_node(node, params=node_params)
+            if isinstance(node, DAG):
+                outputs[node_name] = invoke_dag(node, params=node_params)
+            else:
+                outputs[node_name] = invoke_node(node, params=node_params)
         except (ValueError, TypeError, SerializationError) as e:
             raise e.__class__(f"Error when invoking node '{node_name}'. {str(e)}")
 

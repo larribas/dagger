@@ -162,6 +162,36 @@ def test__init__with_a_cyclic_dependency():
         )
 
 
+def test__init__with_nested_dags():
+    DAG(
+        {
+            "outermost": DAG(
+                {
+                    "come-up-with-a-number": Node(
+                        lambda: 1, outputs=dict(x=outputs.FromReturnValue())
+                    ),
+                    "middle": DAG(
+                        {
+                            "innermost": Node(
+                                lambda x: x,
+                                inputs=dict(x=inputs.FromParam()),
+                                outputs=dict(y=outputs.FromReturnValue()),
+                            )
+                        },
+                        inputs=dict(
+                            x=inputs.FromNodeOutput("come-up-with-a-number", "x")
+                        ),
+                        outputs=dict(yy=DAGOutput("innermost", "y")),
+                    ),
+                },
+                outputs=dict(yyy=DAGOutput("middle", "yy")),
+            )
+        },
+        outputs=dict(yyyy=DAGOutput("outermost", "yyy")),
+    )
+    # Then, no validation exceptions are raised
+
+
 #
 # Node execution order
 #
