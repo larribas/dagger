@@ -6,28 +6,28 @@ import pytest
 import dagger.inputs as inputs
 import dagger.outputs as outputs
 from dagger import Node
-from dagger.runtime.cli.node import invoke
+from dagger.runtime.cli.node import invoke_node
 
 #
-# Invoke
+# invoke_node
 #
 
 
-def test__invoke__without_inputs_or_outputs():
+def test__invoke_node__without_inputs_or_outputs():
     invocations = []
     node = Node(lambda: invocations.append(1))
-    invoke(node)
+    invoke_node(node)
     assert invocations == [1]
 
 
-def test__invoke__with_missing_input_parameter():
+def test__invoke_node__with_missing_input_parameter():
     node = Node(
         lambda a: 1,
         inputs=dict(a=inputs.FromParam()),
     )
     with pytest.raises(ValueError) as e:
         with tempfile.NamedTemporaryFile() as f:
-            invoke(node, input_locations=dict(x=f.name))
+            invoke_node(node, input_locations=dict(x=f.name))
 
     assert (
         str(e.value)
@@ -35,14 +35,14 @@ def test__invoke__with_missing_input_parameter():
     )
 
 
-def test__invoke__with_missing_output_parameter():
+def test__invoke_node__with_missing_output_parameter():
     node = Node(
         lambda: 1,
         outputs=dict(a=outputs.FromReturnValue()),
     )
     with pytest.raises(ValueError) as e:
         with tempfile.NamedTemporaryFile() as f:
-            invoke(node, output_locations=dict(x=f.name))
+            invoke_node(node, output_locations=dict(x=f.name))
 
     assert (
         str(e.value)
@@ -50,7 +50,7 @@ def test__invoke__with_missing_output_parameter():
     )
 
 
-def test__invoke__with_multiple_inputs_and_outputs():
+def test__invoke_node__with_multiple_inputs_and_outputs():
     node = Node(
         lambda first_name, last_name: dict(
             message=f"Hello {first_name} {last_name}",
@@ -78,7 +78,7 @@ def test__invoke__with_multiple_inputs_and_outputs():
         with open(last_name_input, "wb") as f:
             f.write(b'"Doe"')
 
-        invoke(
+        invoke_node(
             node,
             input_locations=dict(
                 first_name=first_name_input,

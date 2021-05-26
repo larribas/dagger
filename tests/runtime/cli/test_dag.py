@@ -6,25 +6,25 @@ import dagger.inputs as inputs
 import dagger.outputs as outputs
 from dagger.dag import DAG, DAGOutput
 from dagger.node import Node
-from dagger.runtime.cli.dag import invoke
+from dagger.runtime.cli.dag import invoke_dag
 
 #
-# Invoke
+# invoke_dag
 #
 
 
-def test__invoke__with_no_inputs_or_outputs():
+def test__invoke_dag__with_no_inputs_or_outputs():
     invocations = []
     dag = DAG(
         {
             "single-node": Node(lambda: invocations.append(1)),
         }
     )
-    invoke(dag)
+    invoke_dag(dag)
     assert invocations == [1]
 
 
-def test__invoke__with_inputs_and_outputs():
+def test__invoke_dag__with_inputs_and_outputs():
     dag = DAG(
         nodes=dict(
             square=Node(
@@ -42,7 +42,7 @@ def test__invoke__with_inputs_and_outputs():
         x_input.seek(0)
 
         with tempfile.NamedTemporaryFile() as x_squared_output:
-            invoke(
+            invoke_dag(
                 dag,
                 input_locations=dict(x=x_input.name),
                 output_locations=dict(x_squared=x_squared_output.name),
@@ -50,7 +50,7 @@ def test__invoke__with_inputs_and_outputs():
             assert x_squared_output.read() == b"9"
 
 
-def test__invoke__with_missing_input_parameter():
+def test__invoke_dag__with_missing_input_parameter():
     dag = DAG(
         nodes=dict(one=Node(lambda: 1)),
         inputs=dict(a=inputs.FromParam()),
@@ -59,7 +59,7 @@ def test__invoke__with_missing_input_parameter():
         with tempfile.NamedTemporaryFile() as f:
             f.write(b"1")
             f.seek(0)
-            invoke(dag, input_locations=dict(x=f.name))
+            invoke_dag(dag, input_locations=dict(x=f.name))
 
     assert (
         str(e.value)
@@ -67,7 +67,7 @@ def test__invoke__with_missing_input_parameter():
     )
 
 
-def test__invoke__with_missing_output_parameter():
+def test__invoke_dag__with_missing_output_parameter():
     dag = DAG(
         nodes=dict(
             one=Node(
@@ -79,7 +79,7 @@ def test__invoke__with_missing_output_parameter():
     )
     with pytest.raises(ValueError) as e:
         with tempfile.NamedTemporaryFile() as f:
-            invoke(dag, output_locations=dict(x=f.name))
+            invoke_dag(dag, output_locations=dict(x=f.name))
 
     assert (
         str(e.value)
@@ -87,7 +87,7 @@ def test__invoke__with_missing_output_parameter():
     )
 
 
-def test__invoke__propagates_node_exceptions_extending_the_details():
+def test__invoke_dag__propagates_node_exceptions_extending_the_details():
     dag = DAG(
         nodes={
             "always-1": Node(
@@ -98,7 +98,7 @@ def test__invoke__propagates_node_exceptions_extending_the_details():
     )
     with pytest.raises(TypeError) as e:
         with tempfile.NamedTemporaryFile() as x_output:
-            invoke(dag, output_locations=dict(x=x_output.name))
+            invoke_dag(dag, output_locations=dict(x=x_output.name))
 
     assert (
         str(e.value)
