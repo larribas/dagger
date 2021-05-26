@@ -5,20 +5,6 @@ import dagger.outputs as outputs
 from dagger.node import Node, validate_name
 from dagger.serializers import DefaultSerializer
 
-
-class UnsupportedInput:
-    def __init__(self):
-        self.serializer = DefaultSerializer
-
-
-class UnsupportedOutput:
-    def __init__(self):
-        self.serializer = DefaultSerializer
-
-    def from_function_return_value(self, results):
-        return results
-
-
 #
 # Init
 #
@@ -35,6 +21,10 @@ def test__init__with_an_invalid_input_name():
 
 
 def test__init__with_an_unsupported_input():
+    class UnsupportedInput:
+        def __init__(self):
+            self.serializer = DefaultSerializer
+
     with pytest.raises(ValueError) as e:
         Node(
             lambda x: 1,
@@ -60,6 +50,13 @@ def test__init__with_an_invalid_output_name():
 
 
 def test__init__with_an_unsupported_output():
+    class UnsupportedOutput:
+        def __init__(self):
+            self.serializer = DefaultSerializer
+
+    def from_function_return_value(self, results):
+        return results
+
     with pytest.raises(ValueError) as e:
         Node(
             lambda: 1,

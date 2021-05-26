@@ -4,6 +4,7 @@ import dagger.inputs as inputs
 import dagger.outputs as outputs
 from dagger.dag import DAG, CyclicDependencyError, DAGOutput, validate_name
 from dagger.node import Node
+from dagger.serializers import DefaultSerializer
 
 #
 # Init
@@ -30,6 +31,28 @@ def test__init__with_an_invalid_input_name():
             nodes={"my-node": Node(lambda: 1)},
             inputs={"invalid name": inputs.FromParam()},
         )
+
+
+def test__init__with_invalid_input_type():
+    class UnsupportedInput:
+        def __init__(self):
+            self.serializer = DefaultSerializer
+
+    with pytest.raises(ValueError) as e:
+        DAG(
+            nodes=dict(
+                n=Node(
+                    lambda x: x,
+                    inputs=dict(x=inputs.FromParam()),
+                ),
+            ),
+            inputs=dict(x=UnsupportedInput()),
+        )
+
+    assert (
+        str(e.value)
+        == "Input 'x' is of type 'UnsupportedInput'. However, DAGs only support the following types of inputs: ['FromParam', 'FromNodeOutput']"
+    )
 
 
 def test__init__with_an_invalid_output_name():

@@ -55,14 +55,14 @@ def validate_name(name: str):
         )
 
 
-def validate_input_is_supported(input_name, input):
+def validate_input_is_supported(input_name: str, input: SupportedInputs):
     if not is_type_supported(input, SupportedInputs):
         raise ValueError(
             f"Input '{input_name}' is of type '{type(input).__name__}'. However, nodes only support the following types of inputs: {[t.__name__ for t in get_type_args(SupportedInputs)]}"
         )
 
 
-def validate_output_is_supported(output_name, output):
+def validate_output_is_supported(output_name: str, output: SupportedOutputs):
     if not is_type_supported(output, SupportedOutputs):
         raise ValueError(
             f"Output '{output_name}' is of type '{type(output).__name__}'. However, nodes only support the following types of outputs: {[t.__name__ for t in get_type_args(SupportedOutputs)]}"
