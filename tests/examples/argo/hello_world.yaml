@@ -9,8 +9,8 @@ spec:
     dag:
       tasks:
       - name: say-hello-world
-        template: node-say-hello-world
-  - name: node-say-hello-world
+        template: dag-say-hello-world
+  - name: dag-say-hello-world
     container:
       image: local.registry/dagger
       command: [hello-world]

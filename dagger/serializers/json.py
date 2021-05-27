@@ -1,3 +1,4 @@
+from json.decoder import JSONDecodeError
 from typing import Any, Optional
 
 from dagger.serializers.errors import DeserializationError, SerializationError
@@ -31,5 +32,7 @@ class JSON:
 
         try:
             return json.loads(serialized_value)
-        except TypeError as e:
-            raise DeserializationError(e)
+        except (TypeError, JSONDecodeError) as e:
+            raise DeserializationError(
+                f"We cannot deserialize value '{str(serialized_value)}' as JSON. {str(e)}"
+            )

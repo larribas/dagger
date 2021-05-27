@@ -18,61 +18,61 @@ spec:
           - from: '{{inputs.artifacts.number}}'
             name: number
         name: multiply-by-0
-        template: node-multiply-by-0
+        template: dag-multiply-by-0
       - arguments:
           artifacts:
           - from: '{{inputs.artifacts.number}}'
             name: number
         name: multiply-by-1
-        template: node-multiply-by-1
+        template: dag-multiply-by-1
       - arguments:
           artifacts:
           - from: '{{inputs.artifacts.number}}'
             name: number
         name: multiply-by-2
-        template: node-multiply-by-2
+        template: dag-multiply-by-2
       - arguments:
           artifacts:
           - from: '{{inputs.artifacts.number}}'
             name: number
         name: multiply-by-3
-        template: node-multiply-by-3
+        template: dag-multiply-by-3
       - arguments:
           artifacts:
           - from: '{{inputs.artifacts.number}}'
             name: number
         name: multiply-by-4
-        template: node-multiply-by-4
+        template: dag-multiply-by-4
       - arguments:
           artifacts:
           - from: '{{inputs.artifacts.number}}'
             name: number
         name: multiply-by-5
-        template: node-multiply-by-5
+        template: dag-multiply-by-5
       - arguments:
           artifacts:
           - from: '{{inputs.artifacts.number}}'
             name: number
         name: multiply-by-6
-        template: node-multiply-by-6
+        template: dag-multiply-by-6
       - arguments:
           artifacts:
           - from: '{{inputs.artifacts.number}}'
             name: number
         name: multiply-by-7
-        template: node-multiply-by-7
+        template: dag-multiply-by-7
       - arguments:
           artifacts:
           - from: '{{inputs.artifacts.number}}'
             name: number
         name: multiply-by-8
-        template: node-multiply-by-8
+        template: dag-multiply-by-8
       - arguments:
           artifacts:
           - from: '{{inputs.artifacts.number}}'
             name: number
         name: multiply-by-9
-        template: node-multiply-by-9
+        template: dag-multiply-by-9
       - arguments:
           artifacts:
           - from: '{{tasks.multiply-by-0.outputs.artifacts.multiplied-number}}'
@@ -107,7 +107,7 @@ spec:
         - multiply-by-8
         - multiply-by-9
         name: sum-results
-        template: node-sum-results
+        template: dag-sum-results
     inputs:
       artifacts:
       - name: number
@@ -136,7 +136,7 @@ spec:
       artifacts:
       - name: number
         path: /tmp/inputs/number.json
-    name: node-multiply-by-0
+    name: dag-multiply-by-0
     outputs:
       artifacts:
       - name: multiplied-number
@@ -164,7 +164,7 @@ spec:
       artifacts:
       - name: number
         path: /tmp/inputs/number.json
-    name: node-multiply-by-1
+    name: dag-multiply-by-1
     outputs:
       artifacts:
       - name: multiplied-number
@@ -192,7 +192,7 @@ spec:
       artifacts:
       - name: number
         path: /tmp/inputs/number.json
-    name: node-multiply-by-2
+    name: dag-multiply-by-2
     outputs:
       artifacts:
       - name: multiplied-number
@@ -220,7 +220,7 @@ spec:
       artifacts:
       - name: number
         path: /tmp/inputs/number.json
-    name: node-multiply-by-3
+    name: dag-multiply-by-3
     outputs:
       artifacts:
       - name: multiplied-number
@@ -248,7 +248,7 @@ spec:
       artifacts:
       - name: number
         path: /tmp/inputs/number.json
-    name: node-multiply-by-4
+    name: dag-multiply-by-4
     outputs:
       artifacts:
       - name: multiplied-number
@@ -276,7 +276,7 @@ spec:
       artifacts:
       - name: number
         path: /tmp/inputs/number.json
-    name: node-multiply-by-5
+    name: dag-multiply-by-5
     outputs:
       artifacts:
       - name: multiplied-number
@@ -304,7 +304,7 @@ spec:
       artifacts:
       - name: number
         path: /tmp/inputs/number.json
-    name: node-multiply-by-6
+    name: dag-multiply-by-6
     outputs:
       artifacts:
       - name: multiplied-number
@@ -332,7 +332,7 @@ spec:
       artifacts:
       - name: number
         path: /tmp/inputs/number.json
-    name: node-multiply-by-7
+    name: dag-multiply-by-7
     outputs:
       artifacts:
       - name: multiplied-number
@@ -360,7 +360,7 @@ spec:
       artifacts:
       - name: number
         path: /tmp/inputs/number.json
-    name: node-multiply-by-8
+    name: dag-multiply-by-8
     outputs:
       artifacts:
       - name: multiplied-number
@@ -388,7 +388,7 @@ spec:
       artifacts:
       - name: number
         path: /tmp/inputs/number.json
-    name: node-multiply-by-9
+    name: dag-multiply-by-9
     outputs:
       artifacts:
       - name: multiplied-number
@@ -461,7 +461,7 @@ spec:
         path: /tmp/inputs/results-from-8.json
       - name: results-from-9
         path: /tmp/inputs/results-from-9.json
-    name: node-sum-results
+    name: dag-sum-results
     outputs:
       artifacts:
       - name: sum
