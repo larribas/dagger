@@ -436,6 +436,9 @@ def _task_template_options(
     if options.retry_strategy:
         template["retryStrategy"] = _template_retry_strategy(options.retry_strategy)
 
+    if options.service_account:
+        template["serviceAccountName"] = options.service_account
+
     return template
 
 

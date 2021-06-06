@@ -258,6 +258,7 @@ def test__workflow_spec__with_task_options_with_specific_values():
                 factor=2,
             ),
         ),
+        service_account="specific-service-account-for-this-task",
     )
     dag = DAG(
         {
@@ -300,6 +301,7 @@ def test__workflow_spec__with_task_options_with_specific_values():
                         "maxDuration": "180s",
                     },
                 },
+                "serviceAccountName": "specific-service-account-for-this-task",
             },
         ],
     }
