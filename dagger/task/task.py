@@ -1,5 +1,5 @@
 """Define tasks in a workflow/pipeline."""
-from typing import Callable, List, Mapping, Union
+from typing import Any, Callable, FrozenSet, Iterable, List, Mapping, Union
 from typing import get_args as get_type_args
 
 from dagger.data_structures import FrozenMapping
@@ -28,6 +28,7 @@ class Task:
         func: Callable,
         inputs: Mapping[str, SupportedInputs] = None,
         outputs: Mapping[str, SupportedOutputs] = None,
+        runtime_options: Iterable[Any] = None,
     ):
         """
         Validate and initialize a Task.
@@ -44,6 +45,11 @@ class Task:
         outputs
             A mapping from output names to Task outputs.
             Outputs must be retrievable from the function's outputs.
+
+        runtime_options
+            A list of options to supply to all runtimes.
+            This allows you to take full advantage of the features of each runtime. For instance, you can use it to manipulate node affinities and tolerations in Kubernetes.
+            Check the documentation of each runtime to see potential options.
 
 
         Returns
@@ -82,6 +88,7 @@ class Task:
         self._inputs = inputs
         self._outputs = outputs
         self._func = func
+        self._runtime_options = frozenset(runtime_options or [])
 
     @property
     def func(self) -> Callable:
@@ -97,6 +104,11 @@ class Task:
     def outputs(self) -> Mapping[str, SupportedOutputs]:
         """Get the outputs the Task produces."""
         return self._outputs
+
+    @property
+    def runtime_options(self) -> FrozenSet[Any]:
+        """Get the specified runtime options."""
+        return self._runtime_options
 
 
 def _validate_input_is_supported(input_name, input):

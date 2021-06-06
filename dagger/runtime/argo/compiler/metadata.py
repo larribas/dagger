@@ -4,8 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping, Optional
 
 
-# TODO: Try to use a NamedTuple
-@dataclass
+@dataclass(frozen=True)
 class Metadata:
     """Metadata that may be provided for an Argo CRD."""
 

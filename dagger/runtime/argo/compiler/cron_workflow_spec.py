@@ -17,8 +17,7 @@ class CronConcurrencyPolicy(Enum):
     REPLACE = "Replace"
 
 
-# TODO: Change to a NamedTuple
-@dataclass
+@dataclass(frozen=True)
 class Cron:
     """
     Scheduling options for the cron job.

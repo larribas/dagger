@@ -5,7 +5,8 @@ from typing import Any, Dict, List, Mapping, Optional
 
 from dagger.dag import DAG, Node, validate_parameters
 from dagger.input import FromNodeOutput, FromParam
-from dagger.runtime.argo.errors import IncompatibilityError
+from dagger.runtime.argo.compiler.errors import IncompatibilityError
+from dagger.runtime.argo.options import ArgoTaskOptions
 from dagger.task import SupportedInputs as SupportedTaskInputs
 from dagger.task import Task
 
@@ -303,14 +304,16 @@ def _task_template(
         "name": _template_name(address),
         "container": {
             "image": container_image,
-            # We create a copy of the entrypoint to prevent the YAML library
-            # from using anchors and aliases and make the resulting YAML more
-            # explicit. It also allows any other postprocessor to change some
-            # of the entrypoints without affecting the rest
-            "command": container_command[:],
             "args": _task_template_container_arguments(task=task, address=address),
         },
     }
+
+    if container_command:
+        # We create a copy of the entrypoint to prevent the YAML library
+        # from using anchors and aliases and make the resulting YAML more
+        # explicit. It also allows any other postprocessor to change some
+        # of the entrypoints without affecting the rest
+        template["container"]["command"] = container_command[:]
 
     if task.inputs:
         template["inputs"] = _task_template_inputs(task)
@@ -322,7 +325,10 @@ def _task_template(
             {"name": "outputs", "mountPath": OUTPUT_PATH}
         ]
 
-    return template
+    return {
+        **_task_template_options(task, address),
+        **template,
+    }
 
 
 def _task_template_inputs(task: Task) -> Mapping[str, Any]:
@@ -397,6 +403,37 @@ def _task_template_container_arguments(
             ]
         )
     )
+
+
+def _task_template_options(
+    task: Task,
+    address: List[str],
+) -> Mapping[str, Any]:
+    """
+    Return a minimal map of options to a template, if they are defined through the task's runtime options.
+
+    https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#template
+    """
+    node_name = ".".join(address)
+    task_options = [
+        option for option in task.runtime_options if isinstance(option, ArgoTaskOptions)
+    ]
+
+    if len(task_options) > 1:
+        raise ValueError(
+            f"You have specified two different instances of ArgoTaskOptions in task '{node_name}'. This behavior may be ambiguous and not what you intended. Therefore, we prefer raising an exception here. If you really want to specify multiple sets of options (say, because you have generic and specific options and you want to keep your code DRY), we recommend you use Python functions."
+        )
+
+    options = task_options[0] if task_options else ArgoTaskOptions()
+    template: dict = {}
+
+    if options.timeout_seconds:
+        template["timeout"] = f"{options.timeout_seconds}s"
+
+    if options.active_deadline_seconds:
+        template["activeDeadlineSeconds"] = options.active_deadline_seconds
+
+    return template
 
 
 def _template_name(address: List[str]) -> str:

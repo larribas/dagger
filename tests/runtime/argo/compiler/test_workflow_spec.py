@@ -3,11 +3,12 @@ import pytest
 import dagger.input as input
 import dagger.output as output
 from dagger.dag import DAG, DAGOutput
-from dagger.runtime.argo.errors import IncompatibilityError
-from dagger.runtime.argo.workflow_spec import (
+from dagger.runtime.argo.compiler.errors import IncompatibilityError
+from dagger.runtime.argo.compiler.workflow_spec import (
     _dag_task_argument_artifact_from,
     workflow_spec,
 )
+from dagger.runtime.argo.options import ArgoTaskOptions
 from dagger.task import Task
 
 
@@ -176,6 +177,107 @@ def test__workflow_spec__setting_service_account():
         )["serviceAccountName"]
         == service_account
     )
+
+
+def test__workflow_spec__with_more_than_one_task_option__fails():
+    dag = DAG(
+        {
+            "n": Task(
+                lambda: 1,
+                runtime_options=[
+                    ArgoTaskOptions(),
+                    ArgoTaskOptions(timeout_seconds=11),
+                ],
+            )
+        }
+    )
+
+    with pytest.raises(ValueError) as e:
+        workflow_spec(dag, container_image="my-image")
+
+    assert (
+        str(e.value)
+        == "You have specified two different instances of ArgoTaskOptions in task 'n'. This behavior may be ambiguous and not what you intended. Therefore, we prefer raising an exception here. If you really want to specify multiple sets of options (say, because you have generic and specific options and you want to keep your code DRY), we recommend you use Python functions."
+    )
+
+
+def test__workflow_spec__with_task_options_with_default_values():
+    container_image = "my-image"
+    options = ArgoTaskOptions()
+    dag = DAG(
+        {
+            "n": Task(
+                lambda: 1,
+                runtime_options=[options],
+            )
+        }
+    )
+
+    assert workflow_spec(dag, container_image=container_image) == {
+        "entrypoint": "dag",
+        "templates": [
+            {
+                "name": "dag",
+                "dag": {
+                    "tasks": [
+                        {
+                            "name": "n",
+                            "template": "dag-n",
+                        },
+                    ],
+                },
+            },
+            {
+                "name": "dag-n",
+                "container": {
+                    "image": container_image,
+                    "args": ["--node-name", "n"],
+                },
+            },
+        ],
+    }
+
+
+def test__workflow_spec__with_task_options_with_specific_values():
+    container_image = "my-image"
+    options = ArgoTaskOptions(
+        timeout_seconds=2 * 60,
+        active_deadline_seconds=40,
+    )
+    dag = DAG(
+        {
+            "n": Task(
+                lambda: 1,
+                runtime_options=[options],
+            )
+        }
+    )
+
+    assert workflow_spec(dag, container_image=container_image) == {
+        "entrypoint": "dag",
+        "templates": [
+            {
+                "name": "dag",
+                "dag": {
+                    "tasks": [
+                        {
+                            "name": "n",
+                            "template": "dag-n",
+                        },
+                    ],
+                },
+            },
+            {
+                "name": "dag-n",
+                "container": {
+                    "image": container_image,
+                    "args": ["--node-name", "n"],
+                },
+                "timeout": "120s",
+                "activeDeadlineSeconds": 40,
+            },
+        ],
+    }
 
 
 def test__dag_task_argument_artifact_from__with_incompatible_input():
