@@ -259,6 +259,13 @@ def test__workflow_spec__with_task_options_with_specific_values():
             ),
         ),
         service_account="specific-service-account-for-this-task",
+        parallelism=5,
+        priority=3,
+        resource_requests={
+            "cpu": "500m",
+            "ephemeral-storage": "40Gi",
+        },
+        resource_limits={"memory": "8Gi"},
     )
     dag = DAG(
         {
@@ -288,6 +295,15 @@ def test__workflow_spec__with_task_options_with_specific_values():
                 "container": {
                     "image": container_image,
                     "args": ["--node-name", "n"],
+                    "resources": {
+                        "requests": {
+                            "cpu": "500m",
+                            "ephemeral-storage": "40Gi",
+                        },
+                        "limits": {
+                            "memory": "8Gi",
+                        },
+                    },
                 },
                 "timeout": "120s",
                 "activeDeadlineSeconds": 40,
@@ -302,6 +318,8 @@ def test__workflow_spec__with_task_options_with_specific_values():
                     },
                 },
                 "serviceAccountName": "specific-service-account-for-this-task",
+                "parallelism": 5,
+                "priority": 3,
             },
         ],
     }

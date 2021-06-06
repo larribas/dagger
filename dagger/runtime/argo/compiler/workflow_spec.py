@@ -300,11 +300,23 @@ def _task_template(
 
     https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#template
     """
+    task_options = [
+        option for option in task.runtime_options if isinstance(option, ArgoTaskOptions)
+    ]
+    if len(task_options) > 1:
+        node_name = ".".join(address)
+        raise ValueError(
+            f"You have specified two different instances of ArgoTaskOptions in task '{node_name}'. This behavior may be ambiguous and not what you intended. Therefore, we prefer raising an exception here. If you really want to specify multiple sets of options (say, because you have generic and specific options and you want to keep your code DRY), we recommend you use Python functions."
+        )
+
+    options = task_options[0] if task_options else ArgoTaskOptions()
+
     template: dict = {
         "name": _template_name(address),
         "container": {
             "image": container_image,
             "args": _task_template_container_arguments(task=task, address=address),
+            **_task_template_container_options(options),
         },
     }
 
@@ -326,7 +338,7 @@ def _task_template(
         ]
 
     return {
-        **_task_template_options(task, address),
+        **_task_template_options(options),
         **template,
     }
 
@@ -405,26 +417,12 @@ def _task_template_container_arguments(
     )
 
 
-def _task_template_options(
-    task: Task,
-    address: List[str],
-) -> Mapping[str, Any]:
+def _task_template_options(options: ArgoTaskOptions) -> Mapping[str, Any]:
     """
-    Return a minimal map of options to a template, if they are defined through the task's runtime options.
+    Return a minimal map of options for a template.
 
     https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#template
     """
-    node_name = ".".join(address)
-    task_options = [
-        option for option in task.runtime_options if isinstance(option, ArgoTaskOptions)
-    ]
-
-    if len(task_options) > 1:
-        raise ValueError(
-            f"You have specified two different instances of ArgoTaskOptions in task '{node_name}'. This behavior may be ambiguous and not what you intended. Therefore, we prefer raising an exception here. If you really want to specify multiple sets of options (say, because you have generic and specific options and you want to keep your code DRY), we recommend you use Python functions."
-        )
-
-    options = task_options[0] if task_options else ArgoTaskOptions()
     template: dict = {}
 
     if options.timeout_seconds:
@@ -446,6 +444,26 @@ def _task_template_options(
         template["priority"] = options.priority
 
     return template
+
+
+def _task_template_container_options(options: ArgoTaskOptions) -> Mapping[str, Any]:
+    """
+    Return a minimal map of options for a template's container.
+
+    https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#container
+    """
+    container: dict = {}
+
+    if options.resource_requests or options.resource_limits:
+        container["resources"] = {}
+
+    if options.resource_requests:
+        container["resources"]["requests"] = options.resource_requests
+
+    if options.resource_limits:
+        container["resources"]["limits"] = options.resource_limits
+
+    return container
 
 
 def _template_retry_strategy(strategy: RetryStrategy) -> Mapping[str, Any]:

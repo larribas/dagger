@@ -127,10 +127,3 @@ def test__runtime_options__returns_specified_options():
     options = {"some", "arbitrary", "options"}
     task = Task(lambda: 1, runtime_options=options)
     assert task.runtime_options == options
-
-
-def test__runtime_options__cannot_be_mutated():
-    task = Task(lambda: 1)
-
-    with pytest.raises(AttributeError):
-        task.runtime_options.append("extra-option")

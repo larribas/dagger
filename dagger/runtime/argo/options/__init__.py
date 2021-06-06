@@ -9,9 +9,9 @@ Task(..., runtime_options=[ArgoTaskOptions(...)])
 DAG(..., runtime_options=[ArgoDAGOptions(...)])
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
+from typing import Mapping, Optional
 
 
 class RetryPolicy(Enum):
@@ -68,6 +68,8 @@ class ArgoTaskOptions:
     service_account: Optional[str] = None
     parallelism: Optional[int] = None
     priority: Optional[int] = None
+    resource_requests: Mapping[str, str] = field(default_factory=dict)
+    resource_limits: Mapping[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
