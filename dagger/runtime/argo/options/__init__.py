@@ -66,6 +66,8 @@ class ArgoTaskOptions:
     active_deadline_seconds: Optional[int] = None
     retry_strategy: Optional[RetryStrategy] = None
     service_account: Optional[str] = None
+    parallelism: Optional[int] = None
+    priority: Optional[int] = None
 
 
 @dataclass(frozen=True)

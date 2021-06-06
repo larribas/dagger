@@ -439,6 +439,12 @@ def _task_template_options(
     if options.service_account:
         template["serviceAccountName"] = options.service_account
 
+    if options.parallelism:
+        template["parallelism"] = options.parallelism
+
+    if options.priority:
+        template["priority"] = options.priority
+
     return template
 
 
