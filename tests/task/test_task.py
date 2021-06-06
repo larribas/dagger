@@ -5,10 +5,6 @@ import dagger.output as output
 from dagger.serializer import DefaultSerializer
 from dagger.task import Task
 
-#
-# Init
-#
-
 
 def test__init__with_an_invalid_input_name():
     with pytest.raises(ValueError):
@@ -86,4 +82,28 @@ def test__init__with_input_and_signature_mismatch():
     assert (
         str(e.value)
         == "This node was declared with the following inputs: ['a']. However, the node's function has the following signature: (a, b). The inputs could not be bound to the parameters because: missing a required argument: 'b'"
+    )
+
+
+def test__inputs__cannot_be_mutated():
+    task = Task(lambda x: x, inputs=dict(x=input.FromParam()))
+
+    with pytest.raises(TypeError) as e:
+        task.inputs["y"] = input.FromParam()
+
+    assert (
+        str(e.value)
+        == "You may not mutate the inputs of a task. We do this to guarantee that, once initialized, the structures you build with dagger remain valid and consistent."
+    )
+
+
+def test__outputs__cannot_be_mutated():
+    task = Task(lambda: 1, outputs=dict(x=output.FromReturnValue()))
+
+    with pytest.raises(TypeError) as e:
+        task.outputs["x"] = output.FromKey("k")
+
+    assert (
+        str(e.value)
+        == "You may not mutate the outputs of a task. We do this to guarantee that, once initialized, the structures you build with dagger remain valid and consistent."
     )

@@ -1,11 +1,12 @@
 """Read-only Mapping."""
+from collections.abc import Mapping as MappingABC
 from typing import Generic, Iterator, Mapping, TypeVar
 
 K = TypeVar("K")
 V = TypeVar("V")
 
 
-class FrozenMapping(Generic[K, V]):
+class FrozenMapping(Generic[K, V], MappingABC):
     """Implementation of a read-only Mapping."""
 
     def __init__(

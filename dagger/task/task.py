@@ -2,6 +2,7 @@
 from typing import Callable, List, Mapping, Union
 from typing import get_args as get_type_args
 
+from dagger.data_structures import FrozenMapping
 from dagger.input import FromNodeOutput, FromParam
 from dagger.input import validate_name as validate_input_name
 from dagger.output import FromKey, FromProperty, FromReturnValue
@@ -59,18 +60,24 @@ class Task:
         ValueError
             If the names of the inputs/outputs have unsupported characters.
         """
-        inputs = inputs or {}
-        outputs = outputs or {}
+        inputs = FrozenMapping(
+            inputs or {},
+            error_message="You may not mutate the inputs of a task. We do this to guarantee that, once initialized, the structures you build with dagger remain valid and consistent.",
+        )
+        outputs = FrozenMapping(
+            outputs or {},
+            error_message="You may not mutate the outputs of a task. We do this to guarantee that, once initialized, the structures you build with dagger remain valid and consistent.",
+        )
 
-        for input_name, input in inputs.items():
+        for input_name in inputs:
             validate_input_name(input_name)
-            _validate_input_is_supported(input_name, input)
+            _validate_input_is_supported(input_name, inputs[input_name])
 
-        for output_name, output in outputs.items():
+        for output_name in outputs:
             validate_output_name(output_name)
-            _validate_output_is_supported(output_name, output)
+            _validate_output_is_supported(output_name, outputs[output_name])
 
-        _validate_callable_inputs_match_defined_inputs(func, list(inputs.keys()))
+        _validate_callable_inputs_match_defined_inputs(func, list(inputs))
 
         self._inputs = inputs
         self._outputs = outputs

@@ -144,7 +144,7 @@ def _nested(
             f"{current_namespace}.{next_node}" if nested_levels_so_far else next_node
         )
         raise ValueError(
-            f"You selected node '{human_readable_node_address}'. However, {human_readable_dag_address} does not contain any node with such a name. These are the names the DAG contains: {list(dag.nodes.keys())}"
+            f"You selected node '{human_readable_node_address}'. However, {human_readable_dag_address} does not contain any node with such a name. These are the names the DAG contains: {list(dag.nodes)}"
         )
 
     return _nested(

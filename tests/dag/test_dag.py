@@ -255,3 +255,55 @@ def test__node_execution_order__is_based_on_dependencies():
         ),
     )
     assert dag.node_execution_order == [{"first"}, {"second"}, {"third"}]
+
+
+#
+# Properties
+#
+
+
+def test__inputs__cannot_be_mutated():
+    dag = DAG(
+        {"my-node": Task(lambda: 1)},
+        inputs=dict(x=input.FromParam()),
+    )
+
+    with pytest.raises(TypeError) as e:
+        dag.inputs["y"] = input.FromParam()
+
+    assert (
+        str(e.value)
+        == "You may not mutate the inputs of a DAG after it has been initialized. We do this to guarantee the structures you build with dagger remain valid and consistent."
+    )
+
+
+def test__outputs__cannot_be_mutated():
+    dag = DAG(
+        {
+            "my-node": Task(
+                lambda: 1,
+                outputs=dict(x=output.FromReturnValue()),
+            )
+        },
+        outputs=dict(x=DAGOutput("my-node", "x")),
+    )
+
+    with pytest.raises(TypeError) as e:
+        dag.outputs["x"] = DAGOutput("my-node", "y")
+
+    assert (
+        str(e.value)
+        == "You may not mutate the outputs of a DAG after it has been initialized. We do this to guarantee the structures you build with dagger remain valid and consistent."
+    )
+
+
+def test__nodes__cannot_be_mutated():
+    dag = DAG({"my-node": Task(lambda: 1)})
+
+    with pytest.raises(TypeError) as e:
+        del dag.nodes["my-node"]
+
+    assert (
+        str(e.value)
+        == "You may not mutate the nodes of a DAG after it has been initialized. We do this to guarantee the structures you build with dagger remain valid and consistent."
+    )

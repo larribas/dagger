@@ -62,9 +62,9 @@ def _deserialize_inputs(
 ):
 
     deserialized_inputs = {}
-    for input_name, input_type in inputs.items():
+    for input_name in inputs:
         try:
-            deserialized_inputs[input_name] = input_type.serializer.deserialize(
+            deserialized_inputs[input_name] = inputs[input_name].serializer.deserialize(
                 params[input_name]
             )
         except KeyError:
@@ -81,7 +81,8 @@ def _serialize_outputs(
 ) -> Mapping[str, bytes]:
 
     serialized_outputs = {}
-    for output_name, output_type in outputs.items():
+    for output_name in outputs:
+        output_type = outputs[output_name]
         try:
             output = output_type.from_function_return_value(return_value)
             serialized_outputs[output_name] = output_type.serializer.serialize(output)

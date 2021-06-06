@@ -73,8 +73,8 @@ def workflow_spec(
 def _workflow_spec_arguments(params: Mapping[str, bytes]) -> Mapping[str, Any]:
     return {
         "artifacts": [
-            {"name": param_name, "raw": {"data": param_value}}
-            for param_name, param_value in params.items()
+            {"name": param_name, "raw": {"data": params[param_name]}}
+            for param_name in params
         ],
     }
 
@@ -139,12 +139,12 @@ def _templates(
                 ],
                 *[
                     _templates(
-                        node=node,
+                        node=dag.nodes[node_name],
                         address=address + [node_name],
                         container_image=container_image,
                         container_command=container_command,
                     )
-                    for node_name, node in dag.nodes.items()
+                    for node_name in dag.nodes
                 ],
             )
         )
@@ -174,17 +174,17 @@ def _dag_template(
         "dag": {
             "tasks": [
                 _dag_task(
-                    node=node,
+                    node=dag.nodes[node_name],
                     node_address=address + [node_name],
                 )
-                for node_name, node in dag.nodes.items()
+                for node_name in dag.nodes
             ]
         },
     }
 
     if dag.inputs:
         template["inputs"] = {
-            "artifacts": [{"name": input_name} for input_name in dag.inputs.keys()]
+            "artifacts": [{"name": input_name} for input_name in dag.inputs]
         }
 
     if dag.outputs:
@@ -193,10 +193,10 @@ def _dag_template(
                 {
                     "name": output_name,
                     "from": "{{"
-                    + f"tasks.{output.node}.outputs.artifacts.{output.output}"
+                    + f"tasks.{dag.outputs[output_name].node}.outputs.artifacts.{dag.outputs[output_name].output}"
                     + "}}",
                 }
-                for output_name, output in dag.outputs.items()
+                for output_name in dag.outputs
             ]
         }
 
@@ -237,9 +237,9 @@ def _dag_task_dependencies(node: Node) -> List[str]:
     Dependencies are based on the inputs of the node. If one of the node's inputs depends on the output of another node N, we add N to the list of dependencies.
     """
     return [
-        input.node
-        for input in node.inputs.values()
-        if isinstance(input, FromNodeOutput)
+        input_from_node_output.node
+        for input_from_node_output in node.inputs.values()
+        if isinstance(input_from_node_output, FromNodeOutput)
     ]
 
 
@@ -259,10 +259,10 @@ def _dag_task_arguments(
                 "from": _dag_task_argument_artifact_from(
                     node_address=node_address,
                     input_name=input_name,
-                    input=input,
+                    input=node.inputs[input_name],
                 ),
             }
-            for input_name, input in node.inputs.items()
+            for input_name in node.inputs
         ]
     }
 
@@ -336,10 +336,11 @@ def _task_template_inputs(task: Task) -> Mapping[str, Any]:
             {
                 "name": input_name,
                 "path": os.path.join(
-                    INPUT_PATH, f"{input_name}.{input.serializer.extension}"
+                    INPUT_PATH,
+                    f"{input_name}.{task.inputs[input_name].serializer.extension}",
                 ),
             }
-            for input_name, input in task.inputs.items()
+            for input_name in task.inputs
         ]
     }
 
@@ -355,10 +356,11 @@ def _task_template_outputs(task: Task) -> Mapping[str, Any]:
             {
                 "name": output_name,
                 "path": os.path.join(
-                    OUTPUT_PATH, f"{output_name}.{output.serializer.extension}"
+                    OUTPUT_PATH,
+                    f"{output_name}.{task.outputs[output_name].serializer.extension}",
                 ),
             }
-            for output_name, output in task.outputs.items()
+            for output_name in task.outputs
         ]
     }
 
@@ -382,7 +384,7 @@ def _task_template_container_arguments(
                         input_name,
                         "{{" + f"inputs.artifacts.{input_name}.path" + "}}",
                     ]
-                    for input_name in task.inputs.keys()
+                    for input_name in task.inputs
                 ],
                 *[
                     [
@@ -390,7 +392,7 @@ def _task_template_container_arguments(
                         output_name,
                         "{{" + f"outputs.artifacts.{output_name}.path" + "}}",
                     ]
-                    for output_name in task.outputs.keys()
+                    for output_name in task.outputs
                 ],
             ]
         )

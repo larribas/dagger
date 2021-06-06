@@ -1,6 +1,6 @@
 """Run a DAG in memory."""
 import itertools
-from typing import Dict, Optional
+from typing import Dict, Mapping, Optional
 
 from dagger.dag import DAG, validate_parameters
 from dagger.input import FromNodeOutput, FromParam
@@ -10,8 +10,8 @@ from dagger.serializer import SerializationError
 
 def invoke_dag(
     dag: DAG,
-    params: Optional[Dict[str, bytes]] = None,
-) -> Dict[str, bytes]:
+    params: Optional[Mapping[str, bytes]] = None,
+) -> Mapping[str, bytes]:
     """
     Invoke a DAG with a series of parameters.
 
@@ -43,7 +43,7 @@ def invoke_dag(
         When some of the outputs cannot be serialized with the specified Serializer
     """
     params = params or {}
-    outputs: Dict[str, Dict[str, bytes]] = {}
+    outputs: Dict[str, Mapping[str, bytes]] = {}
 
     validate_parameters(dag.inputs, params)
 
@@ -52,14 +52,15 @@ def invoke_dag(
     for task_name in sequential_task_order:
         task = dag.nodes[task_name]
         task_params: Dict[str, bytes] = {}
-        for input_name, input_type in task.inputs.items():
-            if isinstance(input_type, FromParam):
+        for input_name in task.inputs:
+            task_input = task.inputs[input_name]
+            if isinstance(task_input, FromParam):
                 task_params[input_name] = params[input_name]
-            elif isinstance(input_type, FromNodeOutput):
-                task_params[input_name] = outputs[input_type.node][input_type.output]
+            elif isinstance(task_input, FromNodeOutput):
+                task_params[input_name] = outputs[task_input.node][task_input.output]
             else:
                 raise TypeError(
-                    f"Input type '{type(input_type)}' is not supported by the local runtime. The use of unsupported inputs should have been validated by the DAG object. This may be a bug in the library. Please open an issue in our GitHub repository."
+                    f"Input type '{type(task_input)}' is not supported by the local runtime. The use of unsupported inputs should have been validated by the DAG object. This may be a bug in the library. Please open an issue in our GitHub repository."
                 )
 
         try:
@@ -71,7 +72,8 @@ def invoke_dag(
             raise e.__class__(f"Error when invoking task '{task_name}'. {str(e)}")
 
     dag_outputs = {}
-    for output_name, output in dag.outputs.items():
-        dag_outputs[output_name] = outputs[output.node][output.output]
+    for output_name in dag.outputs:
+        output_type = dag.outputs[output_name]
+        dag_outputs[output_name] = outputs[output_type.node][output_type.output]
 
     return dag_outputs

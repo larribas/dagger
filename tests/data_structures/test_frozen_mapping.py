@@ -36,3 +36,9 @@ def test__can_be_used_as_a_mapping():
     assert "a" in frozen_dict
     assert frozen_dict["a"] == 1
     assert list(frozen_dict) == ["a", "b"]
+    assert frozen_dict.get("a") == 1
+    assert frozen_dict.get("x", 3) == 3
+    assert list(frozen_dict.keys()) == ["a", "b"]
+    assert list(frozen_dict.values()) == [1, 2]
+    assert list(frozen_dict.items()) == [("a", 1), ("b", 2)]
+    assert frozen_dict == {"a": 1, "b": 2}
