@@ -10,7 +10,48 @@ DAG(..., runtime_options=[ArgoDAGOptions(...)])
 """
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import Optional
+
+
+class RetryPolicy(Enum):
+    """
+    Retry policy for a task.
+
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#retrystrategy
+    """
+
+    ALWAYS = "Always"
+    ON_FAILURE = "OnFailure"
+    ON_ERROR = "OnError"
+    ON_TRANSIENT_ERROR = "OnTransientError"
+
+
+@dataclass(frozen=True)
+class RetryBackoff:
+    """
+    Retry strategy backoff policy.
+
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#backoff
+    """
+
+    duration_seconds: int
+    max_duration_seconds: int
+    factor: int
+
+
+@dataclass(frozen=True)
+class RetryStrategy:
+    """
+    Retry strategy.
+
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#retrystrategy
+    """
+
+    limit: Optional[int] = None
+    policy: RetryPolicy = RetryPolicy.ON_FAILURE
+    node_anti_affinity: bool = False
+    backoff: Optional[RetryBackoff] = None
 
 
 @dataclass(frozen=True)
@@ -23,6 +64,7 @@ class ArgoTaskOptions:
 
     timeout_seconds: Optional[int] = None
     active_deadline_seconds: Optional[int] = None
+    retry_strategy: Optional[RetryStrategy] = None
 
 
 @dataclass(frozen=True)

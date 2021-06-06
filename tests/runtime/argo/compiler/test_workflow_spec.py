@@ -8,7 +8,12 @@ from dagger.runtime.argo.compiler.workflow_spec import (
     _dag_task_argument_artifact_from,
     workflow_spec,
 )
-from dagger.runtime.argo.options import ArgoTaskOptions
+from dagger.runtime.argo.options import (
+    ArgoTaskOptions,
+    RetryBackoff,
+    RetryPolicy,
+    RetryStrategy,
+)
 from dagger.task import Task
 
 
@@ -243,6 +248,16 @@ def test__workflow_spec__with_task_options_with_specific_values():
     options = ArgoTaskOptions(
         timeout_seconds=2 * 60,
         active_deadline_seconds=40,
+        retry_strategy=RetryStrategy(
+            limit=11,
+            policy=RetryPolicy.ON_TRANSIENT_ERROR,
+            node_anti_affinity=True,
+            backoff=RetryBackoff(
+                duration_seconds=30,
+                max_duration_seconds=3 * 60,
+                factor=2,
+            ),
+        ),
     )
     dag = DAG(
         {
@@ -275,6 +290,16 @@ def test__workflow_spec__with_task_options_with_specific_values():
                 },
                 "timeout": "120s",
                 "activeDeadlineSeconds": 40,
+                "retryStrategy": {
+                    "limit": 11,
+                    "retryPolicy": "OnTransientError",
+                    "affinity": {"nodeAntiAffinity": {}},
+                    "backoff": {
+                        "duration": "30s",
+                        "factor": 2,
+                        "maxDuration": "180s",
+                    },
+                },
             },
         ],
     }

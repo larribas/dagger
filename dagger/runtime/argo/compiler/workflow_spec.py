@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Mapping, Optional
 from dagger.dag import DAG, Node, validate_parameters
 from dagger.input import FromNodeOutput, FromParam
 from dagger.runtime.argo.compiler.errors import IncompatibilityError
-from dagger.runtime.argo.options import ArgoTaskOptions
+from dagger.runtime.argo.options import ArgoTaskOptions, RetryStrategy
 from dagger.task import SupportedInputs as SupportedTaskInputs
 from dagger.task import Task
 
@@ -433,7 +433,33 @@ def _task_template_options(
     if options.active_deadline_seconds:
         template["activeDeadlineSeconds"] = options.active_deadline_seconds
 
+    if options.retry_strategy:
+        template["retryStrategy"] = _template_retry_strategy(options.retry_strategy)
+
     return template
+
+
+def _template_retry_strategy(strategy: RetryStrategy) -> Mapping[str, Any]:
+    result: dict = {}
+    default = RetryStrategy()
+
+    if strategy.limit:
+        result["limit"] = strategy.limit
+
+    if strategy.policy != default.policy:
+        result["retryPolicy"] = strategy.policy.value
+
+    if strategy.node_anti_affinity != default.node_anti_affinity:
+        result["affinity"] = {"nodeAntiAffinity": {}}
+
+    if strategy.backoff:
+        result["backoff"] = {
+            "duration": f"{strategy.backoff.duration_seconds}s",
+            "maxDuration": f"{strategy.backoff.max_duration_seconds}s",
+            "factor": strategy.backoff.factor,
+        }
+
+    return result
 
 
 def _template_name(address: List[str]) -> str:
