@@ -1,5 +1,4 @@
 from dagger.dag import DAG
-from dagger.node import Node
 from dagger.runtime.argo import (
     Cron,
     CronConcurrencyPolicy,
@@ -7,10 +6,11 @@ from dagger.runtime.argo import (
     cron_workflow_manifest,
     workflow_manifest,
 )
+from dagger.task import Task
 
 
 def test__workflow_manifest():
-    dag = DAG(nodes=dict(single=Node(lambda: 1)))
+    dag = DAG(nodes=dict(single=Task(lambda: 1)))
     manifest = workflow_manifest(
         dag,
         metadata=Metadata(name="my-workflow"),
@@ -26,7 +26,7 @@ def test__workflow_manifest():
 
 
 def test__cron_workflow_manifest():
-    dag = DAG(nodes=dict(single=Node(lambda: 1)))
+    dag = DAG(nodes=dict(single=Task(lambda: 1)))
     manifest = cron_workflow_manifest(
         dag,
         metadata=Metadata(

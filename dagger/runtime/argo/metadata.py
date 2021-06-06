@@ -1,23 +1,29 @@
+"""Metadata for Argo CRDs."""
+
 from dataclasses import dataclass, field
-from typing import Dict, Optional
+from typing import Any, Dict, Mapping, Optional
 
 
+# TODO: Try to use a NamedTuple
 @dataclass
 class Metadata:
+    """Metadata that may be provided for an Argo CRD."""
+
     name: str
     generate_name_from_prefix: bool = False
     namespace: Optional[str] = None
-    annotations: Dict[str, str] = field(default_factory=dict)
-    labels: Dict[str, str] = field(default_factory=dict)
+    annotations: Mapping[str, str] = field(default_factory=dict)
+    labels: Mapping[str, str] = field(default_factory=dict)
     # TODO: Validate names and namespaces upon initialization
 
 
-def object_meta(metadata: Metadata) -> dict:
+def object_meta(metadata: Metadata) -> Mapping[str, Any]:
     """
-    Returns a minimal representation of an ObjectMeta with the supplied information
-    https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#objectmeta
+    Return a minimal representation of an ObjectMeta with the supplied information.
+
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#objectmeta
     """
-    meta: dict = {}
+    meta: Dict[str, Any] = {}
 
     if metadata.generate_name_from_prefix:
         meta["generateName"] = metadata.name

@@ -1,7 +1,7 @@
 from typing import Dict
 
-from dagger.examples.passing_parameters import dag
-from tests.examples.utils import validate_example
+from examples.passing_parameters import dag
+from tests.examples.verification import verify_dag_works_with_all_runtimes
 
 
 def validate_results(results: Dict[str, bytes]):
@@ -9,12 +9,11 @@ def validate_results(results: Dict[str, bytes]):
 
 
 def test():
-    validate_example(
+    verify_dag_works_with_all_runtimes(
         dag,
         params={
             "number": b"5",
         },
         validate_results=validate_results,
         argo_workflow_yaml_filename="passing_parameters.yaml",
-        container_entrypoint=["passing-parameters"],
     )

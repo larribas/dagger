@@ -27,7 +27,12 @@ build-backend = "poetry.core.masonry.api"
 profile = "black"
 multi_line_output = 3
 
+[tool.pydocstyle]
+inherit = false
+convention = "numpy"
+
 [tool.poetry.scripts]
-hello-world = "dagger.examples.hello_world:run_from_cli"
-passing-parameters = "dagger.examples.passing_parameters:run_from_cli"
-static-parallelization = "dagger.examples.static_parallelization:run_from_cli"
+hello-world = "examples.hello_world:run_from_cli"
+passing-parameters = "examples.passing_parameters:run_from_cli"
+static-parallelization = "examples.static_parallelization:run_from_cli"
+nested-dags = "examples.nested_dags:run_from_cli"

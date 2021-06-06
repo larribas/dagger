@@ -1,16 +1,31 @@
+"""Generate CronWorkflow specifications."""
+
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Any, Mapping, Optional
 
 
 class CronConcurrencyPolicy(Enum):
+    """
+    Concurrency policies allowed by Argo/Kubernetes.
+
+    Docs: https://v1-20.docs.kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/#concurrency-policy
+    """
+
     ALLOW = "Allow"
     FORBID = "Forbid"
     REPLACE = "Replace"
 
 
+# TODO: Change to a NamedTuple
 @dataclass
 class Cron:
+    """
+    Scheduling options for the cron job.
+
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#cronworkflowspec
+    """
+
     schedule: str
     suspend: bool = False
     starting_deadline_seconds: int = 0
@@ -20,13 +35,24 @@ class Cron:
     failed_jobs_history_limit: Optional[int] = None
 
 
-def cron_workflow_spec(cron: Cron, workflow_spec: dict):
+def cron_workflow_spec(
+    cron: Cron,
+    workflow_spec: Mapping[str, Any],
+) -> Mapping[str, Any]:
     """
-    Returns a minimal representation of a CronWorkflowSpec with the supplied parameters.
-    https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#cronworkflowspec
+    Return a minimal representation of a CronWorkflowSpec with the supplied parameters.
 
-    It assumes workflow_spec is a well-formed WorkflowSpec.
-    https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#workflowspec
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#cronworkflowspec
+
+    Parameters
+    ----------
+    workflow_spec
+        A well-formed WorkflowSpec.
+        Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#workflowspec
+
+    Returns
+    -------
+    A CronWorkflowSpec represented as a Python mapping
     """
     spec = {
         "schedule": cron.schedule,

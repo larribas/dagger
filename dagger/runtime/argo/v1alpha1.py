@@ -1,4 +1,6 @@
-from typing import Dict, List, Optional
+"""Functions that compile a DAG into Argo CRDs (e.g. Workflow and CronWorkflow) using the v1alpha1 API version."""
+
+from typing import Any, List, Mapping, Optional
 
 from dagger.dag import DAG
 from dagger.runtime.argo.cron_workflow_spec import Cron, cron_workflow_spec
@@ -12,14 +14,14 @@ def workflow_manifest(
     dag: DAG,
     metadata: Metadata,
     container_image: str,
-    params: Optional[Dict[str, bytes]] = None,
+    params: Optional[Mapping[str, bytes]] = None,
     container_entrypoint_to_dag_cli: Optional[List[str]] = None,
     service_account: Optional[str] = None,
-) -> dict:
+) -> Mapping[str, Any]:
     """
-    Returns a minimal representation of a Workflow to execute the supplied DAG
-    with the specified metadata
-    https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#workflow
+    Return a minimal representation of a Workflow to execute the supplied DAG with the specified metadata.
+
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#workflow
     """
     return {
         "apiVersion": API_VERSION,
@@ -40,14 +42,14 @@ def cron_workflow_manifest(
     metadata: Metadata,
     cron: Cron,
     container_image: str,
-    params: Optional[Dict[str, bytes]] = None,
+    params: Optional[Mapping[str, bytes]] = None,
     container_entrypoint_to_dag_cli: Optional[List[str]] = None,
     service_account: Optional[str] = None,
-) -> dict:
+) -> Mapping[str, Any]:
     """
-    Returns a minimal representation of a CronWorkflow to execute the supplied DAG
-    with the specified metadata and scheduling parameters.
-    https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#cronworkflow
+    Return a minimal representation of a CronWorkflow to execute the supplied DAG with the specified metadata and scheduling parameters.
+
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#cronworkflow
     """
     return {
         "apiVersion": API_VERSION,

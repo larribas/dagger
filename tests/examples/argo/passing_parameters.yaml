@@ -21,20 +21,20 @@ spec:
     dag:
       tasks:
       - name: double
-        template: node-double
+        template: dag-double
         arguments:
           artifacts:
           - name: number
             from: "{{inputs.artifacts.number}}"
       - name: square
-        template: node-square
+        template: dag-square
         dependencies: [double]
         arguments:
           artifacts:
           - name: number
             from: "{{tasks.double.outputs.artifacts.doubled-number}}"
 
-  - name: node-double
+  - name: dag-double
     inputs:
       artifacts:
       - name: number
@@ -58,7 +58,7 @@ spec:
     - name: outputs
       emptyDir: {}
 
-  - name: node-square
+  - name: dag-square
     inputs:
       artifacts:
       - name: number

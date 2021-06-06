@@ -33,7 +33,7 @@ jobs:
           make set-up-argo
       - name: Package examples in Docker container and push to local registry
         run: |
-          make push-local
+          make docker-push-local
       - name: Run all examples with Argo and expect them to work
         run: |
           EXAMPLES_DIR=tests/examples/argo/

@@ -19,9 +19,9 @@ jobs:
       - uses: Gr1N/setup-poetry@v4
         with:
           poetry-version: 1.1.5
-      - name: Poetry Install
+      - name: Install dependencies
         run: |
-          poetry install
+          make install
       - name: Unit tests
         run: |
-          poetry run pytest --cov=dagger --cov-fail-under=95
+          make test

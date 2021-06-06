@@ -19,12 +19,12 @@ jobs:
       - uses: Gr1N/setup-poetry@v4
         with:
           poetry-version: 1.1.5
-      - name: Poetry Install
+      - name: Install dependencies
         run: |
-          poetry install
+          make install
       - name: Lint
         run: |
-          poetry run flake8
+          make lint
       - name: Check types
         run: |
-          poetry run mypy . --ignore-missing-imports
+          make typecheck

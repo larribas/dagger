@@ -11,18 +11,33 @@ K3D_REGISTRY_PORT ?= 5000
 install:
 	poetry install
 
+.PHONY: test
+test:
+	poetry run pytest --cov=dagger --cov-fail-under=95
+
+.PHONY: lint
+lint:
+	poetry run flake8
+
+.PHONY: typecheck
+typecheck:
+	poetry run mypy . --ignore-missing-imports
+
 .PHONY: build
 build:
 	poetry build -f wheel
+
+.PHONY: docker-build
+docker-build: build
 	docker build . -t $(DOCKER_IMAGE_NAME):$(VERSION) --build-arg "WHEEL=dagger-`poetry version -s`-py3-none-any.whl"
 
 .PHONY: push-local
-push-local: build
+docker-push-local: docker-build
 	docker tag $(DOCKER_IMAGE_NAME):$(VERSION) localhost:$(K3D_REGISTRY_PORT)/$(DOCKER_IMAGE_NAME):$(VERSION)
 	docker push localhost:$(K3D_REGISTRY_PORT)/$(DOCKER_IMAGE_NAME):$(VERSION)
 
 .PHONY: run-%
-run-%: build
+docker-run-%: build
 	docker run -it --entrypoint=$* $(DOCKER_IMAGE_NAME):$(VERSION)
 
 .PHONY: set-up-argo

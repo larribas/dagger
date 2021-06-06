@@ -1,12 +1,11 @@
-from dagger.examples.hello_world import dag
-from tests.examples.utils import validate_example
+from examples.hello_world import dag
+from tests.examples.verification import verify_dag_works_with_all_runtimes
 
 
 def test():
-    validate_example(
+    verify_dag_works_with_all_runtimes(
         dag,
         params={},
         validate_results=lambda _results: None,
         argo_workflow_yaml_filename="hello_world.yaml",
-        container_entrypoint=["hello-world"],
     )
