@@ -19,9 +19,9 @@ jobs:
       - uses: Gr1N/setup-poetry@v4
         with:
           poetry-version: 1.1.5
-      - name: Poetry Install
+      - name: Install dependencies
         run: |
-          poetry install
+          make install
       - name: Verify code format
         run: |
           poetry run black . --check --diff

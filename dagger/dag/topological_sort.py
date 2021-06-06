@@ -1,5 +1,5 @@
 """Sort nodes topologically by their dependencies and detect possible cyclic dependencies."""
-from typing import Any, Dict, List, Set, TypeVar
+from typing import Any, List, Mapping, Set, TypeVar
 
 T = TypeVar("T")
 
@@ -10,14 +10,14 @@ class CyclicDependencyError(Exception):
     pass
 
 
-def topological_sort(node_dependencies: Dict[T, Set[T]]) -> List[Set[T]]:
+def topological_sort(node_dependencies: Mapping[T, Set[T]]) -> List[Set[T]]:
     """
     Perform a topological sort of the provided set of dependencies.
 
     Parameters
     ----------
-    node_dependencies : A dictionary mapping T to Set[T], where T must be hashable
-        Each key in the dictionary represents a node.
+    node_dependencies : A mapping from T to Set[T], where T must be hashable
+        Each key in the mapping represents a node.
         Each value is a set of nodes that should be executed before the current one.
         The dictionary doesn't have to be exhaustive. That is, if a node is mentioned as a dependency of another, but is not present as a key in the dictionary, an empty set of dependencies is assumed from it.
 
@@ -61,5 +61,5 @@ def topological_sort(node_dependencies: Dict[T, Set[T]]) -> List[Set[T]]:
     return sorted_sets
 
 
-def _all_nodes(node_dependencies: Dict[Any, Set[Any]]):
+def _all_nodes(node_dependencies: Mapping[Any, Set[Any]]):
     return set(node_dependencies.keys()).union(*node_dependencies.values())

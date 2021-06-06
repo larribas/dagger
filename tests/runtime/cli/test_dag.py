@@ -2,11 +2,11 @@ import tempfile
 
 import pytest
 
-import dagger.inputs as inputs
-import dagger.outputs as outputs
+import dagger.input as input
+import dagger.output as output
 from dagger.dag import DAG, DAGOutput
-from dagger.node import Node
 from dagger.runtime.cli.dag import invoke_dag
+from dagger.task import Task
 
 #
 # invoke_dag
@@ -17,7 +17,7 @@ def test__invoke_dag__with_no_inputs_or_outputs():
     invocations = []
     dag = DAG(
         {
-            "single-node": Node(lambda: invocations.append(1)),
+            "single-node": Task(lambda: invocations.append(1)),
         }
     )
     invoke_dag(dag)
@@ -27,13 +27,13 @@ def test__invoke_dag__with_no_inputs_or_outputs():
 def test__invoke_dag__with_inputs_and_outputs():
     dag = DAG(
         nodes=dict(
-            square=Node(
+            square=Task(
                 lambda x: x ** 2,
-                inputs=dict(x=inputs.FromParam()),
-                outputs=dict(x_squared=outputs.FromReturnValue()),
+                inputs=dict(x=input.FromParam()),
+                outputs=dict(x_squared=output.FromReturnValue()),
             ),
         ),
-        inputs=dict(x=inputs.FromParam()),
+        inputs=dict(x=input.FromParam()),
         outputs=dict(x_squared=DAGOutput("square", "x_squared")),
     )
 
@@ -52,8 +52,8 @@ def test__invoke_dag__with_inputs_and_outputs():
 
 def test__invoke_dag__with_missing_input_parameter():
     dag = DAG(
-        nodes=dict(one=Node(lambda: 1)),
-        inputs=dict(a=inputs.FromParam()),
+        nodes=dict(one=Task(lambda: 1)),
+        inputs=dict(a=input.FromParam()),
     )
     with pytest.raises(ValueError) as e:
         with tempfile.NamedTemporaryFile() as f:
@@ -70,9 +70,9 @@ def test__invoke_dag__with_missing_input_parameter():
 def test__invoke_dag__with_missing_output_parameter():
     dag = DAG(
         nodes=dict(
-            one=Node(
+            one=Task(
                 lambda: 1,
-                outputs=dict(x=outputs.FromReturnValue()),
+                outputs=dict(x=output.FromReturnValue()),
             )
         ),
         outputs=dict(a=DAGOutput("one", "x")),
@@ -90,9 +90,9 @@ def test__invoke_dag__with_missing_output_parameter():
 def test__invoke_dag__propagates_node_exceptions_extending_the_details():
     dag = DAG(
         nodes={
-            "always-1": Node(
+            "always-1": Task(
                 lambda: 1,
-                outputs=dict(x=outputs.FromKey("missing-key")),
+                outputs=dict(x=output.FromKey("missing-key")),
             ),
         },
     )
@@ -102,5 +102,5 @@ def test__invoke_dag__propagates_node_exceptions_extending_the_details():
 
     assert (
         str(e.value)
-        == "Error when invoking node 'always-1'. We encountered the following error while attempting to serialize the results of this node: This output is of type FromKey. This means we expect the return value of the function to be a dictionary containing, at least, a key named 'missing-key'"
+        == "Error when invoking task 'always-1'. We encountered the following error while attempting to serialize the results of this task: This output is of type FromKey. This means we expect the return value of the function to be a mapping containing, at least, a key named 'missing-key'"
     )

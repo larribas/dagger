@@ -1,13 +1,13 @@
 """Generate Workflow specifications."""
 import itertools
 import os
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional
 
-import dagger.inputs as inputs
-from dagger.dag import DAG, validate_parameters
-from dagger.node import Node
-from dagger.node import SupportedInputs as SupportedNodeInputs
+from dagger.dag import DAG, Node, validate_parameters
+from dagger.input import FromNodeOutput, FromParam
 from dagger.runtime.argo.errors import IncompatibilityError
+from dagger.task import SupportedInputs as SupportedTaskInputs
+from dagger.task import Task
 
 BASE_DAG_NAME = "dag"
 INPUT_PATH = "/tmp/inputs/"
@@ -18,33 +18,33 @@ def workflow_spec(
     dag: DAG,
     container_image: str,
     container_entrypoint_to_dag_cli: Optional[List[str]] = None,
-    params: Optional[Dict[str, bytes]] = None,
+    params: Optional[Mapping[str, bytes]] = None,
     service_account: Optional[str] = None,
-) -> dict:
+) -> Mapping[str, Any]:
     """
     Return a minimal representation of a WorkflowSpec for the supplied DAG and metadata.
 
-    https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#workflowspec
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#workflowspec
 
 
     Parameters
     ----------
-    dag : DAG
+    dag
         The DAG to generate the spec for
 
-    container_image : str
-        The URI to the container image Argo will use for each of the steps
+    container_image
+        The URI to the container image Argo will use for each of the tasks
 
-    container_entrypoint_to_dag_cli : List of str
+    container_entrypoint_to_dag_cli
         The container's entrypoint.
         It must run the specified DAG via the CLI runtime.
         Check the examples and documentation to understand better how to containerize your projects and expose your DAGs through the container.
 
-    params : Dictionary of str -> bytes
+    params
         Parameters to inject to the DAG.
         They must match the inputs the DAG expects.
 
-    service_account : str
+    service_account
         The Kubernetes service account
     """
     params = params or {}
@@ -55,7 +55,7 @@ def workflow_spec(
     spec = {
         "entrypoint": BASE_DAG_NAME,
         "templates": _templates(
-            dag_or_node=dag,
+            node=dag,
             container_image=container_image,
             container_command=container_entrypoint_to_dag_cli,
         ),
@@ -70,7 +70,7 @@ def workflow_spec(
     return spec
 
 
-def _workflow_spec_arguments(params: Dict[str, bytes]) -> dict:
+def _workflow_spec_arguments(params: Mapping[str, bytes]) -> Mapping[str, Any]:
     return {
         "artifacts": [
             {"name": param_name, "raw": {"data": param_value}}
@@ -80,59 +80,92 @@ def _workflow_spec_arguments(params: Dict[str, bytes]) -> dict:
 
 
 def _templates(
-    dag_or_node: Union[DAG, Node],
+    node: Node,
     container_image: str,
     container_command: List[str],
     address: List[str] = None,
-) -> List[dict]:
+) -> List[Mapping[str, Any]]:
     """
     Return a list of Template resources for all the sub-DAGs and sub-nodes.
 
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#template
+
     This function is prepared to be used recursively.
 
-    https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#template
+
+    Parameters
+    ----------
+    node
+        The node to generate templates for.
+
+    container_image
+        The URI to the container image Argo will use for each of the tasks.
+
+    container_command
+        The container's entrypoint.
+
+    address
+        A list of node names that point to this node.
+        For instance, in a nested DAG, the address ["outer", "inner"] would point to a node named "inner", defined inside of a DAG named "outer", defined inside of the root DAG.
+        If not specified, it defaults to an empty list.
+        The address should only be empty for the root node of the DAG.
+
+
+    Returns
+    -------
+    A list of template specifications.
     """
     address = address or []
 
-    if isinstance(dag_or_node, Node):
+    if isinstance(node, Task):
+        task = node
         return [
-            _node_template(
-                node=dag_or_node,
+            _task_template(
+                task=task,
                 address=address,
                 container_image=container_image,
                 container_command=container_command,
             )
         ]
-
-    return list(
-        itertools.chain(
-            [
-                _dag_template(
-                    dag=dag_or_node,
-                    address=address,
-                )
-            ],
-            *[
-                _templates(
-                    dag_or_node=node,
-                    address=address + [node_name],
-                    container_image=container_image,
-                    container_command=container_command,
-                )
-                for node_name, node in dag_or_node.nodes.items()
-            ],
+    elif isinstance(node, DAG):
+        dag = node
+        return list(
+            itertools.chain(
+                [
+                    _dag_template(
+                        dag=dag,
+                        address=address,
+                    )
+                ],
+                *[
+                    _templates(
+                        node=node,
+                        address=address + [node_name],
+                        container_image=container_image,
+                        container_command=container_command,
+                    )
+                    for node_name, node in dag.nodes.items()
+                ],
+            )
         )
-    )
+    else:
+        # TODO: Test this scenario
+        human_readable_node_address = (
+            f"Node {'.'.join(address)}" if address else "This node"
+        )
+        raise IncompatibilityError(
+            f"Whoops. Node '{human_readable_node_address}' is of type '{type(node).__name__}'. While this node type may be supported by the DAG, the current version of the Argo runtime does not support it. Please, check the GitHub project to see if this issue has already been reported and addressed in a newer version. Otherwise, please report this as a bug in our GitHub tracker. Sorry for the inconvenience."
+        )
 
 
 def _dag_template(
     dag: DAG,
     address: List[str] = None,
-) -> dict:
+) -> Mapping[str, Any]:
     """
     Return a minimal representation of a Template that uses 'tasks' to orchestrate the supplied DAG.
 
-    https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#template
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#template
     """
     address = address or []
 
@@ -141,7 +174,7 @@ def _dag_template(
         "dag": {
             "tasks": [
                 _dag_task(
-                    dag_or_node=node,
+                    node=node,
                     node_address=address + [node_name],
                 )
                 for node_name, node in dag.nodes.items()
@@ -170,30 +203,34 @@ def _dag_template(
     return template
 
 
-def _dag_task(dag_or_node: Union[DAG, Node], node_address: List[str]) -> dict:
+def _dag_task(
+    node: Node,
+    node_address: List[str],
+) -> Mapping[str, Any]:
     """
     Return a minimal representation of a DAGTask for a specific node.
 
-    https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#dagtask
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#dagtask
     """
-    task: dict = {
+    dag_task: Dict[str, Any] = {
         "name": node_address[-1],
         "template": _template_name(node_address),
     }
 
-    dependencies = _dag_task_dependencies(dag_or_node)
+    dependencies = _dag_task_dependencies(node)
     if dependencies:
-        task["dependencies"] = dependencies
+        dag_task["dependencies"] = dependencies
 
-    if dag_or_node.inputs:
-        task["arguments"] = _dag_task_arguments(
-            dag_or_node=dag_or_node, node_address=node_address
+    if node.inputs:
+        dag_task["arguments"] = _dag_task_arguments(
+            node=node,
+            node_address=node_address,
         )
 
-    return task
+    return dag_task
 
 
-def _dag_task_dependencies(dag_or_node: Union[DAG, Node]) -> List[str]:
+def _dag_task_dependencies(node: Node) -> List[str]:
     """
     Return a list of dependencies for the current node.
 
@@ -201,16 +238,19 @@ def _dag_task_dependencies(dag_or_node: Union[DAG, Node]) -> List[str]:
     """
     return [
         input.node
-        for input in dag_or_node.inputs.values()
-        if isinstance(input, inputs.FromNodeOutput)
+        for input in node.inputs.values()
+        if isinstance(input, FromNodeOutput)
     ]
 
 
-def _dag_task_arguments(dag_or_node: Union[DAG, Node], node_address: List[str]) -> dict:
+def _dag_task_arguments(
+    node: Node,
+    node_address: List[str],
+) -> Mapping[str, Any]:
     """
     Return a minimal representation of an Arguments object, retrieving each of the node's inputs from the right source.
 
-    https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#arguments
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#arguments
     """
     return {
         "artifacts": [
@@ -222,7 +262,7 @@ def _dag_task_arguments(dag_or_node: Union[DAG, Node], node_address: List[str]) 
                     input=input,
                 ),
             }
-            for input_name, input in dag_or_node.inputs.items()
+            for input_name, input in node.inputs.items()
         ]
     }
 
@@ -230,16 +270,16 @@ def _dag_task_arguments(dag_or_node: Union[DAG, Node], node_address: List[str]) 
 def _dag_task_argument_artifact_from(
     node_address: List[str],
     input_name: str,
-    input: SupportedNodeInputs,
+    input: SupportedTaskInputs,
 ) -> str:
     """
     Return a pointer to the source of a specific artifact, based on the type of each input, and using Argo's workflow variables.
 
-    https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/variables.md
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/variables.md
     """
-    if isinstance(input, inputs.FromParam):
+    if isinstance(input, FromParam):
         return "{{" + f"inputs.artifacts.{input_name}" + "}}"
-    elif isinstance(input, inputs.FromNodeOutput):
+    elif isinstance(input, FromNodeOutput):
         return "{{" + f"tasks.{input.node}.outputs.artifacts.{input.output}" + "}}"
     else:
         node_name = ".".join(node_address)
@@ -248,12 +288,12 @@ def _dag_task_argument_artifact_from(
         )
 
 
-def _node_template(
-    node: Node,
+def _task_template(
+    task: Task,
     address: List[str],
     container_image: str,
     container_command: List[str],
-) -> dict:
+) -> Mapping[str, Any]:
     """
     Return a minimal representation of a Template that executes a specific Node.
 
@@ -268,15 +308,15 @@ def _node_template(
             # explicit. It also allows any other postprocessor to change some
             # of the entrypoints without affecting the rest
             "command": container_command[:],
-            "args": _node_template_container_arguments(node=node, address=address),
+            "args": _task_template_container_arguments(task=task, address=address),
         },
     }
 
-    if node.inputs:
-        template["inputs"] = _node_template_inputs(node)
+    if task.inputs:
+        template["inputs"] = _task_template_inputs(task)
 
-    if node.outputs:
-        template["outputs"] = _node_template_outputs(node)
+    if task.outputs:
+        template["outputs"] = _task_template_outputs(task)
         template["volumes"] = [{"name": "outputs", "emptyDir": {}}]
         template["container"]["volumeMounts"] = [
             {"name": "outputs", "mountPath": OUTPUT_PATH}
@@ -285,11 +325,11 @@ def _node_template(
     return template
 
 
-def _node_template_inputs(node: Node) -> dict:
+def _task_template_inputs(task: Task) -> Mapping[str, Any]:
     """
     Return a minimal representation of an Inputs object, mounting all the inputs a node needs as artifacts in a given path.
 
-    https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#inputs
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#inputs
     """
     return {
         "artifacts": [
@@ -299,16 +339,16 @@ def _node_template_inputs(node: Node) -> dict:
                     INPUT_PATH, f"{input_name}.{input.serializer.extension}"
                 ),
             }
-            for input_name, input in node.inputs.items()
+            for input_name, input in task.inputs.items()
         ]
     }
 
 
-def _node_template_outputs(node: Node) -> dict:
+def _task_template_outputs(task: Task) -> Mapping[str, Any]:
     """
     Return a minimal representation of an Outputs object, pointing all the outputs a node produces to artifacts in a given path.
 
-    https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#outputs
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#outputs
     """
     return {
         "artifacts": [
@@ -318,16 +358,19 @@ def _node_template_outputs(node: Node) -> dict:
                     OUTPUT_PATH, f"{output_name}.{output.serializer.extension}"
                 ),
             }
-            for output_name, output in node.outputs.items()
+            for output_name, output in task.outputs.items()
         ]
     }
 
 
-def _node_template_container_arguments(node: Node, address: List[str]) -> List[str]:
+def _task_template_container_arguments(
+    task: Task,
+    address: List[str],
+) -> List[str]:
     """
     Return a list of arguments to supply to the CLI runtime to run a specific DAG node with a set of inputs and outputs mounted as artifacts.
 
-    https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#outputs
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#outputs
     """
     return list(
         itertools.chain(
@@ -339,7 +382,7 @@ def _node_template_container_arguments(node: Node, address: List[str]) -> List[s
                         input_name,
                         "{{" + f"inputs.artifacts.{input_name}.path" + "}}",
                     ]
-                    for input_name in node.inputs.keys()
+                    for input_name in task.inputs.keys()
                 ],
                 *[
                     [
@@ -347,7 +390,7 @@ def _node_template_container_arguments(node: Node, address: List[str]) -> List[s
                         output_name,
                         "{{" + f"outputs.artifacts.{output_name}.path" + "}}",
                     ]
-                    for output_name in node.outputs.keys()
+                    for output_name in task.outputs.keys()
                 ],
             ]
         )

@@ -1,19 +1,19 @@
 """
-Run DAGs or Nodes taking their inputs from files and storing their outputs into files.
+Run DAGs or Tasks taking their inputs from files and storing their outputs into files.
 
 It defines a Command-Line Interface through which users can specify all input/output locations,
-and optionally select a specific node to invoke.
+and optionally select a specific task to invoke.
 
-It runs all nodes/DAGs using the "local" runtime.
+It runs all tasks/DAGs using the "local" runtime.
 """
 import logging
 import sys
-from typing import List, Union
+from typing import List
 
-from dagger.dag import DAG
-from dagger.node import Node
+from dagger.dag import DAG, Node
 from dagger.runtime.cli.dag import invoke_dag
-from dagger.runtime.cli.node import invoke_node
+from dagger.runtime.cli.task import invoke_task
+from dagger.task import Task
 
 
 def invoke(
@@ -63,19 +63,19 @@ def invoke(
     }
 
     if args.node_name:
-        dag_or_node = _nested(dag, args.node_name.split("."))
+        node = _nested(dag, args.node_name.split("."))
     else:
-        dag_or_node = dag
+        node = dag
 
-    if isinstance(dag_or_node, Node):
-        invoke_node(
-            dag_or_node,
+    if isinstance(node, Task):
+        invoke_task(
+            node,
             input_locations=input_locations,
             output_locations=output_locations,
         )
     else:
         invoke_dag(
-            dag_or_node,
+            node,
             input_locations=input_locations,
             output_locations=output_locations,
         )
@@ -114,10 +114,10 @@ def _call_arg_parser():
 
 
 def _nested(
-    dag_or_node: Union[DAG, Node],
+    node: Node,
     address: List[str],
     nested_levels_so_far: List[str] = None,
-) -> Union[DAG, Node]:
+) -> Node:
     """
     Return a nested node given an address with dot-notation (e.g. three.nested.levels).
 
@@ -126,15 +126,16 @@ def _nested(
     nested_levels_so_far = nested_levels_so_far or []
 
     if len(address) == 0:
-        return dag_or_node
+        return node
 
-    if isinstance(dag_or_node, Node):
+    if isinstance(node, Task):
         raise ValueError(
             f"Node '{'.'.join(nested_levels_so_far)}' does not contain any other nodes. However, you are trying to access a subnode '{'.'.join(address)}'."
         )
 
+    dag = node
     next_node = address[0]
-    if next_node not in dag_or_node.nodes:
+    if next_node not in dag.nodes:
         current_namespace = ".".join(nested_levels_so_far)
         human_readable_dag_address = (
             f"DAG '{current_namespace}'" if nested_levels_so_far else "this DAG"
@@ -143,11 +144,11 @@ def _nested(
             f"{current_namespace}.{next_node}" if nested_levels_so_far else next_node
         )
         raise ValueError(
-            f"You selected node '{human_readable_node_address}'. However, {human_readable_dag_address} does not contain any node with such a name. These are the names the DAG contains: {list(dag_or_node.nodes.keys())}"
+            f"You selected node '{human_readable_node_address}'. However, {human_readable_dag_address} does not contain any node with such a name. These are the names the DAG contains: {list(dag.nodes.keys())}"
         )
 
     return _nested(
-        dag_or_node.nodes[next_node],
+        dag.nodes[next_node],
         address=address[1:],
         nested_levels_so_far=nested_levels_so_far + [next_node],
     )

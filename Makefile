@@ -11,6 +11,18 @@ K3D_REGISTRY_PORT ?= 5000
 install:
 	poetry install
 
+.PHONY: test
+test:
+	poetry run pytest --cov=dagger --cov-fail-under=95
+
+.PHONY: lint
+lint:
+	poetry run flake8
+
+.PHONY: typecheck
+typecheck:
+	poetry run mypy . --ignore-missing-imports
+
 .PHONY: build
 build:
 	poetry build -f wheel

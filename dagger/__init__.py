@@ -1,8 +1,9 @@
+"""Define sophisticated workflows/pipelines as Directed Acyclic Graphs (DAGs) and execute them with different runtimes, either locally or remotely."""
 import logging
 import os
 
-from dagger.dag import DAG, DAGOutput
-from dagger.node import Node
+from dagger.dag import DAG, DAGOutput  # noqa
+from dagger.task import Task  # noqa
 
 __version__ = "0.1.0"
 
@@ -13,9 +14,3 @@ logging.basicConfig(
     format=LOG_FORMAT,
     datefmt="%Y-%m-%d %H:%M:%S",
 )
-
-__all__ = [
-    DAG.__name__,
-    DAGOutput.__name__,
-    Node.__name__,
-]

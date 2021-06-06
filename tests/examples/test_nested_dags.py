@@ -1,7 +1,7 @@
 from typing import Dict
 
-from dagger.examples.nested_dags import dag
-from tests.examples.utils import validate_example
+from examples.nested_dags import dag
+from tests.examples.verification import verify_dag_works_with_all_runtimes
 
 
 def validate_results(results: Dict[str, bytes]):
@@ -11,7 +11,7 @@ def validate_results(results: Dict[str, bytes]):
 
 
 def test():
-    validate_example(
+    verify_dag_works_with_all_runtimes(
         dag,
         params={
             "album_name": b'"big dag"',
@@ -19,5 +19,4 @@ def test():
         },
         validate_results=validate_results,
         argo_workflow_yaml_filename="nested_dags.yaml",
-        container_entrypoint=["nested-dags"],
     )

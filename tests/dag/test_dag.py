@@ -1,10 +1,10 @@
 import pytest
 
-import dagger.inputs as inputs
-import dagger.outputs as outputs
-from dagger.dag import DAG, CyclicDependencyError, DAGOutput, validate_name
-from dagger.node import Node
-from dagger.serializers import DefaultSerializer
+import dagger.input as input
+import dagger.output as output
+from dagger.dag import DAG, CyclicDependencyError, DAGOutput
+from dagger.serializer import DefaultSerializer
+from dagger.task import Task
 
 #
 # Init
@@ -19,17 +19,46 @@ def test__init__with_no_nodes():
 
 
 def test__init__with_an_invalid_node_name():
-    with pytest.raises(ValueError):
+    invalid_names = [
+        "",
+        "name with spaces",
+        "x" * 65,
+        "with$ymßols",
+        "with_underscores",
+    ]
+
+    for name in invalid_names:
+        with pytest.raises(ValueError) as e:
+            DAG(
+                nodes={name: Task(lambda: 1)},
+            )
+
+        assert (
+            str(e.value)
+            == f"'{name}' is not a valid name for a node. Node names must comply with the regex ^[a-zA-Z0-9][a-zA-Z0-9-]{{0,63}}$"
+        )
+
+
+def test__init__with_a_valid_node_name():
+    valid_names = [
+        "param",
+        "name-with-dashes",
+        "name-with-dashes-and-123",
+        "x" * 64,
+    ]
+
+    for name in valid_names:
+        # We are testing it doesn't raise any validation errors
         DAG(
-            nodes={"invalid_name": Node(lambda: 1)},
+            nodes={name: Task(lambda: 1)},
         )
 
 
 def test__init__with_an_invalid_input_name():
     with pytest.raises(ValueError):
         DAG(
-            nodes={"my-node": Node(lambda: 1)},
-            inputs={"invalid name": inputs.FromParam()},
+            nodes={"my-node": Task(lambda: 1)},
+            inputs={"invalid name": input.FromParam()},
         )
 
 
@@ -38,12 +67,12 @@ def test__init__with_invalid_input_type():
         def __init__(self):
             self.serializer = DefaultSerializer
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(TypeError) as e:
         DAG(
             nodes=dict(
-                n=Node(
+                n=Task(
                     lambda x: x,
-                    inputs=dict(x=inputs.FromParam()),
+                    inputs=dict(x=input.FromParam()),
                 ),
             ),
             inputs=dict(x=UnsupportedInput()),
@@ -59,7 +88,7 @@ def test__init__with_an_invalid_output_name():
     with pytest.raises(ValueError):
         DAG(
             nodes={
-                "my-node": Node(lambda: 1, outputs=dict(x=outputs.FromReturnValue()))
+                "my-node": Task(lambda: 1, outputs=dict(x=output.FromReturnValue()))
             },
             outputs={"invalid name": DAGOutput("my-node", "x")},
         )
@@ -68,7 +97,7 @@ def test__init__with_an_invalid_output_name():
 def test__init__with_an_output_that_references_a_nonexistent_node():
     with pytest.raises(ValueError) as e:
         DAG(
-            nodes={"my-node": Node(lambda: 1)},
+            nodes={"my-node": Task(lambda: 1)},
             outputs=dict(x=DAGOutput("missing-node", "y")),
         )
 
@@ -82,7 +111,7 @@ def test__init__with_an_output_that_references_a_nonexistent_node_output():
     with pytest.raises(ValueError) as e:
         DAG(
             nodes={
-                "my-node": Node(lambda: 1, outputs=dict(x=outputs.FromReturnValue()))
+                "my-node": Task(lambda: 1, outputs=dict(x=output.FromReturnValue()))
             },
             outputs=dict(y=DAGOutput("my-node", "z")),
         )
@@ -97,9 +126,9 @@ def test__init__with_a_node_that_references_another_that_does_not_exist():
     with pytest.raises(ValueError) as e:
         DAG(
             {
-                "my-node": Node(
+                "my-node": Task(
                     lambda x: 1,
-                    inputs=dict(x=inputs.FromNodeOutput("missing-node", "x")),
+                    inputs=dict(x=input.FromNodeOutput("missing-node", "x")),
                 ),
             }
         )
@@ -114,13 +143,13 @@ def test__init__with_a_node_that_references_an_output_that_does_not_exist():
     with pytest.raises(ValueError) as e:
         DAG(
             {
-                "first-node": Node(
+                "first-node": Task(
                     lambda: 1,
-                    outputs=dict(z=outputs.FromReturnValue()),
+                    outputs=dict(z=output.FromReturnValue()),
                 ),
-                "second-node": Node(
+                "second-node": Task(
                     lambda x: 1,
-                    inputs=dict(x=inputs.FromNodeOutput("first-node", "y")),
+                    inputs=dict(x=input.FromNodeOutput("first-node", "y")),
                 ),
             }
         )
@@ -135,12 +164,12 @@ def test__init__with_a_node_that_references_a_dag_input_that_does_not_exist():
     with pytest.raises(ValueError) as e:
         DAG(
             nodes={
-                "my-node": Node(
+                "my-node": Task(
                     lambda x: 1,
-                    inputs=dict(x=inputs.FromParam()),
+                    inputs=dict(x=input.FromParam()),
                 ),
             },
-            inputs=dict(z=inputs.FromParam()),
+            inputs=dict(z=input.FromParam()),
         )
 
     assert (
@@ -153,10 +182,10 @@ def test__init__with_a_cyclic_dependency():
     with pytest.raises(CyclicDependencyError):
         DAG(
             nodes=dict(
-                a=Node(
+                a=Task(
                     lambda x: x,
-                    inputs=dict(x=inputs.FromNodeOutput("a", "x")),
-                    outputs=dict(x=outputs.FromReturnValue()),
+                    inputs=dict(x=input.FromNodeOutput("a", "x")),
+                    outputs=dict(x=output.FromReturnValue()),
                 ),
             ),
         )
@@ -167,19 +196,19 @@ def test__init__with_nested_dags():
         {
             "outermost": DAG(
                 {
-                    "come-up-with-a-number": Node(
-                        lambda: 1, outputs=dict(x=outputs.FromReturnValue())
+                    "come-up-with-a-number": Task(
+                        lambda: 1, outputs=dict(x=output.FromReturnValue())
                     ),
                     "middle": DAG(
                         {
-                            "innermost": Node(
+                            "innermost": Task(
                                 lambda x: x,
-                                inputs=dict(x=inputs.FromParam()),
-                                outputs=dict(y=outputs.FromReturnValue()),
+                                inputs=dict(x=input.FromParam()),
+                                outputs=dict(y=output.FromReturnValue()),
                             )
                         },
                         inputs=dict(
-                            x=inputs.FromNodeOutput("come-up-with-a-number", "x")
+                            x=input.FromNodeOutput("come-up-with-a-number", "x")
                         ),
                         outputs=dict(yy=DAGOutput("innermost", "y")),
                     ),
@@ -200,8 +229,8 @@ def test__init__with_nested_dags():
 def test__node_execution_order__with_no_dependencies():
     dag = DAG(
         nodes=dict(
-            one=Node(lambda: 1),
-            two=Node(lambda: 2),
+            one=Task(lambda: 1),
+            two=Task(lambda: 2),
         ),
     )
     assert dag.node_execution_order == [{"one", "two"}]
@@ -210,56 +239,19 @@ def test__node_execution_order__with_no_dependencies():
 def test__node_execution_order__is_based_on_dependencies():
     dag = DAG(
         nodes=dict(
-            second=Node(
+            second=Task(
                 lambda x: x * 2,
-                inputs=dict(x=inputs.FromNodeOutput("first", "x")),
-                outputs=dict(x=outputs.FromReturnValue()),
+                inputs=dict(x=input.FromNodeOutput("first", "x")),
+                outputs=dict(x=output.FromReturnValue()),
             ),
-            third=Node(
+            third=Task(
                 lambda x: x * 2,
-                inputs=dict(x=inputs.FromNodeOutput("second", "x")),
+                inputs=dict(x=input.FromNodeOutput("second", "x")),
             ),
-            first=Node(
+            first=Task(
                 lambda: 1,
-                outputs=dict(x=outputs.FromReturnValue()),
+                outputs=dict(x=output.FromReturnValue()),
             ),
         ),
     )
     assert dag.node_execution_order == [{"first"}, {"second"}, {"third"}]
-
-
-#
-# validate_name
-#
-
-
-def test__validate_name__with_valid_names():
-    valid_names = [
-        "param",
-        "name-with-dashes",
-        "name-with-dashes-and-123",
-        "a" * 64,
-    ]
-
-    for name in valid_names:
-        # We are testing it doesn't raise any validation errors
-        validate_name(name)
-
-
-def test__validate_name__with_invalid_names():
-    invalid_names = [
-        "",
-        "name with spaces",
-        "x" * 65,
-        "with$ymßols",
-        "with_underscores",
-    ]
-
-    for name in invalid_names:
-        with pytest.raises(ValueError) as e:
-            validate_name(name)
-
-        assert (
-            str(e.value)
-            == f"'{name}' is not a valid name for a DAG. DAG names must comply with the regex ^[a-zA-Z0-9][a-zA-Z0-9-]{{0,63}}$"
-        )

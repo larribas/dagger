@@ -3,28 +3,28 @@ import tempfile
 
 import pytest
 
-import dagger.inputs as inputs
-import dagger.outputs as outputs
+import dagger.input as input
+import dagger.output as output
 from dagger.dag import DAG, DAGOutput
-from dagger.node import Node
 from dagger.runtime.cli import invoke
+from dagger.task import Task
 
 
 def test__invoke__whole_dag():
     dag = DAG(
         nodes=dict(
-            double=Node(
+            double=Task(
                 lambda x: x * 2,
-                inputs=dict(x=inputs.FromParam()),
-                outputs=dict(x_doubled=outputs.FromReturnValue()),
+                inputs=dict(x=input.FromParam()),
+                outputs=dict(x_doubled=output.FromReturnValue()),
             ),
-            square=Node(
+            square=Task(
                 lambda x: x ** 2,
-                inputs=dict(x=inputs.FromNodeOutput("double", "x_doubled")),
-                outputs=dict(x_squared=outputs.FromReturnValue()),
+                inputs=dict(x=input.FromNodeOutput("double", "x_doubled")),
+                outputs=dict(x_squared=output.FromReturnValue()),
             ),
         ),
-        inputs=dict(x=inputs.FromParam()),
+        inputs=dict(x=input.FromParam()),
         outputs=dict(x_doubled_and_squared=DAGOutput("square", "x_squared")),
     )
 
@@ -52,7 +52,7 @@ def test__invoke__whole_dag():
 def test__invoke__selecting_a_node_that_does_not_exist():
     dag = DAG(
         {
-            "single-node": Node(lambda: 1),
+            "single-node": Task(lambda: 1),
         }
     )
     with pytest.raises(ValueError) as e:
@@ -67,13 +67,13 @@ def test__invoke__selecting_a_node_that_does_not_exist():
 def test__invoke__selecting_a_node():
     dag = DAG(
         nodes=dict(
-            square=Node(
+            square=Task(
                 lambda x: x ** 2,
-                inputs=dict(x=inputs.FromParam()),
-                outputs=dict(x_squared=outputs.FromReturnValue()),
+                inputs=dict(x=input.FromParam()),
+                outputs=dict(x_squared=output.FromReturnValue()),
             ),
         ),
-        inputs=dict(x=inputs.FromParam()),
+        inputs=dict(x=input.FromParam()),
         outputs=dict(x_squared=DAGOutput("square", "x_squared")),
     )
 
@@ -98,23 +98,23 @@ def test__invoke__selecting_a_node():
 def test__invoke__selecting_a_node_from_nested_dag():
     dag = DAG(
         {
-            "double": Node(
+            "double": Task(
                 lambda x: 2 * x,
-                inputs=dict(x=inputs.FromParam()),
-                outputs=dict(x=outputs.FromReturnValue()),
+                inputs=dict(x=input.FromParam()),
+                outputs=dict(x=output.FromReturnValue()),
             ),
             "nested": DAG(
                 {
-                    "square": Node(
+                    "square": Task(
                         lambda x: x ** 2,
-                        inputs=dict(x=inputs.FromParam()),
-                        outputs=dict(x=outputs.FromReturnValue()),
+                        inputs=dict(x=input.FromParam()),
+                        outputs=dict(x=output.FromReturnValue()),
                     ),
                 },
-                inputs=dict(x=inputs.FromParam()),
+                inputs=dict(x=input.FromParam()),
             ),
         },
-        inputs=dict(x=inputs.FromParam()),
+        inputs=dict(x=input.FromParam()),
         outputs=dict(x=DAGOutput("double", "x")),
     )
 
@@ -139,7 +139,7 @@ def test__invoke__selecting_a_node_from_nested_dag():
 def test__invoke__selecting_a_nested_node_that_does_not_exist():
     dag = DAG(
         {
-            "nested": DAG({"single-node": Node(lambda: 1)}),
+            "nested": DAG({"single-node": Task(lambda: 1)}),
         }
     )
     with pytest.raises(ValueError) as e:
@@ -156,17 +156,17 @@ def test__invoke__selecting_a_nested_dag():
         {
             "nested": DAG(
                 {
-                    "square": Node(
+                    "square": Task(
                         lambda x: x ** 2,
-                        inputs=dict(x=inputs.FromParam()),
-                        outputs=dict(x=outputs.FromReturnValue()),
+                        inputs=dict(x=input.FromParam()),
+                        outputs=dict(x=output.FromReturnValue()),
                     ),
                 },
-                inputs=dict(x=inputs.FromParam()),
+                inputs=dict(x=input.FromParam()),
                 outputs=dict(x=DAGOutput("square", "x")),
             ),
         },
-        inputs=dict(x=inputs.FromParam()),
+        inputs=dict(x=input.FromParam()),
     )
 
     with tempfile.NamedTemporaryFile() as x_input:

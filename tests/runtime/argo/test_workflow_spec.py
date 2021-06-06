@@ -1,14 +1,14 @@
 import pytest
 
-import dagger.inputs as inputs
-import dagger.outputs as outputs
+import dagger.input as input
+import dagger.output as output
 from dagger.dag import DAG, DAGOutput
-from dagger.node import Node
 from dagger.runtime.argo.errors import IncompatibilityError
 from dagger.runtime.argo.workflow_spec import (
     _dag_task_argument_artifact_from,
     workflow_spec,
 )
+from dagger.task import Task
 
 
 def test__workflow_spec__simplest_dag():
@@ -16,7 +16,7 @@ def test__workflow_spec__simplest_dag():
     container_entrypoint = ["my", "dag", "entrypoint"]
     dag = DAG(
         {
-            "single-node": Node(lambda: 1),
+            "single-node": Task(lambda: 1),
         }
     )
 
@@ -59,12 +59,12 @@ def test__workflow_spec__nested_dags():
 
     dag = DAG(
         {
-            "a": Node(lambda: 1),
+            "a": Task(lambda: 1),
             "deeply": DAG(
                 {
                     "nested": DAG(
                         {
-                            "a": Node(lambda: 1),
+                            "a": Task(lambda: 1),
                         }
                     )
                 }
@@ -145,13 +145,13 @@ def test__workflow_spec__nested_dags():
 def test__workflow_spec__with_invalid_parameters():
     dag = DAG(
         nodes={
-            "double": Node(
+            "double": Task(
                 lambda x: x * 2,
-                inputs={"x": inputs.FromParam()},
-                outputs={"2x": outputs.FromReturnValue()},
+                inputs={"x": input.FromParam()},
+                outputs={"2x": output.FromReturnValue()},
             ),
         },
-        inputs={"x": inputs.FromParam()},
+        inputs={"x": input.FromParam()},
         outputs={"2x": DAGOutput(node="double", output="2x")},
     )
 
@@ -166,7 +166,7 @@ def test__workflow_spec__with_invalid_parameters():
 
 def test__workflow_spec__setting_service_account():
     service_account = "my-service-account"
-    dag = DAG({"single-node": Node(lambda: 1)})
+    dag = DAG({"single-node": Task(lambda: 1)})
 
     assert (
         workflow_spec(

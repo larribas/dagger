@@ -1,5 +1,5 @@
 """Run DAGs taking their inputs and outputs from files."""
-from typing import Dict
+from typing import Mapping
 
 import dagger.runtime.local as local
 from dagger.dag import DAG
@@ -11,26 +11,26 @@ from dagger.runtime.cli.locations import (
 
 def invoke_dag(
     dag: DAG,
-    input_locations: Dict[str, str] = None,
-    output_locations: Dict[str, str] = None,
+    input_locations: Mapping[str, str] = None,
+    output_locations: Mapping[str, str] = None,
 ):
     """
     Invoke a DAG. Take the inputs from and store the outputs in the locations specified.
 
     Parameters
     ----------
-    dag : DAG
+    dag
         DAG to execute
 
-    input_locations : Dictionary of str -> str
+    input_locations
         Location of the files that contain the values for the inputs of the DAG.
         The contents of the files must be serialized in a binary format.
-        The dictionary keys are the names of the inputs.
+        The mapping's keys are the names of the inputs.
 
-    output_locations : Dictionary of str -> str
+    output_locations
         Location of the files where the outputs of the DAG should be stored.
         The contents of the files will be serialized in a binary format.
-        The dictionary keys are the names of the outputs.
+        The mapping's keys are the names of the outputs.
 
 
     Raises

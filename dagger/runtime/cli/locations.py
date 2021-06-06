@@ -11,14 +11,13 @@ def retrieve_input_from_location(input_location: str) -> bytes:
 
     Parameters
     ----------
-    input_location : str
+    input_location
         A pointer to a file (e.g. "/my/filesystem/file.txt")
 
 
     Returns
     -------
-    bytes
-        The contents of the file.
+    The contents of the file.
 
 
     Raises
@@ -39,10 +38,10 @@ def store_output_in_location(serialized_output: bytes, output_location: str):
 
     Parameters
     ----------
-    serialized_output : bytes
+    serialized_output
         A sequence of bytes representing the output to store
 
-    output_location : str
+    output_location
         A pointer to a file (e.g. "/my/filesystem/file.txt")
 
 

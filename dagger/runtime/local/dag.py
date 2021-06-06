@@ -3,9 +3,9 @@ import itertools
 from typing import Dict, Optional
 
 from dagger.dag import DAG, validate_parameters
-from dagger.inputs import FromNodeOutput, FromParam
-from dagger.runtime.local.node import invoke_node
-from dagger.serializers import SerializationError
+from dagger.input import FromNodeOutput, FromParam
+from dagger.runtime.local.task import invoke_task
+from dagger.serializer import SerializationError
 
 
 def invoke_dag(
@@ -17,10 +17,10 @@ def invoke_dag(
 
     Parameters
     ----------
-    dag : DAG
+    dag
         DAG to execute
 
-    params : Dictionary of str -> bytes
+    params
         Inputs to the DAG.
         Serialized into their binary format.
         Indexed by input/parameter name.
@@ -28,9 +28,7 @@ def invoke_dag(
 
     Returns
     -------
-    Dictionary of str -> bytes
-        Serialized outputs of the DAG.
-        Indexed by output name.
+    Serialized outputs of the DAG, indexed by output name.
 
 
     Raises
@@ -39,7 +37,7 @@ def invoke_dag(
         When any required parameters are missing
 
     TypeError
-        When any of the outputs cannot be obtained from the return value of their node
+        When any of the outputs cannot be obtained from the return value of their task
 
     SerializationError
         When some of the outputs cannot be serialized with the specified Serializer
@@ -50,27 +48,27 @@ def invoke_dag(
     validate_parameters(dag.inputs, params)
 
     # TODO: Support both sequential and parallel execution
-    sequential_node_order = itertools.chain(*dag.node_execution_order)
-    for node_name in sequential_node_order:
-        node = dag.nodes[node_name]
-        node_params: Dict[str, bytes] = {}
-        for input_name, input_type in node.inputs.items():
+    sequential_task_order = itertools.chain(*dag.node_execution_order)
+    for task_name in sequential_task_order:
+        task = dag.nodes[task_name]
+        task_params: Dict[str, bytes] = {}
+        for input_name, input_type in task.inputs.items():
             if isinstance(input_type, FromParam):
-                node_params[input_name] = params[input_name]
+                task_params[input_name] = params[input_name]
             elif isinstance(input_type, FromNodeOutput):
-                node_params[input_name] = outputs[input_type.node][input_type.output]
+                task_params[input_name] = outputs[input_type.node][input_type.output]
             else:
                 raise TypeError(
                     f"Input type '{type(input_type)}' is not supported by the local runtime. The use of unsupported inputs should have been validated by the DAG object. This may be a bug in the library. Please open an issue in our GitHub repository."
                 )
 
         try:
-            if isinstance(node, DAG):
-                outputs[node_name] = invoke_dag(node, params=node_params)
+            if isinstance(task, DAG):
+                outputs[task_name] = invoke_dag(task, params=task_params)
             else:
-                outputs[node_name] = invoke_node(node, params=node_params)
+                outputs[task_name] = invoke_task(task, params=task_params)
         except (ValueError, TypeError, SerializationError) as e:
-            raise e.__class__(f"Error when invoking node '{node_name}'. {str(e)}")
+            raise e.__class__(f"Error when invoking task '{task_name}'. {str(e)}")
 
     dag_outputs = {}
     for output_name, output in dag.outputs.items():
