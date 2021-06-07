@@ -1,5 +1,5 @@
 from dagger.dag import DAG
-from dagger.runtime.argo.compiler import (
+from dagger.runtime.argo import (
     Cron,
     CronConcurrencyPolicy,
     Metadata,

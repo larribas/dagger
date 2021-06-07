@@ -1,5 +1,5 @@
 """Define tasks in a workflow/pipeline."""
-from typing import Any, Callable, Iterable, List, Mapping, Union
+from typing import Any, Callable, List, Mapping, Union
 from typing import get_args as get_type_args
 
 from dagger.data_structures import FrozenMapping
@@ -28,7 +28,7 @@ class Task:
         func: Callable,
         inputs: Mapping[str, SupportedInputs] = None,
         outputs: Mapping[str, SupportedOutputs] = None,
-        runtime_options: Iterable[Any] = None,
+        runtime_options: Mapping[str, Any] = None,
     ):
         """
         Validate and initialize a Task.
@@ -88,7 +88,7 @@ class Task:
         self._inputs = inputs
         self._outputs = outputs
         self._func = func
-        self._runtime_options = runtime_options or []
+        self._runtime_options = runtime_options or {}
 
     @property
     def func(self) -> Callable:
@@ -106,7 +106,7 @@ class Task:
         return self._outputs
 
     @property
-    def runtime_options(self) -> Iterable[Any]:
+    def runtime_options(self) -> Mapping[str, Any]:
         """Get the specified runtime options."""
         return self._runtime_options
 

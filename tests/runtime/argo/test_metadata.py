@@ -1,4 +1,4 @@
-from dagger.runtime.argo.compiler.metadata import Metadata, object_meta
+from dagger.runtime.argo.metadata import Metadata, object_meta
 
 
 def test__object_meta__only_with_name():

@@ -307,3 +307,17 @@ def test__nodes__cannot_be_mutated():
         str(e.value)
         == "You may not mutate the nodes of a DAG after it has been initialized. We do this to guarantee the structures you build with dagger remain valid and consistent."
     )
+
+
+def test__runtime_options__is_empty_by_default():
+    dag = DAG({"my-node": Task(lambda: 1)})
+    assert len(dag.runtime_options) == 0
+
+
+def test__runtime_options__returns_specified_options():
+    options = {"my-runtime": {"my": "options"}}
+    dag = DAG(
+        {"my-node": Task(lambda: 1)},
+        runtime_options=options,
+    )
+    assert dag.runtime_options == options

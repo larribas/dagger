@@ -1,6 +1,6 @@
 """Define the data structure for a DAG and validate all its components upon initialization."""
 import re
-from typing import List, Mapping, NamedTuple, Set, Union
+from typing import Any, List, Mapping, NamedTuple, Set, Union
 from typing import get_args as get_type_args
 
 from dagger.dag.topological_sort import topological_sort
@@ -47,6 +47,7 @@ class DAG:
         nodes: Mapping[str, Node],
         inputs: Mapping[str, SupportedInputs] = None,
         outputs: Mapping[str, DAGOutput] = None,
+        runtime_options: Mapping[str, Any] = None,
     ):
         """
         Validate and initialize a DAG.
@@ -64,6 +65,11 @@ class DAG:
         outputs
             A mapping from output names to DAG outputs.
             Outputs must come from the output of a node within the DAG.
+
+        runtime_options
+            A list of options to supply to all runtimes.
+            This allows you to take full advantage of the features of each runtime. For instance, you can use it to manipulate node affinities and tolerations in Kubernetes.
+            Check the documentation of each runtime to see potential options.
 
 
         Returns
@@ -113,6 +119,7 @@ class DAG:
         self._nodes = nodes
         self._inputs = inputs
         self._outputs = outputs
+        self._runtime_options = runtime_options or {}
         self._node_execution_order = topological_sort(
             {
                 node_name: _node_dependencies(nodes[node_name].inputs)
@@ -134,6 +141,11 @@ class DAG:
     def outputs(self) -> Mapping[str, DAGOutput]:
         """Get the outputs the DAG produces."""
         return self._outputs
+
+    @property
+    def runtime_options(self) -> Mapping[str, Any]:
+        """Get the specified runtime options."""
+        return self._runtime_options
 
     @property
     def node_execution_order(self) -> List[Set[str]]:

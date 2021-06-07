@@ -5,8 +5,7 @@ from typing import Any, Dict, List, Mapping, Optional
 
 from dagger.dag import DAG, Node, validate_parameters
 from dagger.input import FromNodeOutput, FromParam
-from dagger.runtime.argo.compiler.errors import IncompatibilityError
-from dagger.runtime.argo.options import ArgoTaskOptions
+from dagger.runtime.argo.errors import IncompatibilityError
 from dagger.task import SupportedInputs as SupportedTaskInputs
 from dagger.task import Task
 
@@ -201,7 +200,11 @@ def _dag_template(
             ]
         }
 
-    return template
+    return _spec_override(
+        original=template,
+        overrides=dag.runtime_options.get("argo_dag_template_overrides", {}),
+        address=address,
+    )
 
 
 def _dag_task(
@@ -300,17 +303,6 @@ def _task_template(
 
     https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#template
     """
-    task_name = ".".join(address)
-    task_options = [
-        option for option in task.runtime_options if isinstance(option, ArgoTaskOptions)
-    ]
-    if len(task_options) > 1:
-        raise ValueError(
-            f"You have specified two different instances of ArgoTaskOptions in task '{task_name}'. This behavior may be ambiguous and not what you intended. Therefore, we prefer raising an exception here. If you really want to specify multiple sets of options (say, because you have generic and specific options and you want to keep your code DRY), we recommend you use Python functions."
-        )
-
-    options = task_options[0] if task_options else ArgoTaskOptions()
-
     template: dict = {
         "name": _template_name(address),
         "container": {
@@ -336,14 +328,16 @@ def _task_template(
             {"name": "outputs", "mountPath": OUTPUT_PATH}
         ]
 
+    # Overrides
     template["container"] = _spec_override(
         original=template["container"],
-        overrides=options.container_overrides,
+        overrides=task.runtime_options.get("argo_container_overrides", {}),
         address=address,
     )
+
     return _spec_override(
         original=template,
-        overrides=options.template_overrides,
+        overrides=task.runtime_options.get("argo_template_overrides", {}),
         address=address,
     )
 
@@ -438,11 +432,11 @@ def _spec_override(
     if not overrides:
         return original
 
-    task_name = ".".join(address)
-    key_intersection = set(overrides.keys()).intersection(original.keys())
+    key_intersection = set(overrides).intersection(original)
     if key_intersection:
+        node_name = ".".join(address) if address else "this DAG"
         raise ValueError(
-            f"In task '{task_name}', you are trying to override the value of {sorted(list(key_intersection))}. The Argo runtime uses these attributes to guarantee the behavior of the supplied DAG is correct. Therefore, we cannot let you override them."
+            f"In {node_name}, you are trying to override the value of {sorted(list(key_intersection))}. The Argo runtime uses these attributes to guarantee the behavior of the supplied DAG is correct. Therefore, we cannot let you override them."
         )
 
     return {**original, **overrides}

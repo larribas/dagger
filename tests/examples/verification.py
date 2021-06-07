@@ -147,7 +147,7 @@ def verify_dag_matches_expected_manifest_when_using_argo_runtime(
         An Argo CRD representing a workflow that runs the supplied DAG.
         We only check the 'spec' section of the workflow. Therefore, metadata, API versioning or scheduling options do not have any effect on the result of calling this function.
     """
-    import dagger.runtime.argo.compiler as argo
+    import dagger.runtime.argo as argo
 
     try:
         container_entrypoint = [

@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: argo-specific-extras-
+spec:
+  entrypoint: dag
+  templates:
+  - name: dag
+    dag:
+      tasks:
+      - name: long-task
+        faisFast: false
+        template: dag-long-task
+  - name: dag-long-task
+    container:
+      image: local.registry/dagger
+      command: [argo-specific-extras]
+      args: [
+        --node-name, long-task
+      ]
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "60Mi"
+    retryStrategy:
+      limit: 5
+    activeDeadlineSeconds: 30

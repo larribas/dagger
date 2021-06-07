@@ -17,13 +17,10 @@ Each of the tasks will run:
 We provide examples and tutorials in the project's documentation.
 """
 
-from dagger.runtime.argo.compiler.cron_workflow_spec import (  # noqa
-    Cron,
-    CronConcurrencyPolicy,
-)
-from dagger.runtime.argo.compiler.errors import IncompatibilityError  # noqa
-from dagger.runtime.argo.compiler.metadata import Metadata  # noqa
-from dagger.runtime.argo.compiler.v1alpha1 import (  # noqa
+from dagger.runtime.argo.cron_workflow_spec import Cron, CronConcurrencyPolicy  # noqa
+from dagger.runtime.argo.errors import IncompatibilityError  # noqa
+from dagger.runtime.argo.metadata import Metadata  # noqa
+from dagger.runtime.argo.v1alpha1 import (  # noqa
     cron_workflow_manifest,
     workflow_manifest,
 )
