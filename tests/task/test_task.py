@@ -124,6 +124,6 @@ def test__runtime_options__is_empty_by_default():
 
 
 def test__runtime_options__returns_specified_options():
-    options = {"some", "arbitrary", "options"}
+    options = {"my-runtime": {"my": "options"}}
     task = Task(lambda: 1, runtime_options=options)
     assert task.runtime_options == options
