@@ -9,75 +9,41 @@ Task(..., runtime_options=[ArgoTaskOptions(...)])
 DAG(..., runtime_options=[ArgoDAGOptions(...)])
 """
 
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Mapping, Optional
-
-
-class RetryPolicy(Enum):
-    """
-    Retry policy for a task.
-
-    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#retrystrategy
-    """
-
-    ALWAYS = "Always"
-    ON_FAILURE = "OnFailure"
-    ON_ERROR = "OnError"
-    ON_TRANSIENT_ERROR = "OnTransientError"
-
-
-@dataclass(frozen=True)
-class RetryBackoff:
-    """
-    Retry strategy backoff policy.
-
-    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#backoff
-    """
-
-    duration_seconds: int
-    max_duration_seconds: int
-    factor: int
-
-
-@dataclass(frozen=True)
-class RetryStrategy:
-    """
-    Retry strategy.
-
-    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#retrystrategy
-    """
-
-    limit: Optional[int] = None
-    policy: RetryPolicy = RetryPolicy.ON_FAILURE
-    node_anti_affinity: bool = False
-    backoff: Optional[RetryBackoff] = None
+from dataclasses import dataclass
+from typing import Any, Mapping, Optional
 
 
 @dataclass(frozen=True)
 class ArgoTaskOptions:
     """
-    Extra options for a Task template.
+    Extra options for a Task.
 
-    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#template
+    We don't want dagger to fall behind in terms of compatibility with the latest features of Argo.
+
+    This class allows you to specify custom overrides for these specs:
+    - Template: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#template
+    - Container: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#container
+
+    And declare these overrides together with the Task you are defining, so that there's a single source of truth for the behavior of a Task. Or put another way:
+    > Gather together those things that change for the same reason
     """
 
-    timeout_seconds: Optional[int] = None
-    active_deadline_seconds: Optional[int] = None
-    retry_strategy: Optional[RetryStrategy] = None
-    service_account: Optional[str] = None
-    parallelism: Optional[int] = None
-    priority: Optional[int] = None
-    resource_requests: Mapping[str, str] = field(default_factory=dict)
-    resource_limits: Mapping[str, str] = field(default_factory=dict)
+    template_overrides: Optional[Mapping[str, Any]] = None
+    container_overrides: Optional[Mapping[str, Any]] = None
 
 
 @dataclass(frozen=True)
 class ArgoDAGOptions:
     """
-    Extra options for a DAG template.
+    Extra options for a DAG.
 
-    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#dagtemplate
+    We don't want dagger to fall behind in terms of compatibility with the latest features of Argo.
+
+    This class allows you to specify custom overrides for these specs:
+    - DAGTemplate: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#dagtemplate
+
+    And declare these overrides together with the DAG you are defining, so that there's a single source of truth for the behavior of a DAG. Or put another way:
+    > Gather together those things that change for the same reason
     """
 
-    fail_fast: bool = True
+    dag_template_overrides: Optional[Mapping[str, Any]] = None

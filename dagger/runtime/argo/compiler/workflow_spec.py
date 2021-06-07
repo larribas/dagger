@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Mapping, Optional
 from dagger.dag import DAG, Node, validate_parameters
 from dagger.input import FromNodeOutput, FromParam
 from dagger.runtime.argo.compiler.errors import IncompatibilityError
-from dagger.runtime.argo.options import ArgoTaskOptions, RetryStrategy
+from dagger.runtime.argo.options import ArgoTaskOptions
 from dagger.task import SupportedInputs as SupportedTaskInputs
 from dagger.task import Task
 
@@ -300,13 +300,13 @@ def _task_template(
 
     https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#template
     """
+    task_name = ".".join(address)
     task_options = [
         option for option in task.runtime_options if isinstance(option, ArgoTaskOptions)
     ]
     if len(task_options) > 1:
-        node_name = ".".join(address)
         raise ValueError(
-            f"You have specified two different instances of ArgoTaskOptions in task '{node_name}'. This behavior may be ambiguous and not what you intended. Therefore, we prefer raising an exception here. If you really want to specify multiple sets of options (say, because you have generic and specific options and you want to keep your code DRY), we recommend you use Python functions."
+            f"You have specified two different instances of ArgoTaskOptions in task '{task_name}'. This behavior may be ambiguous and not what you intended. Therefore, we prefer raising an exception here. If you really want to specify multiple sets of options (say, because you have generic and specific options and you want to keep your code DRY), we recommend you use Python functions."
         )
 
     options = task_options[0] if task_options else ArgoTaskOptions()
@@ -316,7 +316,6 @@ def _task_template(
         "container": {
             "image": container_image,
             "args": _task_template_container_arguments(task=task, address=address),
-            **_task_template_container_options(options),
         },
     }
 
@@ -337,10 +336,16 @@ def _task_template(
             {"name": "outputs", "mountPath": OUTPUT_PATH}
         ]
 
-    return {
-        **_task_template_options(options),
-        **template,
-    }
+    template["container"] = _spec_override(
+        original=template["container"],
+        overrides=options.container_overrides,
+        address=address,
+    )
+    return _spec_override(
+        original=template,
+        overrides=options.template_overrides,
+        address=address,
+    )
 
 
 def _task_template_inputs(task: Task) -> Mapping[str, Any]:
@@ -417,76 +422,30 @@ def _task_template_container_arguments(
     )
 
 
-def _task_template_options(options: ArgoTaskOptions) -> Mapping[str, Any]:
+def _spec_override(
+    original: Mapping[str, Any],
+    overrides: Mapping[str, Any],
+    address: List[str],
+) -> Mapping[str, Any]:
     """
-    Return a minimal map of options for a template.
+    Given an original arbitrary spec and a set of overrides, verify the overrides don't intersect with the existing attributes and return both mappings merged.
 
-    https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#template
+    Raises
+    ------
+    ValueError
+        If we attempt to override keys that are already present in the original mapping.
     """
-    template: dict = {}
+    if not overrides:
+        return original
 
-    if options.timeout_seconds:
-        template["timeout"] = f"{options.timeout_seconds}s"
+    task_name = ".".join(address)
+    key_intersection = set(overrides.keys()).intersection(original.keys())
+    if key_intersection:
+        raise ValueError(
+            f"In task '{task_name}', you are trying to override the value of {sorted(list(key_intersection))}. The Argo runtime uses these attributes to guarantee the behavior of the supplied DAG is correct. Therefore, we cannot let you override them."
+        )
 
-    if options.active_deadline_seconds:
-        template["activeDeadlineSeconds"] = options.active_deadline_seconds
-
-    if options.retry_strategy:
-        template["retryStrategy"] = _template_retry_strategy(options.retry_strategy)
-
-    if options.service_account:
-        template["serviceAccountName"] = options.service_account
-
-    if options.parallelism:
-        template["parallelism"] = options.parallelism
-
-    if options.priority:
-        template["priority"] = options.priority
-
-    return template
-
-
-def _task_template_container_options(options: ArgoTaskOptions) -> Mapping[str, Any]:
-    """
-    Return a minimal map of options for a template's container.
-
-    https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#container
-    """
-    container: dict = {}
-
-    if options.resource_requests or options.resource_limits:
-        container["resources"] = {}
-
-    if options.resource_requests:
-        container["resources"]["requests"] = options.resource_requests
-
-    if options.resource_limits:
-        container["resources"]["limits"] = options.resource_limits
-
-    return container
-
-
-def _template_retry_strategy(strategy: RetryStrategy) -> Mapping[str, Any]:
-    result: dict = {}
-    default = RetryStrategy()
-
-    if strategy.limit:
-        result["limit"] = strategy.limit
-
-    if strategy.policy != default.policy:
-        result["retryPolicy"] = strategy.policy.value
-
-    if strategy.node_anti_affinity != default.node_anti_affinity:
-        result["affinity"] = {"nodeAntiAffinity": {}}
-
-    if strategy.backoff:
-        result["backoff"] = {
-            "duration": f"{strategy.backoff.duration_seconds}s",
-            "maxDuration": f"{strategy.backoff.max_duration_seconds}s",
-            "factor": strategy.backoff.factor,
-        }
-
-    return result
+    return {**original, **overrides}
 
 
 def _template_name(address: List[str]) -> str:

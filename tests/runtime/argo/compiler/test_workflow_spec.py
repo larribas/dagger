@@ -8,12 +8,7 @@ from dagger.runtime.argo.compiler.workflow_spec import (
     _dag_task_argument_artifact_from,
     workflow_spec,
 )
-from dagger.runtime.argo.options import (
-    ArgoTaskOptions,
-    RetryBackoff,
-    RetryPolicy,
-    RetryStrategy,
-)
+from dagger.runtime.argo.options import ArgoTaskOptions
 from dagger.task import Task
 
 
@@ -184,29 +179,7 @@ def test__workflow_spec__setting_service_account():
     )
 
 
-def test__workflow_spec__with_more_than_one_task_option__fails():
-    dag = DAG(
-        {
-            "n": Task(
-                lambda: 1,
-                runtime_options=[
-                    ArgoTaskOptions(),
-                    ArgoTaskOptions(timeout_seconds=11),
-                ],
-            )
-        }
-    )
-
-    with pytest.raises(ValueError) as e:
-        workflow_spec(dag, container_image="my-image")
-
-    assert (
-        str(e.value)
-        == "You have specified two different instances of ArgoTaskOptions in task 'n'. This behavior may be ambiguous and not what you intended. Therefore, we prefer raising an exception here. If you really want to specify multiple sets of options (say, because you have generic and specific options and you want to keep your code DRY), we recommend you use Python functions."
-    )
-
-
-def test__workflow_spec__with_task_options_with_default_values():
+def test__workflow_spec__with_empty_task_options():
     container_image = "my-image"
     options = ArgoTaskOptions()
     dag = DAG(
@@ -243,29 +216,91 @@ def test__workflow_spec__with_task_options_with_default_values():
     }
 
 
-def test__workflow_spec__with_task_options_with_specific_values():
+def test__workflow_spec__with_more_than_one_task_option__fails():
+    dag = DAG(
+        {
+            "n": Task(
+                lambda: 1,
+                runtime_options=[
+                    ArgoTaskOptions(),
+                    ArgoTaskOptions(),
+                ],
+            )
+        }
+    )
+
+    with pytest.raises(ValueError) as e:
+        workflow_spec(dag, container_image="my-image")
+
+    assert (
+        str(e.value)
+        == "You have specified two different instances of ArgoTaskOptions in task 'n'. This behavior may be ambiguous and not what you intended. Therefore, we prefer raising an exception here. If you really want to specify multiple sets of options (say, because you have generic and specific options and you want to keep your code DRY), we recommend you use Python functions."
+    )
+
+
+def test__workflow_spec__with_template_overrides_that_affect_essential_attributes__fails():
+    dag = DAG(
+        {
+            "n": Task(
+                lambda: 1,
+                runtime_options=[
+                    ArgoTaskOptions(
+                        template_overrides={"container": {}, "name": "x"},
+                    )
+                ],
+            )
+        }
+    )
+
+    with pytest.raises(ValueError) as e:
+        workflow_spec(dag, container_image="my-image")
+
+    assert (
+        str(e.value)
+        == "In task 'n', you are trying to override the value of ['container', 'name']. The Argo runtime uses these attributes to guarantee the behavior of the supplied DAG is correct. Therefore, we cannot let you override them."
+    )
+
+
+def test__workflow_spec__with_container_overrides_that_affect_essential_attributes__fails():
+    dag = DAG(
+        {
+            "n": Task(
+                lambda: 1,
+                runtime_options=[ArgoTaskOptions(container_overrides={"image": "x"})],
+            )
+        }
+    )
+
+    with pytest.raises(ValueError) as e:
+        workflow_spec(dag, container_image="my-image")
+
+    assert (
+        str(e.value)
+        == "In task 'n', you are trying to override the value of ['image']. The Argo runtime uses these attributes to guarantee the behavior of the supplied DAG is correct. Therefore, we cannot let you override them."
+    )
+
+
+def test__workflow_spec__with_specific_task_options():
     container_image = "my-image"
     options = ArgoTaskOptions(
-        timeout_seconds=2 * 60,
-        active_deadline_seconds=40,
-        retry_strategy=RetryStrategy(
-            limit=11,
-            policy=RetryPolicy.ON_TRANSIENT_ERROR,
-            node_anti_affinity=True,
-            backoff=RetryBackoff(
-                duration_seconds=30,
-                max_duration_seconds=3 * 60,
-                factor=2,
-            ),
-        ),
-        service_account="specific-service-account-for-this-task",
-        parallelism=5,
-        priority=3,
-        resource_requests={
-            "cpu": "500m",
-            "ephemeral-storage": "40Gi",
+        template_overrides={
+            "timeout": "31m",
+            "retryStrategy": {
+                "limit": 11,
+            },
+            "priority": 3,
         },
-        resource_limits={"memory": "8Gi"},
+        container_overrides={
+            "resources": {
+                "requests": {
+                    "cpu": "500m",
+                    "ephemeral-storage": "40Gi",
+                },
+                "limits": {
+                    "memory": "8Gi",
+                },
+            },
+        },
     )
     dag = DAG(
         {
@@ -305,20 +340,10 @@ def test__workflow_spec__with_task_options_with_specific_values():
                         },
                     },
                 },
-                "timeout": "120s",
-                "activeDeadlineSeconds": 40,
+                "timeout": "31m",
                 "retryStrategy": {
                     "limit": 11,
-                    "retryPolicy": "OnTransientError",
-                    "affinity": {"nodeAntiAffinity": {}},
-                    "backoff": {
-                        "duration": "30s",
-                        "factor": 2,
-                        "maxDuration": "180s",
-                    },
                 },
-                "serviceAccountName": "specific-service-account-for-this-task",
-                "parallelism": 5,
                 "priority": 3,
             },
         ],
