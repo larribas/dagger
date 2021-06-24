@@ -7,9 +7,9 @@ spec:
   templates:
   - name: dag
     dag:
+      failFast: false
       tasks:
       - name: long-task
-        faisFast: false
         template: dag-long-task
   - name: dag-long-task
     container:

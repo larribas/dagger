@@ -169,7 +169,7 @@ def _dag_template(
     """
     address = address or []
 
-    template = {
+    template: dict = {
         "name": _template_name(address),
         "dag": {
             "tasks": [
@@ -200,11 +200,13 @@ def _dag_template(
             ]
         }
 
-    return _spec_override(
-        original=template,
+    template["dag"] = _spec_override(
+        original=template["dag"],
         overrides=dag.runtime_options.get("argo_dag_template_overrides", {}),
         address=address,
     )
+
+    return template
 
 
 def _dag_task(

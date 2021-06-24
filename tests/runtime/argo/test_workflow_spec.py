@@ -300,7 +300,7 @@ def test__workflow_spec__with_dag_template_overrides_that_affect_essential_attri
         {"n": Task(lambda: 1)},
         runtime_options={
             "argo_dag_template_overrides": {
-                "dag": [],
+                "tasks": [],
             },
         },
     )
@@ -310,7 +310,7 @@ def test__workflow_spec__with_dag_template_overrides_that_affect_essential_attri
 
     assert (
         str(e.value)
-        == "In this DAG, you are trying to override the value of ['dag']. The Argo runtime uses these attributes to guarantee the behavior of the supplied DAG is correct. Therefore, we cannot let you override them."
+        == "In this DAG, you are trying to override the value of ['tasks']. The Argo runtime uses these attributes to guarantee the behavior of the supplied DAG is correct. Therefore, we cannot let you override them."
     )
 
 
@@ -332,9 +332,9 @@ def test__workflow_spec__with_dag_template_overrides():
         "templates": [
             {
                 "name": "dag",
-                "failFast": False,
-                "extraAttribute": "extra",
                 "dag": {
+                    "failFast": False,
+                    "extraAttribute": "extra",
                     "tasks": [
                         {
                             "name": "n",

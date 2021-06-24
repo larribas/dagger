@@ -7,10 +7,15 @@ This example may only show a subset of all the available options. Check the Argo
 """
 from dagger import DAG, Task
 
+
+def long_task():  # noqa
+    print("Long task that benefits from a timeout and a retry strategy")
+
+
 dag = DAG(
     {
         "long-task": Task(
-            lambda: "long task that benefits from a timeout and a retry strategy",
+            long_task,
             runtime_options={
                 "argo_container_overrides": {
                     "resources": {"requests": {"cpu": "100m", "memory": "60Mi"}}
