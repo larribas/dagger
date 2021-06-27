@@ -178,6 +178,182 @@ def test__workflow_spec__setting_service_account():
     )
 
 
+def test__workflow_spec__with_template_overrides_that_affect_essential_attributes__fails():
+    dag = DAG(
+        {
+            "n": Task(
+                lambda: 1,
+                runtime_options={
+                    "argo_template_overrides": {
+                        "container": {},
+                        "name": "x",
+                    }
+                },
+            )
+        }
+    )
+
+    with pytest.raises(ValueError) as e:
+        workflow_spec(dag, container_image="my-image")
+
+    assert (
+        str(e.value)
+        == "In n, you are trying to override the value of ['container', 'name']. The Argo runtime uses these attributes to guarantee the behavior of the supplied DAG is correct. Therefore, we cannot let you override them."
+    )
+
+
+def test__workflow_spec__with_container_overrides_that_affect_essential_attributes__fails():
+    dag = DAG(
+        {
+            "n": Task(
+                lambda: 1,
+                runtime_options={
+                    "argo_container_overrides": {
+                        "image": "x",
+                    }
+                },
+            )
+        }
+    )
+
+    with pytest.raises(ValueError) as e:
+        workflow_spec(dag, container_image="my-image")
+
+    assert (
+        str(e.value)
+        == "In n, you are trying to override the value of ['image']. The Argo runtime uses these attributes to guarantee the behavior of the supplied DAG is correct. Therefore, we cannot let you override them."
+    )
+
+
+def test__workflow_spec__with_task_overrides():
+    container_image = "my-image"
+    options = {
+        "argo_template_overrides": {
+            "timeout": "31m",
+            "retryStrategy": {
+                "limit": 11,
+            },
+            "priority": 3,
+        },
+        "argo_container_overrides": {
+            "resources": {
+                "requests": {
+                    "cpu": "500m",
+                    "ephemeral-storage": "40Gi",
+                },
+                "limits": {
+                    "memory": "8Gi",
+                },
+            },
+        },
+    }
+    dag = DAG(
+        {
+            "n": Task(
+                lambda: 1,
+                runtime_options=options,
+            )
+        }
+    )
+
+    assert workflow_spec(dag, container_image=container_image) == {
+        "entrypoint": "dag",
+        "templates": [
+            {
+                "name": "dag",
+                "dag": {
+                    "tasks": [
+                        {
+                            "name": "n",
+                            "template": "dag-n",
+                        },
+                    ],
+                },
+            },
+            {
+                "name": "dag-n",
+                "container": {
+                    "image": container_image,
+                    "args": ["--node-name", "n"],
+                    "resources": {
+                        "requests": {
+                            "cpu": "500m",
+                            "ephemeral-storage": "40Gi",
+                        },
+                        "limits": {
+                            "memory": "8Gi",
+                        },
+                    },
+                },
+                "timeout": "31m",
+                "retryStrategy": {
+                    "limit": 11,
+                },
+                "priority": 3,
+            },
+        ],
+    }
+
+
+def test__workflow_spec__with_dag_template_overrides_that_affect_essential_attributes__fails():
+    dag = DAG(
+        {"n": Task(lambda: 1)},
+        runtime_options={
+            "argo_dag_template_overrides": {
+                "tasks": [],
+            },
+        },
+    )
+
+    with pytest.raises(ValueError) as e:
+        workflow_spec(dag, container_image="my-image")
+
+    assert (
+        str(e.value)
+        == "In this DAG, you are trying to override the value of ['tasks']. The Argo runtime uses these attributes to guarantee the behavior of the supplied DAG is correct. Therefore, we cannot let you override them."
+    )
+
+
+def test__workflow_spec__with_dag_template_overrides():
+    container_image = "my-image"
+    options = {
+        "argo_dag_template_overrides": {
+            "failFast": False,
+            "extraAttribute": "extra",
+        },
+    }
+    dag = DAG(
+        {"n": Task(lambda: 1)},
+        runtime_options=options,
+    )
+
+    assert workflow_spec(dag, container_image=container_image) == {
+        "entrypoint": "dag",
+        "templates": [
+            {
+                "name": "dag",
+                "dag": {
+                    "failFast": False,
+                    "extraAttribute": "extra",
+                    "tasks": [
+                        {
+                            "name": "n",
+                            "template": "dag-n",
+                        },
+                    ],
+                },
+            },
+            {
+                "name": "dag-n",
+                "container": {
+                    "image": container_image,
+                    "args": ["--node-name", "n"],
+                },
+            },
+        ],
+    }
+
+
 def test__dag_task_argument_artifact_from__with_incompatible_input():
     class IncompatibleInput:
         pass

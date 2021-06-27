@@ -169,7 +169,7 @@ def _dag_template(
     """
     address = address or []
 
-    template = {
+    template: dict = {
         "name": _template_name(address),
         "dag": {
             "tasks": [
@@ -199,6 +199,12 @@ def _dag_template(
                 for output_name in dag.outputs
             ]
         }
+
+    template["dag"] = _spec_override(
+        original=template["dag"],
+        overrides=dag.runtime_options.get("argo_dag_template_overrides", {}),
+        address=address,
+    )
 
     return template
 
@@ -303,14 +309,16 @@ def _task_template(
         "name": _template_name(address),
         "container": {
             "image": container_image,
-            # We create a copy of the entrypoint to prevent the YAML library
-            # from using anchors and aliases and make the resulting YAML more
-            # explicit. It also allows any other postprocessor to change some
-            # of the entrypoints without affecting the rest
-            "command": container_command[:],
             "args": _task_template_container_arguments(task=task, address=address),
         },
     }
+
+    if container_command:
+        # We create a copy of the entrypoint to prevent the YAML library
+        # from using anchors and aliases and make the resulting YAML more
+        # explicit. It also allows any other postprocessor to change some
+        # of the entrypoints without affecting the rest
+        template["container"]["command"] = container_command[:]
 
     if task.inputs:
         template["inputs"] = _task_template_inputs(task)
@@ -322,7 +330,18 @@ def _task_template(
             {"name": "outputs", "mountPath": OUTPUT_PATH}
         ]
 
-    return template
+    # Overrides
+    template["container"] = _spec_override(
+        original=template["container"],
+        overrides=task.runtime_options.get("argo_container_overrides", {}),
+        address=address,
+    )
+
+    return _spec_override(
+        original=template,
+        overrides=task.runtime_options.get("argo_template_overrides", {}),
+        address=address,
+    )
 
 
 def _task_template_inputs(task: Task) -> Mapping[str, Any]:
@@ -397,6 +416,32 @@ def _task_template_container_arguments(
             ]
         )
     )
+
+
+def _spec_override(
+    original: Mapping[str, Any],
+    overrides: Mapping[str, Any],
+    address: List[str],
+) -> Mapping[str, Any]:
+    """
+    Given an original arbitrary spec and a set of overrides, verify the overrides don't intersect with the existing attributes and return both mappings merged.
+
+    Raises
+    ------
+    ValueError
+        If we attempt to override keys that are already present in the original mapping.
+    """
+    if not overrides:
+        return original
+
+    key_intersection = set(overrides).intersection(original)
+    if key_intersection:
+        node_name = ".".join(address) if address else "this DAG"
+        raise ValueError(
+            f"In {node_name}, you are trying to override the value of {sorted(list(key_intersection))}. The Argo runtime uses these attributes to guarantee the behavior of the supplied DAG is correct. Therefore, we cannot let you override them."
+        )
+
+    return {**original, **overrides}
 
 
 def _template_name(address: List[str]) -> str:

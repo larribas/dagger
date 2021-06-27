@@ -5,6 +5,10 @@ import dagger.output as output
 from dagger.serializer import DefaultSerializer
 from dagger.task import Task
 
+#
+# Initialization
+#
+
 
 def test__init__with_an_invalid_input_name():
     with pytest.raises(ValueError):
@@ -85,6 +89,11 @@ def test__init__with_input_and_signature_mismatch():
     )
 
 
+#
+# Properties
+#
+
+
 def test__inputs__cannot_be_mutated():
     task = Task(lambda x: x, inputs=dict(x=input.FromParam()))
 
@@ -107,3 +116,14 @@ def test__outputs__cannot_be_mutated():
         str(e.value)
         == "You may not mutate the outputs of a task. We do this to guarantee that, once initialized, the structures you build with dagger remain valid and consistent."
     )
+
+
+def test__runtime_options__is_empty_by_default():
+    task = Task(lambda: 1)
+    assert len(task.runtime_options) == 0
+
+
+def test__runtime_options__returns_specified_options():
+    options = {"my-runtime": {"my": "options"}}
+    task = Task(lambda: 1, runtime_options=options)
+    assert task.runtime_options == options
