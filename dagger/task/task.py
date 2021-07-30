@@ -110,6 +110,24 @@ class Task:
         """Get the specified runtime options."""
         return self._runtime_options
 
+    def __eq__(self, obj) -> bool:
+        """Return true if the two tasks are equivalent to each other."""
+        return (
+            self._func == obj._func
+            and self._inputs == obj._inputs
+            and self._outputs == obj._outputs
+            and self._runtime_options == obj._runtime_options
+        )
+
+    def __str__(self) -> str:
+        """Return a human-readable representation of the task."""
+        return f"""Task(
+            inputs={str(self._inputs)}, 
+            outputs={str(self._outputs)}, 
+            runtime_options={str(self._runtime_options)}, 
+        )
+        """
+
 
 def _validate_input_is_supported(input_name, input):
     if not _is_type_supported(input, SupportedInputs):

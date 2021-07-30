@@ -1,5 +1,7 @@
 """Input retrieved from the parameters passed to the parent node."""
 
+from typing import Optional
+
 from dagger.serializer import DefaultSerializer, Serializer
 
 
@@ -8,6 +10,7 @@ class FromParam:
 
     def __init__(
         self,
+        name: Optional[str] = None,
         serializer: Serializer = DefaultSerializer,
     ):
         """
@@ -18,13 +21,27 @@ class FromParam:
         serializer
             The Serializer implementation to use to deserialize the input.
 
+        name
+            The name of the parameter in the parent node.
+            If omitted, it's assumed to be equal to the name given to this input.
+
         Returns
         -------
         A valid, immutable representation of an input.
         """
         self._serializer = serializer
+        self._name = name
 
     @property
     def serializer(self) -> Serializer:
         """Get the strategy to use in order to deserialize the supplied inputs."""
         return self._serializer
+
+    @property
+    def name(self) -> Optional[str]:
+        """Get the name the input references, if any."""
+        return self._name
+
+    def __eq__(self, obj):
+        """Return true if both inputs are equivalent."""
+        return self._name == obj._name and self._serializer == obj._serializer

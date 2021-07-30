@@ -102,5 +102,5 @@ def test__invoke_dag__propagates_node_exceptions_extending_the_details():
 
     assert (
         str(e.value)
-        == "Error when invoking task 'always-1'. We encountered the following error while attempting to serialize the results of this task: This output is of type FromKey. This means we expect the return value of the function to be a mapping containing, at least, a key named 'missing-key'"
+        == "Error when invoking node 'always-1'. We encountered the following error while attempting to serialize the results of this task: This output is of type FromKey. This means we expect the return value of the function to be a mapping containing, at least, a key named 'missing-key'"
     )

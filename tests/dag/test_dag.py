@@ -1,3 +1,5 @@
+from itertools import combinations
+
 import pytest
 
 import dagger.input as input
@@ -178,6 +180,19 @@ def test__init__with_a_node_that_references_a_dag_input_that_does_not_exist():
     )
 
 
+def test__init__with_a_node_that_references_an_existing_dag_input_explicitly():
+    DAG(
+        nodes={
+            "my-node": Task(
+                lambda x: 1,
+                inputs=dict(x=input.FromParam("z")),
+            ),
+        },
+        inputs=dict(z=input.FromParam()),
+    )
+    # We are expecting no validation errors to be raised
+
+
 def test__init__with_a_cyclic_dependency():
     with pytest.raises(CyclicDependencyError):
         DAG(
@@ -321,3 +336,43 @@ def test__runtime_options__returns_specified_options():
         runtime_options=options,
     )
     assert dag.runtime_options == options
+
+
+def test__eq():
+    def f(**kwargs):
+        return 11
+
+    nodes = {"my-node": Task(lambda: 1, outputs=dict(x=output.FromReturnValue()))}
+    inputs = dict(x=input.FromParam())
+    outputs = dict(x=DAGOutput("my-node", "x"))
+    runtime_options = {"my": "options"}
+
+    same = [
+        DAG(
+            nodes=nodes,
+            inputs=inputs,
+            outputs=outputs,
+            runtime_options=runtime_options,
+        )
+        for i in range(3)
+    ]
+
+    different = [
+        DAG(
+            nodes=nodes, inputs=inputs, outputs=outputs, runtime_options=runtime_options
+        ),
+        DAG(nodes=nodes, inputs=inputs, outputs=outputs),
+        DAG(nodes=nodes, inputs=inputs, runtime_options=runtime_options),
+        DAG(nodes=nodes, outputs=outputs, runtime_options=runtime_options),
+        DAG(
+            nodes={
+                "my-node": Task(lambda: 2, outputs=dict(x=output.FromReturnValue()))
+            },
+            inputs=inputs,
+            outputs=outputs,
+            runtime_options=runtime_options,
+        ),
+    ]
+
+    assert all(x == y for x, y in combinations(same, 2))
+    assert all(x != y for x, y in combinations(different, 2))

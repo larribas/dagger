@@ -142,6 +142,37 @@ def test__workflow_spec__nested_dags():
     }
 
 
+def test__workflow_spec__with_input_from_param_with_different_name():
+    container_image = "my-image"
+    container_entrypoint = ["my", "dag", "entrypoint"]
+    dag = DAG(
+        inputs=dict(a=input.FromParam()),
+        outputs=dict(y=DAGOutput("times3", "x")),
+        nodes=dict(
+            times3=Task(
+                lambda b: b * 3,
+                inputs=dict(b=input.FromParam("a")),
+                outputs=dict(x=output.FromReturnValue()),
+            )
+        ),
+    )
+
+    spec = workflow_spec(
+        dag,
+        container_image=container_image,
+        container_entrypoint_to_dag_cli=container_entrypoint,
+        params={"a": b"2"},
+    )
+
+    assert spec["arguments"]["artifacts"] == [{"name": "a", "raw": {"data": b"2"}}]
+    assert spec["templates"][0]["dag"]["tasks"][0]["arguments"]["artifacts"] == [
+        {
+            "name": "b",
+            "from": "{{inputs.artifacts.a}}",
+        }
+    ]
+
+
 def test__workflow_spec__with_invalid_parameters():
     dag = DAG(
         nodes={

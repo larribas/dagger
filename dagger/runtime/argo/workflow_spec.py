@@ -284,7 +284,7 @@ def _dag_task_argument_artifact_from(
     Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/variables.md
     """
     if isinstance(input, FromParam):
-        return "{{" + f"inputs.artifacts.{input_name}" + "}}"
+        return "{{" + f"inputs.artifacts.{input.name or input_name}" + "}}"
     elif isinstance(input, FromNodeOutput):
         return "{{" + f"tasks.{input.node}.outputs.artifacts.{input.output}" + "}}"
     else:

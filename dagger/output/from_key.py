@@ -70,3 +70,11 @@ class FromKey(Generic[K, V]):
         raise TypeError(
             f"This output is of type {self.__class__.__name__}. This means we expect the return value of the function to be a mapping containing, at least, a key named '{self._key}'"
         )
+
+    def __eq__(self, obj) -> bool:
+        """Return true if both outputs are equivalent."""
+        return (
+            isinstance(obj, FromKey)
+            and self._serializer == obj._serializer
+            and self._name == obj._name
+        )

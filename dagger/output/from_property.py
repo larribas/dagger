@@ -56,3 +56,11 @@ class FromProperty:
         raise TypeError(
             f"This output is of type {self.__class__.__name__}. This means we expect the return value of the function to be an object with a property named '{self._name}'"
         )
+
+    def __eq__(self, obj) -> bool:
+        """Return true if both outputs are equivalent."""
+        return (
+            isinstance(obj, FromProperty)
+            and self._serializer == obj._serializer
+            and self._name == obj._name
+        )

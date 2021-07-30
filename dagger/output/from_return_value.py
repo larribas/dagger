@@ -33,3 +33,11 @@ class FromReturnValue(Generic[T]):
     def from_function_return_value(self, return_value: T) -> T:
         """Retrieve the output from the return value of the task's function."""
         return return_value
+
+    def __eq__(self, obj) -> bool:
+        """Return true if both outputs are equivalent."""
+        return isinstance(obj, FromReturnValue) and self._serializer == obj._serializer
+
+    def __str__(self) -> str:
+        """Return a human-readable representation of the output."""
+        return f"FromReturnValue(serializer={self._serializer})"

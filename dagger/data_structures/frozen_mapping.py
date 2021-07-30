@@ -81,3 +81,8 @@ class FrozenMapping(Generic[K, V], MappingABC):
     def __len__(self) -> int:
         """Get the length of the mapping, defined as the number of (key,value) pairs in it."""
         return self._mapping.__len__()
+
+    def __str__(self) -> str:
+        """Get a human-readable string representation of the data structure."""
+        items = ", ".join([f"{k}: {v}" for k, v in self._mapping.items()])
+        return "{" + items + "}"

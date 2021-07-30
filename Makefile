@@ -31,7 +31,7 @@ build:
 docker-build: build
 	docker build . -t $(DOCKER_IMAGE_NAME):$(VERSION) --build-arg "WHEEL=dagger-`poetry version -s`-py3-none-any.whl"
 
-.PHONY: push-local
+.PHONY: docker-push-local
 docker-push-local: docker-build
 	docker tag $(DOCKER_IMAGE_NAME):$(VERSION) localhost:$(K3D_REGISTRY_PORT)/$(DOCKER_IMAGE_NAME):$(VERSION)
 	docker push localhost:$(K3D_REGISTRY_PORT)/$(DOCKER_IMAGE_NAME):$(VERSION)

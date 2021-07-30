@@ -48,28 +48,28 @@ def invoke_dag(
     validate_parameters(dag.inputs, params)
 
     # TODO: Support both sequential and parallel execution
-    sequential_task_order = itertools.chain(*dag.node_execution_order)
-    for task_name in sequential_task_order:
-        task = dag.nodes[task_name]
-        task_params: Dict[str, bytes] = {}
-        for input_name in task.inputs:
-            task_input = task.inputs[input_name]
-            if isinstance(task_input, FromParam):
-                task_params[input_name] = params[input_name]
-            elif isinstance(task_input, FromNodeOutput):
-                task_params[input_name] = outputs[task_input.node][task_input.output]
+    sequential_node_order = itertools.chain(*dag.node_execution_order)
+    for node_name in sequential_node_order:
+        node = dag.nodes[node_name]
+        node_params: Dict[str, bytes] = {}
+        for input_name in node.inputs:
+            node_input = node.inputs[input_name]
+            if isinstance(node_input, FromParam):
+                node_params[input_name] = params[node_input.name or input_name]
+            elif isinstance(node_input, FromNodeOutput):
+                node_params[input_name] = outputs[node_input.node][node_input.output]
             else:
                 raise TypeError(
-                    f"Input type '{type(task_input)}' is not supported by the local runtime. The use of unsupported inputs should have been validated by the DAG object. This may be a bug in the library. Please open an issue in our GitHub repository."
+                    f"Input type '{type(node_input)}' is not supported by the local runtime. The use of unsupported inputs should have been validated by the DAG object. This may be a bug in the library. Please open an issue in our GitHub repository."
                 )
 
         try:
-            if isinstance(task, DAG):
-                outputs[task_name] = invoke_dag(task, params=task_params)
+            if isinstance(node, DAG):
+                outputs[node_name] = invoke_dag(node, params=node_params)
             else:
-                outputs[task_name] = invoke_task(task, params=task_params)
+                outputs[node_name] = invoke_task(node, params=node_params)
         except (ValueError, TypeError, SerializationError) as e:
-            raise e.__class__(f"Error when invoking task '{task_name}'. {str(e)}")
+            raise e.__class__(f"Error when invoking node '{node_name}'. {str(e)}")
 
     dag_outputs = {}
     for output_name in dag.outputs:
