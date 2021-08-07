@@ -51,3 +51,8 @@ def test__equality():
 
     assert a == b
     assert a != c
+
+
+def test__equality_towards_other_types_of_mapping():
+    a = FrozenMapping({"a": 1, "b": 2}, error_message="")
+    assert a == {"a": 1, "b": 2}

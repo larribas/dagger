@@ -38,6 +38,6 @@ class FromReturnValue(Generic[T]):
         """Return true if both outputs are equivalent."""
         return isinstance(obj, FromReturnValue) and self._serializer == obj._serializer
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return a human-readable representation of the output."""
         return f"FromReturnValue(serializer={self._serializer})"

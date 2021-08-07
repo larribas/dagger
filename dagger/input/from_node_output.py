@@ -49,3 +49,16 @@ class FromNodeOutput:
     def serializer(self) -> Serializer:
         """Get the strategy to use in order to deserialize the supplied inputs."""
         return self._serializer
+
+    def __repr__(self) -> str:
+        """Get a human-readable string representation of the input."""
+        return f"FromNodeOutput(node={self._node_name}, output={self._node_output_name}, serializer={self._serializer})"
+
+    def __eq__(self, obj):
+        """Return true if both inputs are equivalent."""
+        return (
+            isinstance(obj, FromNodeOutput)
+            and self._node_name == obj._node_name
+            and self._node_output_name == obj._node_output_name
+            and self._serializer == obj._serializer
+        )

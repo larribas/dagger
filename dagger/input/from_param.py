@@ -42,6 +42,14 @@ class FromParam:
         """Get the name the input references, if any."""
         return self._name
 
+    def __repr__(self) -> str:
+        """Get a human-readable string representation of the input."""
+        return f"FromParam(name={self._name}, serializer={self._serializer})"
+
     def __eq__(self, obj):
         """Return true if both inputs are equivalent."""
-        return self._name == obj._name and self._serializer == obj._serializer
+        return (
+            isinstance(obj, FromParam)
+            and self._name == obj._name
+            and self._serializer == obj._serializer
+        )

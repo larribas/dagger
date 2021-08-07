@@ -15,7 +15,7 @@ def verify_dags_are_equivalent(
     for input_name in built_by_dsl.inputs:
         assert (
             built_by_dsl.inputs[input_name] == built_declaratively.inputs[input_name]
-        ), f"input '{input_name}' is different"
+        ), f"input '{input_name}' is different: DSL built {built_by_dsl.inputs[input_name]} whereas we are expecting {built_declaratively.inputs[input_name]}"
 
     assert (
         built_by_dsl.outputs.keys() == built_declaratively.outputs.keys()

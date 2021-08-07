@@ -3,6 +3,6 @@
 from contextvars import ContextVar
 from typing import List
 
-from dagger.dsl.invocations import NodeInvocation
+from dagger.dsl.node_invocations import NodeInvocation
 
 node_invocations: ContextVar[List[NodeInvocation]] = ContextVar("node_invocations")

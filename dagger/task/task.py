@@ -119,7 +119,7 @@ class Task:
             and self._runtime_options == obj._runtime_options
         )
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return a human-readable representation of the task."""
         return f"""Task(
             inputs={str(self._inputs)}, 

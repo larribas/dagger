@@ -1,19 +1,25 @@
 """Build DAGs through an imperative domain-specific language."""
 
 import inspect
-from contextvars import Context, copy_context
+from contextvars import copy_context
 from itertools import groupby
-from typing import Callable, Mapping, Union
+from typing import Callable, List, Mapping, Optional, Union
 
-from dagger.dag import DAG
-from dagger.dag import SupportedInputs as SupportedDAGInputs
+from dagger.dag import DAG, DAGOutput, Node
 from dagger.dsl.context import node_invocations
-from dagger.dsl.invocations import DAGInvocation, ParameterUsage, TaskInvocation
-from dagger.input import FromNodeOutput
-from dagger.task import SupportedInputs as SupportedTaskInputs
+from dagger.dsl.errors import POTENTIAL_BUG_MESSAGE
+from dagger.dsl.node_invocations import NodeInvocation, NodeType, SupportedNodeInput
+from dagger.dsl.node_outputs import (
+    NodeOutputKeyUsage,
+    NodeOutputPropertyUsage,
+    NodeOutputReference,
+    NodeOutputUsage,
+)
+from dagger.dsl.parameter_usage import ParameterUsage
+from dagger.input import FromNodeOutput, FromParam
+from dagger.output import FromKey, FromProperty, FromReturnValue
+from dagger.task import SupportedOutputs as SupportedTaskOutputs
 from dagger.task import Task
-
-Node = Union[Task, DAG]
 
 
 class DAGBuilder:
@@ -27,39 +33,151 @@ class DAGBuilder:
     are captured by the context and then rendered as a DAG data structure.
     """
 
-    def __init__(self, build_func: Callable):
+    def __init__(
+        self,
+        build_func: Callable,
+        inputs: Optional[Mapping[str, SupportedNodeInput]] = None,
+        parent_node_names_by_id: Optional[Mapping[str, str]] = None,
+    ):
         self._build_func = build_func
-
-    def __call__(self, *args, **kwargs):
-        """Invoke the builder function and return a DAG data structure it defines."""
-        # The parameters expected by the build function are assumed to be the parameters expected by the DAG.
-        parameters = {
+        self._parameters = {
             param_name: ParameterUsage(name=param_name)
             for param_name in inspect.signature(self._build_func).parameters
         }
+        self._inputs_from_parent = inputs
+        self._parent_node_names_by_id = parent_node_names_by_id or {}
 
-        # We initialize a new context and invoke the build function inside of it.
-        # All node, input and output invocations are thus isolated from other
-        # build functions invoked before, during or after this one.
+    def build(self) -> DAG:
+        """
+        Invoke the builder function and return the DAG data structure it defines.
+
+        It performs the following steps:
+
+
+        Create a clean context
+        ----------------------
+        We initialize a new context and invoke the build function inside of it.
+        All node, input and output invocations are thus isolated from other
+        build functions invoked before, during or after this one.
+
+
+        Build the DAG inputs
+        --------------------
+        If this DAG is being invoked within the context of another DAG (that is,
+        we are composing several DAGs together), we use the inputs supplied by
+        the parent. Otherwise, we use the inputs defined in the function's signature.
+
+
+        Execute the build function in the new context
+        ---------------------------------------------
+        We run the build function to record all node invocations.
+
+
+        Capture DAG outputs and consume them
+        ---------------------------------------
+        If the build function has a return value, we capture it and add it
+        to the set of DAG outputs.
+
+
+        Build the Nodes based on the recorded NodeInvocations
+        -----------------------------------------------------
+        We build all of the DAG's nodes. If a node is a DAG, we invoke the builder
+        recursively.
+        """
         ctx = copy_context()
-        ctx.run(self._build_func, **parameters)
+        node_output_reference = ctx.run(self._build_func, **self._parameters)
+        DAGBuilder._consume_node_output(node_output_reference)
 
-        return DAG(
-            nodes=self._named_node_invocations(ctx),
-            inputs=self._named_dag_inputs(parameters),
+        inputs = self._inputs_from_parent or self._parameters
+        dag_inputs = {
+            input_name: DAGBuilder._build_node_input(
+                input_type,
+                node_names_by_id=self._parent_node_names_by_id,
+            )
+            for input_name, input_type in inputs.items()
+        }
+
+        node_names_by_id = DAGBuilder._translate_invocation_ids_into_readable_names(
+            ctx[node_invocations]
         )
 
-    def _named_dag_inputs(
-        self, parameters: Mapping[str, ParameterUsage]
-    ) -> Mapping[str, SupportedDAGInputs]:
-        return {input_name: input.FromParam() for input_name in parameters}
+        dag_outputs = node_output_reference and {
+            "return_value": DAGOutput(
+                node=node_names_by_id[node_output_reference.invocation_id],
+                output=node_output_reference.output_name,
+            ),
+        }
 
-    def _named_node_invocations(self, ctx: Context) -> Mapping[str, Node]:
-        # Translate invocation ids (which are not supposed to be human-readable)
-        # into meaningful (but still unique) node names
+        dag_nodes = {
+            node_names_by_id[node_invocation.id]: DAGBuilder._build_node(
+                node_invocation, node_names_by_id=node_names_by_id
+            )
+            for node_invocation in ctx[node_invocations]
+        }
+
+        return DAG(
+            inputs=dag_inputs,
+            outputs=dag_outputs,
+            nodes=dag_nodes,
+        )
+
+    @staticmethod
+    def _consume_node_output(node_output_reference: NodeOutputReference):
+        """
+        Explicitly mark direct outputs from other nodes as consumed.
+
+        This is only necessary for outputs of type NodeOutputUsage.
+        See the documentation of the `.consume()` function to understand why.
+        """
+        if isinstance(node_output_reference, NodeOutputUsage):
+            node_output_reference.consume()
+
+    @staticmethod
+    def _translate_invocation_ids_into_readable_names(
+        node_invocations: List[NodeInvocation],
+    ) -> Mapping[str, str]:
+        """
+        Return a map translating invocation ids (UUIDv4) into unique human-readable names.
+
+        We use UUIDv4 as invocation ids to guarantee uniqueness when recording input/output usage.
+        In the context of a DAG definition, we already know all the nodes that have been invoked.
+        Therefore, we can use this information to generate unique names that are more meaningful,
+        based on the name of the function and a sequence number identifying in which position
+        they were invoked.
+
+        For example, the following DAG definition:
+
+        ```
+        @dsl.task
+        def f():
+            pass
+
+        @dsl.task
+        def g():
+            pass
+
+        @dsl.DAG
+        def dag():
+            f()
+            g()
+            g()
+        ```
+
+        Would generate the following mapping:
+
+        ```
+        {
+            "f": "<uuid>",
+            "g-1": "<uuid>",
+            "g-2": "<uuid>",
+        }
+        ```
+
+        The sequence number is only appended if the same task is invoked multiple times.
+        """
         node_names_by_id = {}
         for node_name, group in groupby(
-            ctx[node_invocations], key=lambda invocation: invocation.name
+            node_invocations, key=lambda invocation: invocation.name
         ):
             nodes_with_the_same_name = list(group)
 
@@ -71,53 +189,74 @@ class DAGBuilder:
                         nodes_with_the_same_name[i].id
                     ] = f"{node_name}-{i+1}"
 
-        nodes = {}
-        for node_invocation in ctx[node_invocations]:
-            node_name = node_names_by_id[node_invocation.id]
-            nodes[node_name] = self._build_node(
-                invocation=node_invocation,
-                node_names_by_id=node_names_by_id,
-            )
+        return node_names_by_id
 
-        return nodes
-
-    def _build_node(
-        self,
-        invocation: Union[TaskInvocation, DAGInvocation],
+    @staticmethod
+    def _build_node_input(
+        input_type: SupportedNodeInput,
         node_names_by_id: Mapping[str, str],
-    ) -> Node:
-        """Build a node (a task or DAG) based on the data collected during its invocation."""
-        if isinstance(invocation, TaskInvocation):
-            return Task(
-                invocation.func,
-                inputs=self._build_task_inputs(invocation.inputs, node_names_by_id),
-                # TODO: Decouple the building of the outputs from the data structure that indicates how they were used
-                outputs=invocation.output._build_outputs(),
-            )
-        else:
-            raise NotImplementedError()
-
-    def _build_task_inputs(
-        self,
-        inputs: Mapping[str, SupportedTaskInputs],
-        node_names_by_id: Mapping[str, str],
-    ) -> Mapping[str, SupportedTaskInputs]:
+    ) -> Union[FromParam, FromNodeOutput]:
         """
-        Build the inputs for a task.
+        Return an input for a Node, based on the input_type recorded by the DSL.
 
         If an input references the output of another node by name, it will reference it
         by its unique invocation ID. This method ensures all those references are translated
         into the unique, human-readable name that was generated by this builder.
         """
-        inputs = {}
-        for input_name, input_type in inputs:
-            if isinstance(input_type, FromNodeOutput):
-                inputs[input_name] = FromNodeOutput(
-                    node=node_names_by_id[input_type.node],
-                    output=input_type.output,
-                    serializer=input_type.serializer,
-                )
-            else:
-                inputs[input_name] = input_type
+        if isinstance(input_type, ParameterUsage):
+            return FromParam(name=input_type.name)
+        elif isinstance(input_type, NodeOutputReference):
+            return FromNodeOutput(
+                node=node_names_by_id[input_type.invocation_id],
+                output=input_type.output_name,
+            )
+        else:
+            raise NotImplementedError(
+                f"The DSL is not compatible with inputs of type '{type(input_type).__name__}'. {POTENTIAL_BUG_MESSAGE}"
+            )
 
-        return inputs
+    @staticmethod
+    def _build_task_output(
+        node_output_reference: NodeOutputReference,
+    ) -> SupportedTaskOutputs:
+        if isinstance(node_output_reference, NodeOutputKeyUsage):
+            return FromKey(node_output_reference.key_name)
+        elif isinstance(node_output_reference, NodeOutputPropertyUsage):
+            return FromProperty(node_output_reference.property_name)
+        elif isinstance(node_output_reference, NodeOutputUsage):
+            return FromReturnValue()
+        else:
+            raise NotImplementedError(
+                f"The DSL is not compatible with node outputs of type '{type(node_output_reference).__name__}'. {POTENTIAL_BUG_MESSAGE}"
+            )
+
+    @staticmethod
+    def _build_node(
+        node_invocation: NodeInvocation,
+        node_names_by_id: Mapping[str, str],
+    ) -> Node:
+        """Build a node (a task or DAG) based on the data collected during its invocation."""
+        if node_invocation.node_type == NodeType.TASK:
+            return Task(
+                node_invocation.func,
+                inputs={
+                    input_name: DAGBuilder._build_node_input(
+                        input_type, node_names_by_id=node_names_by_id
+                    )
+                    for input_name, input_type in node_invocation.inputs.items()
+                },
+                outputs={
+                    ref.output_name: DAGBuilder._build_task_output(ref)
+                    for ref in node_invocation.output.references
+                },
+            )
+        elif node_invocation.node_type == NodeType.DAG:
+            return DAGBuilder(
+                build_func=node_invocation.func,
+                inputs=node_invocation.inputs,
+                parent_node_names_by_id=node_names_by_id,
+            ).build()
+        else:
+            raise NotImplementedError(
+                f"The DSL is not compatible with node invocations of type '{node_invocation.node_type}'. {POTENTIAL_BUG_MESSAGE}"
+            )
