@@ -1,5 +1,11 @@
 from dagger.dag import DAGOutput
-from dagger.dsl.dag_builder import DAGBuilder
+from dagger.dsl.build import (
+    _build_dag_outputs,
+    _build_node,
+    _build_node_input,
+    _build_task_output,
+    _translate_invocation_ids_into_readable_names,
+)
 from dagger.dsl.node_invocations import NodeInvocation, NodeType
 from dagger.dsl.node_outputs import (
     NodeOutputKeyUsage,
@@ -23,7 +29,7 @@ def test__translate_invocation_ids_into_readable_names():
             output=NodeOutputUsage(id),
         )
 
-    node_names_by_id = DAGBuilder._translate_invocation_ids_into_readable_names(
+    node_names_by_id = _translate_invocation_ids_into_readable_names(
         [
             invocation("1", "x"),
             invocation("2", "y"),
@@ -43,31 +49,25 @@ def test__translate_invocation_ids_into_readable_names():
 
 
 def test__build_node_input__param_usage():
-    assert (
-        DAGBuilder._build_node_input(ParameterUsage(), node_names_by_id={})
-        == FromParam()
-    )
-    assert DAGBuilder._build_node_input(
+    assert _build_node_input(ParameterUsage(), node_names_by_id={}) == FromParam()
+    assert _build_node_input(
         ParameterUsage(name="x"), node_names_by_id={}
     ) == FromParam("x")
 
 
 def test__build_node_input__node_output_reference():
-    assert DAGBuilder._build_node_input(
+    assert _build_node_input(
         NodeOutputUsage(invocation_id="id"), node_names_by_id={"id": "name"}
     ) == FromNodeOutput("name", "return_value")
 
 
 def test__build_task_output__return_value():
-    assert (
-        DAGBuilder._build_task_output(NodeOutputUsage(invocation_id="id"))
-        == FromReturnValue()
-    )
+    assert _build_task_output(NodeOutputUsage(invocation_id="id")) == FromReturnValue()
 
 
 def test__build_task_output__key():
     assert (
-        DAGBuilder._build_task_output(
+        _build_task_output(
             NodeOutputKeyUsage(
                 invocation_id="id",
                 output_name="output",
@@ -80,7 +80,7 @@ def test__build_task_output__key():
 
 def test__build_task_output__property():
     assert (
-        DAGBuilder._build_task_output(
+        _build_task_output(
             NodeOutputPropertyUsage(
                 invocation_id="id",
                 output_name="output",
@@ -105,7 +105,7 @@ def test__build_node__task():
     another_node_output_usage = NodeOutputUsage(another_node_id)
     another_node_output_usage.consume()
 
-    built_task = DAGBuilder._build_node(
+    built_task = _build_node(
         NodeInvocation(
             id=this_task_id,
             name="f",
@@ -139,7 +139,7 @@ def test__build_node__task():
 
 def test__build_dag_outputs__when_none_are_returned():
     assert (
-        DAGBuilder._build_dag_outputs(
+        _build_dag_outputs(
             None,
             node_names_by_id={},
         )
@@ -149,7 +149,7 @@ def test__build_dag_outputs__when_none_are_returned():
 
 def test__build_dag_outputs__when_a_single_output_is_returned():
     assert (
-        DAGBuilder._build_dag_outputs(
+        _build_dag_outputs(
             NodeOutputKeyUsage(
                 invocation_id="id",
                 output_name="output",
@@ -162,7 +162,7 @@ def test__build_dag_outputs__when_a_single_output_is_returned():
 
 
 def test__build_dag_outputs__when_multiple_outputs_are_returned():
-    assert DAGBuilder._build_dag_outputs(
+    assert _build_dag_outputs(
         {
             "x": NodeOutputKeyUsage(
                 invocation_id="id-1",
@@ -185,7 +185,7 @@ def test__build_dag_outputs__when_multiple_outputs_are_returned():
 
 def test__build_dag_outputs__consumes_node_output_usages():
     node_output_usage = NodeOutputUsage(invocation_id="id")
-    DAGBuilder._build_dag_outputs(
+    _build_dag_outputs(
         {"x": node_output_usage},
         node_names_by_id={"id": "name"},
     )

@@ -92,6 +92,7 @@ def test__task_invocation__records_inputs_from_different_sources():
                 "node_output": node_output_usage,
             },
             output=NodeOutputUsage(invocation_id),
+            runtime_options={},
         ),
     ]
 

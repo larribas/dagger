@@ -1,7 +1,8 @@
 from contextvars import copy_context
 
 from dagger.dsl.context import node_invocations
-from dagger.dsl.node_invocations import DAGInvocation, NodeInvocation
+from dagger.dsl.node_invocations import NodeInvocation, NodeType
+from dagger.dsl.node_outputs import NodeOutputUsage
 
 
 def test__default_context__is_propagated_only_when_copying_the_current_context():
@@ -44,7 +45,10 @@ def append_invocation(name: str):
     new_invocation = NodeInvocation(
         id=name,
         name=name,
-        invocation=DAGInvocation(),
+        node_type=NodeType.DAG,
+        func=lambda: 1,
+        inputs={},
+        output=NodeOutputUsage("x"),
     )
 
     invocations = node_invocations.get([])

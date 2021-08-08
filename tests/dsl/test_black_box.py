@@ -15,24 +15,6 @@ from dagger.task import Task
 from tests.dsl.verification import verify_dags_are_equivalent
 
 
-def test__contexts_in_each_dag_are_isolated():
-    @dsl.task
-    def f():
-        return 1
-
-    @dsl.DAG
-    def build_dag_1():
-        f()
-
-    @dsl.DAG
-    def build_dag_2():
-        f()
-
-    # If the context was shared between dag_1 and dag_2, the second call would accumulate
-    # the results of the previous one and it would yield a different result.
-    assert build_dag_1.build() == build_dag_2.build()
-
-
 def test__hello_world():
     @dsl.task
     def say_hello_world():
@@ -43,7 +25,7 @@ def test__hello_world():
         say_hello_world()
 
     verify_dags_are_equivalent(
-        dag.build(),
+        dsl.build(dag),
         DAG(
             nodes={
                 "say-hello-world": Task(say_hello_world.func),
@@ -64,7 +46,7 @@ def test__multiple_calls_to_the_same_task():
         f()
 
     verify_dags_are_equivalent(
-        dag.build(),
+        dsl.build(dag),
         DAG(
             nodes={
                 "f-1": Task(f.func),
@@ -85,7 +67,7 @@ def test__input_from_param():
         say_hello(first_name)
 
     verify_dags_are_equivalent(
-        dag.build(),
+        dsl.build(dag),
         DAG(
             inputs={
                 "first_name": FromParam("first_name"),
@@ -110,7 +92,7 @@ def test__input_from_param_with_different_names():
         say_hello(name)
 
     verify_dags_are_equivalent(
-        dag.build(),
+        dsl.build(dag),
         DAG(
             inputs={
                 "name": FromParam("name"),
@@ -142,7 +124,7 @@ def test__input_from_node_output():
         announce_number(number)
 
     verify_dags_are_equivalent(
-        dag.build(),
+        dsl.build(dag),
         DAG(
             nodes={
                 "generate-random-number": Task(
@@ -175,7 +157,7 @@ def test__using_sub_outputs():
         print_a_and_b(d["a"], d["b"])
 
     verify_dags_are_equivalent(
-        dag.build(),
+        dsl.build(dag),
         DAG(
             nodes={
                 "generate-complex-structure": Task(
@@ -207,7 +189,7 @@ def test__dag_outputs_from_return_value():
         return generate_complex_structure()
 
     verify_dags_are_equivalent(
-        dag.build(),
+        dsl.build(dag),
         DAG(
             nodes={
                 "generate-complex-structure": Task(
@@ -232,7 +214,7 @@ def test__dag_outputs_from_sub_output():
         return generate_complex_structure()["a"]
 
     verify_dags_are_equivalent(
-        dag.build(),
+        dsl.build(dag),
         DAG(
             nodes={
                 "generate-complex-structure": Task(
@@ -258,7 +240,7 @@ def test__multiple_dag_outputs():
         }
 
     verify_dags_are_equivalent(
-        dag.build(),
+        dsl.build(dag),
         DAG(
             nodes={
                 "generate-number-1": Task(
@@ -292,7 +274,7 @@ def test__nested_dags_simple():
         return inner_dag(n)
 
     verify_dags_are_equivalent(
-        outer_dag.build(),
+        dsl.build(outer_dag),
         DAG(
             inputs={"n": FromParam("n")},
             outputs={"return_value": DAGOutput("inner-dag", "return_value")},
@@ -345,7 +327,7 @@ def test__nested_dags_complex():
         print_number(multiplied_number)
 
     verify_dags_are_equivalent(
-        outer_dag.build(),
+        dsl.build(outer_dag),
         DAG(
             inputs={
                 "multiplier": FromParam("multiplier"),
@@ -394,23 +376,31 @@ def test__runtime_options():
     task_options = {"task_options": 1}
     dag_options = {"dag_options": 2}
 
-    @dsl.task(runtime_options=task_options)
+    @dsl.task
     def say_hello_world():
         print("hello world")
 
-    @dsl.DAG(runtime_options=dag_options)
-    def dag():
-        say_hello_world()
+    @dsl.DAG
+    def inner_dag():
+        say_hello_world.with_runtime_options(task_options)()
+
+    @dsl.DAG
+    def outer_dag():
+        inner_dag.with_runtime_options(dag_options)()
 
     verify_dags_are_equivalent(
-        dag.build(),
+        dsl.build(outer_dag),
         DAG(
             nodes={
-                "say-hello-world": Task(
-                    say_hello_world.func,
-                    runtime_options=task_options,
+                "inner-dag": DAG(
+                    nodes={
+                        "say-hello-world": Task(
+                            say_hello_world.func,
+                            runtime_options=task_options,
+                        ),
+                    },
+                    runtime_options=dag_options,
                 ),
             },
-            runtime_options=dag_options,
         ),
     )

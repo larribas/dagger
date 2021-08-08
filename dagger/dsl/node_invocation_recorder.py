@@ -2,7 +2,7 @@
 
 import inspect
 import uuid
-from typing import Callable, Mapping, Optional
+from typing import Any, Callable, Mapping, Optional
 
 from dagger.dsl.context import node_invocations
 from dagger.dsl.errors import NodeInvokedWithMismatchedArgumentsError
@@ -26,6 +26,14 @@ class NodeInvocationRecorder:
         self._func = func
         self._node_type = node_type
         self._overridden_id = override_id
+        self._runtime_options: Mapping[str, Any] = {}
+
+    def with_runtime_options(
+        self, runtime_options: Mapping[str, Any]
+    ) -> "NodeInvocationRecorder":
+        """Set arbitrary runtime options for this node."""
+        self._runtime_options = runtime_options
+        return self
 
     def __call__(self, *args, **kwargs) -> NodeOutputUsage:
         """
@@ -57,6 +65,7 @@ class NodeInvocationRecorder:
                 func=self._func,
                 inputs=inputs,
                 output=output,
+                runtime_options=self._runtime_options,
             ),
         )
         node_invocations.set(invocations)
@@ -64,12 +73,17 @@ class NodeInvocationRecorder:
         return output
 
     @property
-    def func(self):
+    def func(self) -> Callable:
         """Return the function recorded by this class."""
         return self._func
 
     @property
-    def node_type(self):
+    def runtime_options(self) -> Mapping[str, Any]:
+        """Return the runtime options associated with this class."""
+        return self._runtime_options
+
+    @property
+    def node_type(self) -> NodeType:
         """Return the node type associated with this class."""
         return self._node_type
 
