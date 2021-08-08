@@ -109,3 +109,17 @@ class NodeInvocationRecorder:
         for i in inputs.values():
             if isinstance(i, NodeOutputUsage):
                 i.consume()
+
+    def __repr__(self) -> str:
+        """Get a human-readable string representation of this object."""
+        return f"NodeInvocationRecorder(func={self._func}, node_type={self._node_type}, overridden_id={self._overridden_id}, runtime_options={self._runtime_options})"
+
+    def __eq__(self, obj) -> bool:
+        """Return true if both objects are equivalent."""
+        return (
+            isinstance(obj, NodeInvocationRecorder)
+            and self._func == obj._func
+            and self._node_type == obj._node_type
+            and self._overridden_id == obj._overridden_id
+            and self._runtime_options == obj._runtime_options
+        )

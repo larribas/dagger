@@ -19,9 +19,13 @@ test:
 lint:
 	poetry run flake8
 
-.PHONY: typecheck
-typecheck:
+.PHONY: check-types
+check-types:
 	poetry run mypy . --ignore-missing-imports
+
+.PHONY: check-docs
+check-docs:
+	poetry run pydocstyle --explain .
 
 .PHONY: build
 build:

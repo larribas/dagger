@@ -29,8 +29,15 @@ class NodeOutputReference(Protocol):
     The function `g` will receive a node output reference it can use to build its inputs.
     """
 
-    invocation_id: str
-    output_name: str
+    @property
+    def invocation_id(self) -> str:
+        """Return the invocation id of this reference."""
+        ...
+
+    @property
+    def output_name(self) -> str:
+        """Return the outputs name of this reference."""
+        ...
 
 
 class NodeOutputKeyUsage(NamedTuple):
