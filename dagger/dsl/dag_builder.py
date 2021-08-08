@@ -85,8 +85,11 @@ class DAGBuilder:
         recursively.
         """
         ctx = copy_context()
-        node_output_reference = ctx.run(self._build_func, **self._parameters)
-        DAGBuilder._consume_node_output(node_output_reference)
+        dag_output = ctx.run(self._build_func, **self._parameters)
+
+        node_names_by_id = DAGBuilder._translate_invocation_ids_into_readable_names(
+            ctx[node_invocations]
+        )
 
         inputs = self._inputs_from_parent or self._parameters
         dag_inputs = {
@@ -97,16 +100,10 @@ class DAGBuilder:
             for input_name, input_type in inputs.items()
         }
 
-        node_names_by_id = DAGBuilder._translate_invocation_ids_into_readable_names(
-            ctx[node_invocations]
+        dag_outputs = DAGBuilder._build_dag_outputs(
+            dag_output,
+            node_names_by_id=node_names_by_id,
         )
-
-        dag_outputs = node_output_reference and {
-            "return_value": DAGOutput(
-                node=node_names_by_id[node_output_reference.invocation_id],
-                output=node_output_reference.output_name,
-            ),
-        }
 
         dag_nodes = {
             node_names_by_id[node_invocation.id]: DAGBuilder._build_node(
@@ -122,15 +119,41 @@ class DAGBuilder:
         )
 
     @staticmethod
-    def _consume_node_output(node_output_reference: NodeOutputReference):
-        """
-        Explicitly mark direct outputs from other nodes as consumed.
+    def _build_dag_outputs(
+        dag_output: Union[
+            None,
+            NodeOutputReference,
+            Mapping[str, NodeOutputReference],
+        ],
+        node_names_by_id: Mapping[str, str],
+    ) -> Mapping[str, DAGOutput]:
+        """Build the outputs of a DAG."""
+        outputs_by_name: Mapping[str, NodeOutputReference] = {}
 
-        This is only necessary for outputs of type NodeOutputUsage.
-        See the documentation of the `.consume()` function to understand why.
-        """
-        if isinstance(node_output_reference, NodeOutputUsage):
-            node_output_reference.consume()
+        if isinstance(dag_output, NodeOutputReference):
+            outputs_by_name = {"return_value": dag_output}
+        elif isinstance(dag_output, Mapping):
+            outputs_by_name = dag_output
+        elif dag_output is not None:
+            raise TypeError(
+                f"This DAG returned a value of type {type(dag_output).__name__}. Functions decorated with `dsl.DAG` may only return two types of values: The output of another node or a mapping of [str, the output of another node]"
+            )
+
+        # Explicitly mark direct outputs from other nodes as consumed.
+
+        # This is only necessary for outputs of type NodeOutputUsage.
+        # See the documentation of the `.consume()` function to understand why.
+        for output_ref in outputs_by_name.values():
+            if isinstance(output_ref, NodeOutputUsage):
+                output_ref.consume()
+
+        return {
+            output_name: DAGOutput(
+                node=node_names_by_id[output_ref.invocation_id],
+                output=output_ref.output_name,
+            )
+            for output_name, output_ref in outputs_by_name.items()
+        }
 
     @staticmethod
     def _translate_invocation_ids_into_readable_names(

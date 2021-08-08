@@ -1,3 +1,4 @@
+from dagger.dag import DAGOutput
 from dagger.dsl.dag_builder import DAGBuilder
 from dagger.dsl.node_invocations import NodeInvocation, NodeType
 from dagger.dsl.node_outputs import (
@@ -134,3 +135,58 @@ def test__build_node__task():
             "property_prop": FromProperty("prop"),
         },
     )
+
+
+def test__build_dag_outputs__when_none_are_returned():
+    assert (
+        DAGBuilder._build_dag_outputs(
+            None,
+            node_names_by_id={},
+        )
+        == {}
+    )
+
+
+def test__build_dag_outputs__when_a_single_output_is_returned():
+    assert (
+        DAGBuilder._build_dag_outputs(
+            NodeOutputKeyUsage(
+                invocation_id="id",
+                output_name="output",
+                key_name="key",
+            ),
+            node_names_by_id={"id": "name"},
+        )
+        == {"return_value": DAGOutput("name", "output")}
+    )
+
+
+def test__build_dag_outputs__when_multiple_outputs_are_returned():
+    assert DAGBuilder._build_dag_outputs(
+        {
+            "x": NodeOutputKeyUsage(
+                invocation_id="id-1",
+                output_name="output",
+                key_name="key",
+            ),
+            "y": NodeOutputUsage(
+                invocation_id="id-2",
+            ),
+        },
+        node_names_by_id={
+            "id-1": "name-1",
+            "id-2": "name-2",
+        },
+    ) == {
+        "x": DAGOutput("name-1", "output"),
+        "y": DAGOutput("name-2", "return_value"),
+    }
+
+
+def test__build_dag_outputs__consumes_node_output_usages():
+    node_output_usage = NodeOutputUsage(invocation_id="id")
+    DAGBuilder._build_dag_outputs(
+        {"x": node_output_usage},
+        node_names_by_id={"id": "name"},
+    )
+    assert node_output_usage.references == {node_output_usage}

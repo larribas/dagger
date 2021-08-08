@@ -388,3 +388,29 @@ def test__nested_dags_complex():
             },
         ),
     )
+
+
+def test__runtime_options():
+    task_options = {"task_options": 1}
+    dag_options = {"dag_options": 2}
+
+    @dsl.task(runtime_options=task_options)
+    def say_hello_world():
+        print("hello world")
+
+    @dsl.DAG(runtime_options=dag_options)
+    def dag():
+        say_hello_world()
+
+    verify_dags_are_equivalent(
+        dag.build(),
+        DAG(
+            nodes={
+                "say-hello-world": Task(
+                    say_hello_world.func,
+                    runtime_options=task_options,
+                ),
+            },
+            runtime_options=dag_options,
+        ),
+    )
