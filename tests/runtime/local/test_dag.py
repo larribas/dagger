@@ -47,6 +47,22 @@ def test__invoke_dag__with_missing_input_parameter():
     )
 
 
+def test__invoke_dag__mapping_dag_parameters_to_node_inputs():
+    dag = DAG(
+        inputs=dict(a=input.FromParam()),
+        outputs=dict(x=DAGOutput("times3", "x")),
+        nodes=dict(
+            times3=Task(
+                lambda b: b * 3,
+                inputs=dict(b=input.FromParam("a")),
+                outputs=dict(x=output.FromReturnValue()),
+            )
+        ),
+    )
+
+    assert invoke_dag(dag, params=dict(a=b"1")) == {"x": b"3"}
+
+
 def test__invoke_dag__propagates_task_exceptions_extending_the_details():
     dag = DAG(
         nodes=dict(
@@ -63,7 +79,7 @@ def test__invoke_dag__propagates_task_exceptions_extending_the_details():
 
     assert (
         str(e.value)
-        == "Error when invoking task 'square'. We encountered the following error while attempting to serialize the results of this task: This output is of type FromKey. This means we expect the return value of the function to be a mapping containing, at least, a key named 'missing-key'"
+        == "Error when invoking node 'square'. We encountered the following error while attempting to serialize the results of this task: This output is of type FromKey. This means we expect the return value of the function to be a mapping containing, at least, a key named 'missing-key'"
     )
 
 

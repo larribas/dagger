@@ -1,3 +1,5 @@
+from itertools import combinations
+
 import pytest
 
 import dagger.input as input
@@ -127,3 +129,32 @@ def test__runtime_options__returns_specified_options():
     options = {"my-runtime": {"my": "options"}}
     task = Task(lambda: 1, runtime_options=options)
     assert task.runtime_options == options
+
+
+def test__eq():
+    def f(**kwargs):
+        return 11
+
+    inputs = dict(x=input.FromParam())
+    outputs = dict(x=output.FromReturnValue())
+    runtime_options = {"my": "options"}
+
+    same = [
+        Task(f, inputs=inputs, outputs=outputs, runtime_options=runtime_options)
+        for i in range(3)
+    ]
+    different = [
+        Task(f, inputs=inputs, outputs=outputs, runtime_options=runtime_options),
+        Task(f, inputs=inputs, outputs=outputs),
+        Task(f, inputs=inputs, runtime_options=runtime_options),
+        Task(f, outputs=outputs, runtime_options=runtime_options),
+        Task(
+            lambda **kwargs: 2,
+            inputs=inputs,
+            outputs=outputs,
+            runtime_options=runtime_options,
+        ),
+    ]
+
+    assert all(x == y for x, y in combinations(same, 2))
+    assert all(x != y for x, y in combinations(different, 2))

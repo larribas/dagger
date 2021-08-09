@@ -16,3 +16,14 @@ def test__with_default_serializer():
 def test__with_custom_serializer():
     input = FromParam(serializer=CustomSerializer)
     assert input.serializer == CustomSerializer
+
+
+def test__with_default_name():
+    input = FromParam()
+    assert input.name is None
+
+
+def test__with_overridden_name():
+    name = "custom-name"
+    input = FromParam(name)
+    assert input.name == name

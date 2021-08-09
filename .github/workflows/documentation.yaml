@@ -24,4 +24,4 @@ jobs:
           poetry install
       - name: Verify docstring documentation is standardized
         run: |
-          poetry run pydocstyle --explain .
+          make check-docs

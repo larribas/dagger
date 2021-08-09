@@ -160,6 +160,15 @@ class DAG:
         """
         return self._node_execution_order
 
+    def __eq__(self, obj) -> bool:
+        """Return true if the two DAGs are equivalent to each other."""
+        return (
+            self._nodes == obj._nodes
+            and self._inputs == obj._inputs
+            and self._outputs == obj._outputs
+            and self._runtime_options == obj._runtime_options
+        )
+
 
 def validate_parameters(
     inputs: Mapping[str, SupportedInputs],
@@ -236,19 +245,23 @@ def _validate_node_input_dependencies(
     for node_name in dag_nodes:
         node = dag_nodes[node_name]
         for input_name in node.inputs:
-            dag_input = node.inputs[input_name]
+            node_input = node.inputs[input_name]
             try:
-                if isinstance(dag_input, FromParam):
-                    _validate_input_from_param(input_name, dag_inputs)
-                elif isinstance(dag_input, FromNodeOutput):
+                if isinstance(node_input, FromParam):
+                    _validate_input_from_param(
+                        input_name=input_name,
+                        input=node_input,
+                        dag_inputs=dag_inputs,
+                    )
+                elif isinstance(node_input, FromNodeOutput):
                     _validate_input_from_node_output(
-                        node_name,
-                        dag_input,
-                        dag_nodes,
+                        node_name=node_name,
+                        input=node_input,
+                        dag_nodes=dag_nodes,
                     )
                 else:
                     raise Exception(
-                        f"Whoops. The current version of the library doesn't seem to support inputs of type '{type(dag_input)}'. This is most likely unintended. Please, check the GitHub project to see if this issue has already been reported and addressed in a newer version. Otherwise, please report this as a bug in our GitHub tracker. Sorry for the inconvenience."
+                        f"Whoops. The current version of the library doesn't seem to support inputs of type '{type(node_input)}'. This is most likely unintended. Please, check the GitHub project to see if this issue has already been reported and addressed in a newer version. Otherwise, please report this as a bug in our GitHub tracker. Sorry for the inconvenience."
                     )
 
             except (TypeError, ValueError) as e:
@@ -259,11 +272,15 @@ def _validate_node_input_dependencies(
 
 def _validate_input_from_param(
     input_name: str,
+    input: FromParam,
     dag_inputs: Mapping[str, SupportedInputs],
 ):
-    if input_name not in dag_inputs:
+    # If the param name has not been overridden, we assume it has the same name as the input
+    name = input.name or input_name
+
+    if name not in dag_inputs:
         raise ValueError(
-            f"This input depends on a parameter named '{input_name}' being injected into the DAG. However, the DAG does not have any parameter with such a name. These are the parameters the DAG receives: {list(dag_inputs)}"
+            f"This input depends on a parameter named '{name}' being injected into the DAG. However, the DAG does not have any parameter with such a name. These are the parameters the DAG receives: {sorted(list(dag_inputs))}"
         )
 
 

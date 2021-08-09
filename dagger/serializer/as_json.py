@@ -6,7 +6,7 @@ from typing import Any, Optional
 from dagger.serializer.errors import DeserializationError, SerializationError
 
 
-class JSON:
+class AsJSON:
     """Serializer implementation that uses JSON to marshal/unmarshal Python data structures."""
 
     extension = "json"
@@ -59,3 +59,15 @@ class JSON:
             raise DeserializationError(
                 f"We cannot deserialize value '{str(serialized_value)}' as JSON. {str(e)}"
             )
+
+    def __repr__(self) -> str:
+        """Get a human-readable string representation of the serializer."""
+        return f"AsJSON(indent={self._indent}, allow_nan={self._allow_nan})"
+
+    def __eq__(self, obj) -> bool:
+        """Return true if both serializers are equivalent."""
+        return (
+            isinstance(obj, AsJSON)
+            and self._indent == obj._indent
+            and self._allow_nan == obj._allow_nan
+        )

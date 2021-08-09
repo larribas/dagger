@@ -42,3 +42,17 @@ def test__can_be_used_as_a_mapping():
     assert list(frozen_dict.values()) == [1, 2]
     assert list(frozen_dict.items()) == [("a", 1), ("b", 2)]
     assert frozen_dict == {"a": 1, "b": 2}
+
+
+def test__equality():
+    a = FrozenMapping({"a": 1, "b": 2}, error_message="")
+    b = FrozenMapping({"a": 1, "b": 2}, error_message="")
+    c = FrozenMapping({"a": 2, "b": 2}, error_message="")
+
+    assert a == b
+    assert a != c
+
+
+def test__equality_towards_other_types_of_mapping():
+    a = FrozenMapping({"a": 1, "b": 2}, error_message="")
+    assert a == {"a": 1, "b": 2}

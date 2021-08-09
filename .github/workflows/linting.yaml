@@ -27,4 +27,4 @@ jobs:
           make lint
       - name: Check types
         run: |
-          make typecheck
+          make check-types
