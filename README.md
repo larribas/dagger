@@ -1,9 +1,25 @@
-# argo-workflows-sdk
+# Dagger
 
-The purpose of this project is to provide a set of abstractions to define complex workflows and run them in Argo Workflows.
+![tests](https://github.com/larribas/dagger/actions/workflows/tests.yaml/badge.svg) ![documentation](https://github.com/larribas/dagger/actions/workflows/documentation.yaml/badge.svg) ![type system](https://github.com/larribas/dagger/actions/workflows/linting.yaml/badge.svg) ![style](https://github.com/larribas/dagger/actions/workflows/formatting.yaml/badge.svg)
+
+---
+
+Dagger is a library that allows you to:
+
+* Define sophisticated DAGs (direct acyclic graphs) using very straightforward Python code.
+* Run those DAGs seamlessly in different runtimes or workflow orchestrators (such as Argo Workflows, Kubeflow Pipelines or Airflow)
 
 
-## Design goals
+_Please check the Roadmap section below to understand what is supported and what is not at the moment_
+
+
+## Motivation and Design Principles
+
+The main goal of this library is to provide a __simple yet powerful framework__ to define data/ML pipelines with __minimal friction or boilerplate__ and __run them on any number of execution runtimes__.
+
+It was built following these principles:
+
+* Provide a __high-level abstraction__ that hides repetitive or
 
 * Reduce the friction of passing inputs and outputs across different steps of the workflow.
 * Allow users to take full advantage of all of Argo's features (exit handlers, memoization, timeouts, retries, conditional executions, and so on)
