@@ -2,9 +2,9 @@
 
 from dagger.dag.dag import (  # noqa
     DAG,
-    DAGOutput,
     Node,
     SupportedInputs,
+    SupportedOutputs,
     validate_parameters,
 )
 from dagger.dag.topological_sort import CyclicDependencyError  # noqa

@@ -4,18 +4,22 @@ metadata:
   generateName: nested-dags-
 spec:
   arguments:
-    artifacts:
+    parameters:
     - name: album_name
-      raw:
-        data: !!binary |
-          ImJpZyBkYWci
+      value: "big dag"
     - name: style
-      raw:
-        data: !!binary |
-          ImhpcCBob3Ai
+      value: "hip hop"
   entrypoint: dag
   templates:
-  - dag:
+  - inputs:
+      artifacts:
+      - name: album_name
+        raw:
+          data: '"{{workflow.parameters.album_name}}"'
+      - name: style
+        raw:
+          data: '"{{workflow.parameters.style}}"'
+    dag:
       tasks:
       - name: brainstorm-themes
         template: dag-brainstorm-themes
@@ -52,10 +56,6 @@ spec:
         - record-second-song
         name: publish-album
         template: dag-publish-album
-    inputs:
-      artifacts:
-      - name: album_name
-      - name: style
     name: dag
     outputs:
       artifacts:

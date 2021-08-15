@@ -1,8 +1,8 @@
 import pytest
 
-import dagger.input as input
-import dagger.output as output
-from dagger.dag import DAG, DAGOutput
+from dagger.dag import DAG
+from dagger.input import FromNodeOutput, FromParam
+from dagger.output import FromReturnValue
 from dagger.runtime.argo.errors import IncompatibilityError
 from dagger.runtime.argo.workflow_spec import (
     _dag_task_argument_artifact_from,
@@ -146,13 +146,13 @@ def test__workflow_spec__with_input_from_param_with_different_name():
     container_image = "my-image"
     container_entrypoint = ["my", "dag", "entrypoint"]
     dag = DAG(
-        inputs=dict(a=input.FromParam()),
-        outputs=dict(y=DAGOutput("times3", "x")),
+        inputs=dict(a=FromParam()),
+        outputs=dict(y=FromNodeOutput("times3", "x")),
         nodes=dict(
             times3=Task(
                 lambda b: b * 3,
-                inputs=dict(b=input.FromParam("a")),
-                outputs=dict(x=output.FromReturnValue()),
+                inputs=dict(b=FromParam("a")),
+                outputs=dict(x=FromReturnValue()),
             )
         ),
     )
@@ -161,10 +161,10 @@ def test__workflow_spec__with_input_from_param_with_different_name():
         dag,
         container_image=container_image,
         container_entrypoint_to_dag_cli=container_entrypoint,
-        params={"a": b"2"},
+        params={"a": 2},
     )
 
-    assert spec["arguments"]["artifacts"] == [{"name": "a", "raw": {"data": b"2"}}]
+    assert spec["arguments"]["parameters"] == [{"name": "a", "value": 2}]
     assert spec["templates"][0]["dag"]["tasks"][0]["arguments"]["artifacts"] == [
         {
             "name": "b",
@@ -178,12 +178,12 @@ def test__workflow_spec__with_invalid_parameters():
         nodes={
             "double": Task(
                 lambda x: x * 2,
-                inputs={"x": input.FromParam()},
-                outputs={"2x": output.FromReturnValue()},
+                inputs={"x": FromParam()},
+                outputs={"2x": FromReturnValue()},
             ),
         },
-        inputs={"x": input.FromParam()},
-        outputs={"2x": DAGOutput(node="double", output="2x")},
+        inputs={"x": FromParam()},
+        outputs={"2x": FromNodeOutput(node="double", output="2x")},
     )
 
     with pytest.raises(ValueError) as e:
@@ -191,7 +191,7 @@ def test__workflow_spec__with_invalid_parameters():
 
     assert (
         str(e.value)
-        == "The parameters supplied to this DAG were supposed to contain a parameter named 'x', but only the following parameters were actually supplied: []"
+        == "The parameters supplied to this DAG were supposed to contain the following parameters: ['x']. However, only the following parameters were actually supplied: []. We are missing: ['x']."
     )
 
 

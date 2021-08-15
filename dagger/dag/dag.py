@@ -1,6 +1,7 @@
 """Define the data structure for a DAG and validate all its components upon initialization."""
 import re
-from typing import Any, List, Mapping, NamedTuple, Set, Union
+import warnings
+from typing import Any, List, Mapping, Set, Union
 from typing import get_args as get_type_args
 
 from dagger.dag.topological_sort import topological_sort
@@ -8,28 +9,26 @@ from dagger.data_structures import FrozenMapping
 from dagger.input import FromNodeOutput, FromParam
 from dagger.input import validate_name as validate_input_name
 from dagger.output import validate_name as validate_output_name
+from dagger.serializer import SerializationError
 from dagger.task import SupportedInputs as SupportedTaskInputs
 from dagger.task import Task
 
 VALID_NAME_REGEX = r"^[a-zA-Z0-9][a-zA-Z0-9-]{0,63}$"
 VALID_NAME = re.compile(VALID_NAME_REGEX)
 
-SupportedInputs = Union[
-    FromParam,
-    FromNodeOutput,
-]
-
 Node = Union[
     Task,
     "DAG",
 ]
 
+SupportedInputs = Union[
+    FromParam,
+    FromNodeOutput,
+]
 
-class DAGOutput(NamedTuple):
-    """Define the output of a specific node as the output of the DAG."""
-
-    node: str
-    output: str
+SupportedOutputs = Union[
+    FromNodeOutput,
+]
 
 
 class DAG:
@@ -46,7 +45,7 @@ class DAG:
         self,
         nodes: Mapping[str, Node],
         inputs: Mapping[str, SupportedInputs] = None,
-        outputs: Mapping[str, DAGOutput] = None,
+        outputs: Mapping[str, SupportedOutputs] = None,
         runtime_options: Mapping[str, Any] = None,
     ):
         """
@@ -138,7 +137,7 @@ class DAG:
         return self._inputs
 
     @property
-    def outputs(self) -> Mapping[str, DAGOutput]:
+    def outputs(self) -> Mapping[str, SupportedOutputs]:
         """Get the outputs the DAG produces."""
         return self._outputs
 
@@ -172,7 +171,7 @@ class DAG:
 
 def validate_parameters(
     inputs: Mapping[str, SupportedInputs],
-    params: Mapping[str, bytes],
+    params: Mapping[str, Any],
 ):
     """
     Validate a series of parameters against the inputs of a DAG.
@@ -190,13 +189,28 @@ def validate_parameters(
     ------
     ValueError
         If the set of parameters does not contain all the required inputs.
+
+    SerializationError
+        If the value provided for a parameter is not compatible with the serializer defined for that input.
     """
-    # TODO: Use set differences to provide a more complete error message
-    # TODO: Use warnings to warn about excessive/unused parameters
+    missing_params = inputs.keys() - params.keys()
+    if missing_params:
+        raise ValueError(
+            f"The parameters supplied to this DAG were supposed to contain the following parameters: {sorted(list(inputs))}. However, only the following parameters were actually supplied: {sorted(list(params))}. We are missing: {sorted(list(missing_params))}."
+        )
+
+    superfluous_params = params.keys() - inputs.keys()
+    if superfluous_params:
+        warnings.warn(
+            f"The following parameters were supplied to this DAG, but are not necessary: {sorted(list(superfluous_params))}"
+        )
+
     for input_name in inputs:
-        if input_name not in params:
-            raise ValueError(
-                f"The parameters supplied to this DAG were supposed to contain a parameter named '{input_name}', but only the following parameters were actually supplied: {list(params)}"
+        try:
+            inputs[input_name].serializer.serialize(params[input_name])
+        except SerializationError as e:
+            raise SerializationError(
+                f"The value supplied for input '{input_name}' is not compatible with the serializer defined for that input ({inputs[input_name].serializer}): {e}"
             )
 
 
@@ -217,7 +231,7 @@ def _node_dependencies(node_inputs: Mapping[str, SupportedTaskInputs]) -> Set[st
 
 def _validate_outputs(
     dag_nodes: Mapping[str, Node],
-    dag_outputs: Mapping[str, DAGOutput],
+    dag_outputs: Mapping[str, SupportedOutputs],
 ):
     for output_name in dag_outputs:
         output = dag_outputs[output_name]
@@ -283,6 +297,11 @@ def _validate_input_from_param(
             f"This input depends on a parameter named '{name}' being injected into the DAG. However, the DAG does not have any parameter with such a name. These are the parameters the DAG receives: {sorted(list(dag_inputs))}"
         )
 
+    if input.serializer != dag_inputs[name].serializer:
+        raise ValueError(
+            f"This input is serialized {input.serializer}. However, the input it references is serialized {dag_inputs[name].serializer}."
+        )
+
 
 def _validate_input_from_node_output(
     node_name: str,
@@ -295,10 +314,14 @@ def _validate_input_from_node_output(
         )
 
     referenced_node_outputs = dag_nodes[input.node].outputs
-    print(55, referenced_node_outputs)
     if input.output not in referenced_node_outputs:
         raise ValueError(
             f"This input depends on the output '{input.output}' of another node named '{input.node}'. However, node '{input.node}' does not declare any output with such a name. These are the outputs defined by the node: {list(referenced_node_outputs)}"
+        )
+
+    if input.serializer != referenced_node_outputs[input.output].serializer:
+        raise ValueError(
+            f"This input is serialized {input.serializer}. However, the output it references is serialized {referenced_node_outputs[input.output].serializer}."
         )
 
 

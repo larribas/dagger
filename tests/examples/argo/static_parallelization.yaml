@@ -4,11 +4,9 @@ metadata:
   generateName: static-parallelization-
 spec:
   arguments:
-    artifacts:
+    parameters:
     - name: number
-      raw:
-        data: !!binary |
-          Mg==
+      value: 2
   entrypoint: dag
   templates:
   - dag:
@@ -111,6 +109,8 @@ spec:
     inputs:
       artifacts:
       - name: number
+        raw:
+          data: "{{workflow.parameters.number}}"
     name: dag
     outputs:
       artifacts:

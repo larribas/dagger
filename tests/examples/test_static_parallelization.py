@@ -12,7 +12,7 @@ def test():
     verify_dag_works_with_all_runtimes(
         dag,
         params={
-            "number": b"2",
+            "number": 2,
         },
         validate_results=validate_results,
         argo_workflow_yaml_filename="static_parallelization.yaml",

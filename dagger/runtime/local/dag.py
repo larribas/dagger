@@ -1,47 +1,17 @@
 """Run a DAG in memory."""
 import itertools
-from typing import Dict, Mapping, Optional
+from typing import Any, Dict, Mapping, Optional
 
 from dagger.dag import DAG, validate_parameters
 from dagger.input import FromNodeOutput, FromParam
-from dagger.runtime.local.task import invoke_task
+from dagger.runtime.local.task import _invoke_task
 from dagger.serializer import SerializationError
 
 
-def invoke_dag(
+def _invoke_dag(
     dag: DAG,
-    params: Optional[Mapping[str, bytes]] = None,
+    params: Optional[Mapping[str, Any]] = None,
 ) -> Mapping[str, bytes]:
-    """
-    Invoke a DAG with a series of parameters.
-
-    Parameters
-    ----------
-    dag
-        DAG to execute
-
-    params
-        Inputs to the DAG.
-        Serialized into their binary format.
-        Indexed by input/parameter name.
-
-
-    Returns
-    -------
-    Serialized outputs of the DAG, indexed by output name.
-
-
-    Raises
-    ------
-    ValueError
-        When any required parameters are missing
-
-    TypeError
-        When any of the outputs cannot be obtained from the return value of their task
-
-    SerializationError
-        When some of the outputs cannot be serialized with the specified Serializer
-    """
     params = params or {}
     outputs: Dict[str, Mapping[str, bytes]] = {}
 
@@ -57,7 +27,9 @@ def invoke_dag(
             if isinstance(node_input, FromParam):
                 node_params[input_name] = params[node_input.name or input_name]
             elif isinstance(node_input, FromNodeOutput):
-                node_params[input_name] = outputs[node_input.node][node_input.output]
+                node_params[input_name] = node_input.serializer.deserialize(
+                    outputs[node_input.node][node_input.output]
+                )
             else:
                 raise TypeError(
                     f"Input type '{type(node_input)}' is not supported by the local runtime. The use of unsupported inputs should have been validated by the DAG object. This may be a bug in the library. Please open an issue in our GitHub repository."
@@ -65,9 +37,9 @@ def invoke_dag(
 
         try:
             if isinstance(node, DAG):
-                outputs[node_name] = invoke_dag(node, params=node_params)
+                outputs[node_name] = _invoke_dag(node, params=node_params)
             else:
-                outputs[node_name] = invoke_task(node, params=node_params)
+                outputs[node_name] = _invoke_task(node, params=node_params)
         except (ValueError, TypeError, SerializationError) as e:
             raise e.__class__(f"Error when invoking node '{node_name}'. {str(e)}")
 

@@ -1,52 +1,17 @@
 """Run tasks in memory."""
+import warnings
 from typing import Any, Mapping, Optional
 
 from dagger.serializer import SerializationError
 from dagger.task import SupportedInputs, SupportedOutputs, Task
 
 
-def invoke_task(
+def _invoke_task(
     task: Task,
-    params: Optional[Mapping[str, bytes]] = None,
+    params: Optional[Mapping[str, Any]] = None,
 ) -> Mapping[str, bytes]:
-    """
-    Invoke a task with a series of parameters.
-
-    Parameters
-    ----------
-    task
-        Task to execute
-
-    params
-        Inputs to the task.
-        Serialized into their binary format.
-        Indexed by input/parameter name.
-
-
-    Returns
-    -------
-    Mappingionary of str -> bytes
-        Serialized outputs of the task.
-        Indexed by output name.
-
-
-    Raises
-    ------
-    ValueError
-        When any required parameters are missing
-
-    TypeError
-        When any of the outputs cannot be obtained from the return value of the task's function
-
-    SerializationError
-        When some of the outputs cannot be serialized with the specified Serializer
-    """
     params = params or {}
-
-    inputs = _deserialize_inputs(
-        inputs=task.inputs,
-        params=params,
-    )
+    inputs = _validate_and_filter_inputs(inputs=task.inputs, params=params)
 
     return_value = task.func(**inputs)
 
@@ -56,23 +21,23 @@ def invoke_task(
     )
 
 
-def _deserialize_inputs(
+def _validate_and_filter_inputs(
     inputs: Mapping[str, SupportedInputs],
-    params: Mapping[str, bytes],
-):
+    params: Mapping[str, Any],
+) -> Mapping[str, Any]:
+    missing_params = inputs.keys() - params.keys()
+    if missing_params:
+        raise ValueError(
+            f"The following parameters are required by the task but were not supplied: {sorted(list(missing_params))}"
+        )
 
-    deserialized_inputs = {}
-    for input_name in inputs:
-        try:
-            deserialized_inputs[input_name] = inputs[input_name].serializer.deserialize(
-                params[input_name]
-            )
-        except KeyError:
-            raise ValueError(
-                f"The parameters supplied to this task were supposed to contain a parameter named '{input_name}', but only the following parameters were actually supplied: {list(params.keys())}"
-            )
+    superfluous_params = params.keys() - inputs.keys()
+    if superfluous_params:
+        warnings.warn(
+            f"The following parameters were supplied to the task, but are not necessary: {sorted(list(superfluous_params))}"
+        )
 
-    return deserialized_inputs
+    return {input_name: params[input_name] for input_name in inputs}
 
 
 def _serialize_outputs(

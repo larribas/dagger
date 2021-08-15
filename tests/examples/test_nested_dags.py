@@ -14,8 +14,8 @@ def test():
     verify_dag_works_with_all_runtimes(
         dag,
         params={
-            "album_name": b'"big dag"',
-            "style": b'"hip hop"',
+            "album_name": "big dag",
+            "style": "hip hop",
         },
         validate_results=validate_results,
         argo_workflow_yaml_filename="nested_dags.yaml",

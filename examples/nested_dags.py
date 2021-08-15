@@ -28,9 +28,9 @@ Finally, we connect the "publish-album" task to the outputs of the inner DAGs.
 
 from typing import Mapping
 
-import dagger.input as input
-import dagger.output as output
-from dagger import DAG, DAGOutput, Task
+from dagger import DAG, Task
+from dagger.input import FromNodeOutput, FromParam
+from dagger.output import FromKey, FromReturnValue
 
 
 def brainstorm_themes() -> Mapping[str, str]:  # noqa
@@ -61,20 +61,20 @@ def compose_and_record_song(theme, style):  # noqa
             "compose": Task(
                 compose_song,
                 inputs={
-                    "theme": input.FromParam(),
-                    "style": input.FromParam(),
+                    "theme": FromParam(),
+                    "style": FromParam(),
                 },
                 outputs={
-                    "composition": output.FromReturnValue(),
+                    "composition": FromReturnValue(),
                 },
             ),
             "record": Task(
                 record_song,
                 inputs={
-                    "composition": input.FromNodeOutput("compose", "composition"),
+                    "composition": FromNodeOutput("compose", "composition"),
                 },
                 outputs={
-                    "recording": output.FromReturnValue(),
+                    "recording": FromReturnValue(),
                 },
             ),
         },
@@ -82,7 +82,7 @@ def compose_and_record_song(theme, style):  # noqa
             "theme": theme,
             "style": style,
         },
-        outputs={"song": DAGOutput("record", "recording")},
+        outputs={"song": FromNodeOutput("record", "recording")},
     )
 
 
@@ -91,36 +91,36 @@ dag = DAG(
         "brainstorm-themes": Task(
             brainstorm_themes,
             outputs={
-                "first_theme": output.FromKey("first"),
-                "second_theme": output.FromKey("second"),
+                "first_theme": FromKey("first"),
+                "second_theme": FromKey("second"),
             },
         ),
         "record-first-song": compose_and_record_song(
-            theme=input.FromNodeOutput("brainstorm-themes", "first_theme"),
-            style=input.FromParam(),
+            theme=FromNodeOutput("brainstorm-themes", "first_theme"),
+            style=FromParam(),
         ),
         "record-second-song": compose_and_record_song(
-            theme=input.FromNodeOutput("brainstorm-themes", "second_theme"),
-            style=input.FromParam(),
+            theme=FromNodeOutput("brainstorm-themes", "second_theme"),
+            style=FromParam(),
         ),
         "publish-album": Task(
             publish_album,
             inputs={
-                "album_name": input.FromParam(),
-                "first_song": input.FromNodeOutput("record-first-song", "song"),
-                "second_song": input.FromNodeOutput("record-second-song", "song"),
+                "album_name": FromParam(),
+                "first_song": FromNodeOutput("record-first-song", "song"),
+                "second_song": FromNodeOutput("record-second-song", "song"),
             },
             outputs={
-                "album": output.FromReturnValue(),
+                "album": FromReturnValue(),
             },
         ),
     },
     inputs={
-        "album_name": input.FromParam(),
-        "style": input.FromParam(),
+        "album_name": FromParam(),
+        "style": FromParam(),
     },
     outputs={
-        "album": DAGOutput("publish-album", "album"),
+        "album": FromNodeOutput("publish-album", "album"),
     },
 )
 

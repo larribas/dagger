@@ -8,7 +8,7 @@ knowledge about the internal data structures that build the DAG under the hood.
 
 
 import dagger.dsl as dsl
-from dagger.dag import DAG, DAGOutput
+from dagger.dag import DAG
 from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromKey, FromReturnValue
 from dagger.task import Task
@@ -198,7 +198,9 @@ def test__dag_outputs_from_return_value():
                 ),
             },
             outputs={
-                "return_value": DAGOutput("generate-complex-structure", "return_value")
+                "return_value": FromNodeOutput(
+                    "generate-complex-structure", "return_value"
+                )
             },
         ),
     )
@@ -222,7 +224,9 @@ def test__dag_outputs_from_sub_output():
                     outputs={"key_a": FromKey("a")},
                 ),
             },
-            outputs={"return_value": DAGOutput("generate-complex-structure", "key_a")},
+            outputs={
+                "return_value": FromNodeOutput("generate-complex-structure", "key_a")
+            },
         ),
     )
 
@@ -253,8 +257,8 @@ def test__multiple_dag_outputs():
                 ),
             },
             outputs={
-                "a": DAGOutput("generate-number-1", "return_value"),
-                "b": DAGOutput("generate-number-2", "return_value"),
+                "a": FromNodeOutput("generate-number-1", "return_value"),
+                "b": FromNodeOutput("generate-number-2", "return_value"),
             },
         ),
     )
@@ -277,11 +281,11 @@ def test__nested_dags_simple():
         dsl.build(outer_dag),
         DAG(
             inputs={"n": FromParam("n")},
-            outputs={"return_value": DAGOutput("inner-dag", "return_value")},
+            outputs={"return_value": FromNodeOutput("inner-dag", "return_value")},
             nodes={
                 "inner-dag": DAG(
                     inputs={"n": FromParam("n")},
-                    outputs={"return_value": DAGOutput("double", "return_value")},
+                    outputs={"return_value": FromNodeOutput("double", "return_value")},
                     nodes={
                         "double": Task(
                             double.func,
@@ -343,7 +347,9 @@ def test__nested_dags_complex():
                         "seed": FromNodeOutput("generate-seed", "return_value"),
                     },
                     outputs={
-                        "return_value": DAGOutput("multiply-number", "return_value"),
+                        "return_value": FromNodeOutput(
+                            "multiply-number", "return_value"
+                        ),
                     },
                     nodes={
                         "generate-random-number": Task(

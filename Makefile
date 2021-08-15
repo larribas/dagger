@@ -27,6 +27,10 @@ check-types:
 check-docs:
 	poetry run pydocstyle --explain .
 
+.PHONY: ci
+ci: lint check-types check-docs test
+	@echo "All checks have passed"
+
 .PHONY: build
 build:
 	poetry build -f wheel
@@ -47,11 +51,11 @@ docker-run-%: build
 .PHONY: set-up-argo
 set-up-argo:
 	k3d registry create $(K3D_REGISTRY_NAME) --port $(K3D_REGISTRY_PORT)
-	k3d cluster create $(K3D_CLUSTER_NAME) --registry-use "k3d-$(K3D_REGISTRY_NAME):$(K3D_REGISTRY_PORT)" --registry-config k3d/registries.yaml
-	kubectl create ns $(KUBE_NAMESPACE)
+	k3d cluster create $(K3D_CLUSTER_NAME) --registry-use "k3d-$(K3D_REGISTRY_NAME):$(K3D_REGISTRY_PORT)" --registry-config k3d/registries.yaml --kubeconfig-update-default --kubeconfig-switch-context
 	echo "Waiting for a while for the cluster and the namespace to stabilize"
 	sleep 10
-	kustomize build tests/e2e/manifests/argo/ | kubectl apply -n $(KUBE_NAMESPACE) -f -
+	kubectl create ns $(KUBE_NAMESPACE)
+	kubectl apply -n $(KUBE_NAMESPACE) -k tests/e2e/manifests/argo
 
 .PHONY: tear-down-argo
 tear-down-argo:

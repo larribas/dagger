@@ -1,4 +1,3 @@
-from dagger.dag import DAGOutput
 from dagger.dsl.build import (
     _build_dag_outputs,
     _build_node,
@@ -157,7 +156,7 @@ def test__build_dag_outputs__when_a_single_output_is_returned():
             ),
             node_names_by_id={"id": "name"},
         )
-        == {"return_value": DAGOutput("name", "output")}
+        == {"return_value": FromNodeOutput("name", "output")}
     )
 
 
@@ -178,8 +177,8 @@ def test__build_dag_outputs__when_multiple_outputs_are_returned():
             "id-2": "name-2",
         },
     ) == {
-        "x": DAGOutput("name-1", "output"),
-        "y": DAGOutput("name-2", "return_value"),
+        "x": FromNodeOutput("name-1", "output"),
+        "y": FromNodeOutput("name-2", "return_value"),
     }
 
 
