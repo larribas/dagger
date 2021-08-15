@@ -1,4 +1,4 @@
-FROM python:3.9.6-slim
+FROM python:3.8.7-slim
 
 ARG WHEEL
 
