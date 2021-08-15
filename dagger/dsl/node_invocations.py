@@ -1,12 +1,12 @@
 """Data structures that hold information about certain elements being invoked or used throughout the definition of a DAG using the imperative DSL."""
 
 from enum import Enum
-from typing import Any, Callable, Mapping, NamedTuple, Optional, Union
+from typing import Any, Callable, Mapping, NamedTuple, Optional, Union, get_args
 
 from dagger.dsl.node_outputs import NodeOutputReference, NodeOutputUsage
 from dagger.dsl.parameter_usage import ParameterUsage
 
-SupportedNodeInput = Union[ParameterUsage, NodeOutputReference]
+NodeInputReference = Union[ParameterUsage, NodeOutputReference]
 
 
 class NodeType(Enum):
@@ -23,6 +23,16 @@ class NodeInvocation(NamedTuple):
     name: str
     node_type: NodeType
     func: Callable
-    inputs: Mapping[str, SupportedNodeInput]
+    inputs: Mapping[str, NodeInputReference]
     output: NodeOutputUsage
     runtime_options: Optional[Mapping[str, Any]] = None
+
+
+def is_node_input_reference(obj: Any):
+    """Return true if the supplied object is one of the supported node inputs."""
+    return any(
+        [
+            isinstance(obj, supported_type)
+            for supported_type in get_args(NodeInputReference)
+        ]
+    )

@@ -10,7 +10,7 @@ from dagger.dag import SupportedOutputs as SupportedDAGOutputs
 from dagger.dsl.context import node_invocations
 from dagger.dsl.errors import POTENTIAL_BUG_MESSAGE
 from dagger.dsl.node_invocation_recorder import NodeInvocationRecorder
-from dagger.dsl.node_invocations import NodeInvocation, NodeType, SupportedNodeInput
+from dagger.dsl.node_invocations import NodeInputReference, NodeInvocation, NodeType
 from dagger.dsl.node_outputs import (
     NodeOutputKeyUsage,
     NodeOutputPropertyUsage,
@@ -36,7 +36,7 @@ def build(dag: NodeInvocationRecorder) -> DAG:
 
 def _build(
     build_func: Callable,
-    inputs_from_parent: Mapping[str, SupportedNodeInput],
+    inputs_from_parent: Mapping[str, NodeInputReference],
     parent_node_names_by_id: Mapping[str, str],
     runtime_options: Mapping[str, Any],
 ) -> DAG:
@@ -213,7 +213,7 @@ def _translate_invocation_ids_into_readable_names(
 
 
 def _build_node_input(
-    input_type: SupportedNodeInput,
+    input_type: NodeInputReference,
     node_names_by_id: Mapping[str, str],
 ) -> Union[FromParam, FromNodeOutput]:
     """
