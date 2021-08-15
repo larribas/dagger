@@ -1,11 +1,12 @@
+import warnings
 from itertools import combinations
 
 import pytest
 
 import dagger.input as input
 import dagger.output as output
-from dagger.dag import DAG, CyclicDependencyError, DAGOutput
-from dagger.serializer import DefaultSerializer
+from dagger.dag import DAG, CyclicDependencyError, DAGOutput, validate_parameters
+from dagger.serializer import DefaultSerializer, SerializationError
 from dagger.task import Task
 
 #
@@ -376,3 +377,80 @@ def test__eq():
 
     assert all(x == y for x, y in combinations(same, 2))
     assert all(x != y for x, y in combinations(different, 2))
+
+
+#
+# validate_parameters
+#
+
+
+def test__validate_parameters__when_params_match_inputs():
+    validate_parameters(
+        inputs={
+            "a": input.FromParam(),
+            "b": input.FromNodeOutput("n", "o"),
+        },
+        params={
+            "a": 1,
+            "b": "2",
+        },
+    )
+    # We are testing there are no exceptions raised as a result of calling the validator
+
+
+def test__validate_parameters__when_input_is_missing():
+    with pytest.raises(ValueError) as e:
+        validate_parameters(
+            inputs={
+                "c": input.FromParam(),
+                "a": input.FromParam(),
+                "b": input.FromNodeOutput("n", "o"),
+            },
+            params={
+                "c": 1,
+                "a": 1,
+            },
+        )
+
+    assert (
+        str(e.value)
+        == "The parameters supplied to this DAG were supposed to contain the following parameters: ['a', 'b', 'c']. However, only the following parameters were actually supplied: ['a', 'c']. We are missing: ['b']."
+    )
+
+
+def test__validate_parameters__when_param_is_superfluous():
+    with warnings.catch_warnings(record=True) as w:
+        validate_parameters(
+            inputs={
+                "c": input.FromParam(),
+                "a": input.FromParam(),
+            },
+            params={
+                "z": 1,
+                "a": 1,
+                "c": 1,
+                "y": 1,
+            },
+        )
+        assert len(w) == 1
+        assert (
+            str(w[0].message)
+            == "The following parameters were supplied to this DAG, but are not necessary: ['y', 'z']"
+        )
+
+
+def test__validate_parameters__when_param_value_is_not_compatible_with_serializer():
+    with pytest.raises(SerializationError) as e:
+        validate_parameters(
+            inputs={
+                "a": input.FromParam(),
+            },
+            params={
+                "a": {1},
+            },
+        )
+
+    assert (
+        str(e.value)
+        == "The value supplied for input 'a' is not compatible with the serializer defined for that input (AsJSON(indent=None, allow_nan=False)): Object of type set is not JSON serializable"
+    )

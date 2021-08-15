@@ -1,5 +1,6 @@
 """Define the data structure for a DAG and validate all its components upon initialization."""
 import re
+import warnings
 from typing import Any, List, Mapping, NamedTuple, Set, Union
 from typing import get_args as get_type_args
 
@@ -8,6 +9,7 @@ from dagger.data_structures import FrozenMapping
 from dagger.input import FromNodeOutput, FromParam
 from dagger.input import validate_name as validate_input_name
 from dagger.output import validate_name as validate_output_name
+from dagger.serializer import SerializationError
 from dagger.task import SupportedInputs as SupportedTaskInputs
 from dagger.task import Task
 
@@ -172,7 +174,7 @@ class DAG:
 
 def validate_parameters(
     inputs: Mapping[str, SupportedInputs],
-    params: Mapping[str, bytes],
+    params: Mapping[str, Any],
 ):
     """
     Validate a series of parameters against the inputs of a DAG.
@@ -190,13 +192,28 @@ def validate_parameters(
     ------
     ValueError
         If the set of parameters does not contain all the required inputs.
+
+    SerializationError
+        If the value provided for a parameter is not compatible with the serializer defined for that input.
     """
-    # TODO: Use set differences to provide a more complete error message
-    # TODO: Use warnings to warn about excessive/unused parameters
+    missing_params = inputs.keys() - params.keys()
+    if missing_params:
+        raise ValueError(
+            f"The parameters supplied to this DAG were supposed to contain the following parameters: {sorted(list(inputs))}. However, only the following parameters were actually supplied: {sorted(list(params))}. We are missing: {sorted(list(missing_params))}."
+        )
+
+    superfluous_params = params.keys() - inputs.keys()
+    if superfluous_params:
+        warnings.warn(
+            f"The following parameters were supplied to this DAG, but are not necessary: {sorted(list(superfluous_params))}"
+        )
+
     for input_name in inputs:
-        if input_name not in params:
-            raise ValueError(
-                f"The parameters supplied to this DAG were supposed to contain a parameter named '{input_name}', but only the following parameters were actually supplied: {list(params)}"
+        try:
+            inputs[input_name].serializer.serialize(params[input_name])
+        except SerializationError as e:
+            raise SerializationError(
+                f"The value supplied for input '{input_name}' is not compatible with the serializer defined for that input ({inputs[input_name].serializer}): {e}"
             )
 
 
@@ -295,7 +312,6 @@ def _validate_input_from_node_output(
         )
 
     referenced_node_outputs = dag_nodes[input.node].outputs
-    print(55, referenced_node_outputs)
     if input.output not in referenced_node_outputs:
         raise ValueError(
             f"This input depends on the output '{input.output}' of another node named '{input.node}'. However, node '{input.node}' does not declare any output with such a name. These are the outputs defined by the node: {list(referenced_node_outputs)}"
