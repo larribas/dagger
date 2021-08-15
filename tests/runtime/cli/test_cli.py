@@ -4,9 +4,9 @@ import tempfile
 
 import pytest
 
-import dagger.input as input
-import dagger.output as output
-from dagger.dag import DAG, DAGOutput
+from dagger.dag import DAG
+from dagger.input import FromNodeOutput, FromParam
+from dagger.output import FromReturnValue
 from dagger.runtime.cli.cli import invoke
 from dagger.serializer import AsPickle
 from dagger.task import Task
@@ -17,17 +17,17 @@ def test__invoke__whole_dag():
         nodes=dict(
             double=Task(
                 lambda x: x * 2,
-                inputs=dict(x=input.FromParam()),
-                outputs=dict(x_doubled=output.FromReturnValue()),
+                inputs=dict(x=FromParam()),
+                outputs=dict(x_doubled=FromReturnValue()),
             ),
             square=Task(
                 lambda x: x ** 2,
-                inputs=dict(x=input.FromNodeOutput("double", "x_doubled")),
-                outputs=dict(x_squared=output.FromReturnValue()),
+                inputs=dict(x=FromNodeOutput("double", "x_doubled")),
+                outputs=dict(x_squared=FromReturnValue()),
             ),
         ),
-        inputs=dict(x=input.FromParam()),
-        outputs=dict(x_doubled_and_squared=DAGOutput("square", "x_squared")),
+        inputs=dict(x=FromParam()),
+        outputs=dict(x_doubled_and_squared=FromNodeOutput("square", "x_squared")),
     )
 
     with tempfile.NamedTemporaryFile() as x_input:
@@ -71,12 +71,12 @@ def test__invoke__selecting_a_node():
         nodes=dict(
             square=Task(
                 lambda x: x ** 2,
-                inputs=dict(x=input.FromParam()),
-                outputs=dict(x_squared=output.FromReturnValue()),
+                inputs=dict(x=FromParam()),
+                outputs=dict(x_squared=FromReturnValue()),
             ),
         ),
-        inputs=dict(x=input.FromParam()),
-        outputs=dict(x_squared=DAGOutput("square", "x_squared")),
+        inputs=dict(x=FromParam()),
+        outputs=dict(x_squared=FromNodeOutput("square", "x_squared")),
     )
 
     with tempfile.NamedTemporaryFile() as x_input:
@@ -102,22 +102,22 @@ def test__invoke__selecting_a_node_from_nested_dag():
         {
             "double": Task(
                 lambda x: 2 * x,
-                inputs=dict(x=input.FromParam()),
-                outputs=dict(x=output.FromReturnValue()),
+                inputs=dict(x=FromParam()),
+                outputs=dict(x=FromReturnValue()),
             ),
             "nested": DAG(
                 {
                     "square": Task(
                         lambda x: x ** 2,
-                        inputs=dict(x=input.FromParam()),
-                        outputs=dict(x=output.FromReturnValue()),
+                        inputs=dict(x=FromParam()),
+                        outputs=dict(x=FromReturnValue()),
                     ),
                 },
-                inputs=dict(x=input.FromParam()),
+                inputs=dict(x=FromParam()),
             ),
         },
-        inputs=dict(x=input.FromParam()),
-        outputs=dict(x=DAGOutput("double", "x")),
+        inputs=dict(x=FromParam()),
+        outputs=dict(x=FromNodeOutput("double", "x")),
     )
 
     with tempfile.NamedTemporaryFile() as x_input:
@@ -160,15 +160,15 @@ def test__invoke__selecting_a_nested_dag():
                 {
                     "square": Task(
                         lambda x: x ** 2,
-                        inputs=dict(x=input.FromParam()),
-                        outputs=dict(x=output.FromReturnValue()),
+                        inputs=dict(x=FromParam()),
+                        outputs=dict(x=FromReturnValue()),
                     ),
                 },
-                inputs=dict(x=input.FromParam()),
-                outputs=dict(x=DAGOutput("square", "x")),
+                inputs=dict(x=FromParam()),
+                outputs=dict(x=FromNodeOutput("square", "x")),
             ),
         },
-        inputs=dict(x=input.FromParam()),
+        inputs=dict(x=FromParam()),
     )
 
     with tempfile.NamedTemporaryFile() as x_input:
@@ -192,32 +192,28 @@ def test__invoke__selecting_a_nested_dag():
 def test__invoke__nested_node_with_inputs_from_another_node_output():
     non_default_serializer = AsPickle()
     dag = DAG(
-        inputs={"x": input.FromParam()},
-        outputs={"x": DAGOutput("l1-a", "x")},
+        inputs={"x": FromParam()},
+        outputs={"x": FromNodeOutput("l1-a", "x")},
         nodes={
             "l1-a": Task(
                 lambda: 4,
-                outputs={
-                    "x": output.FromReturnValue(serializer=non_default_serializer)
-                },
+                outputs={"x": FromReturnValue(serializer=non_default_serializer)},
             ),
             "l1-b": DAG(
                 inputs={
-                    "l1-b-y": input.FromNodeOutput(
+                    "l1-b-y": FromNodeOutput(
                         "l1-a", "x", serializer=non_default_serializer
                     )
                 },
                 nodes={
-                    "l2-a": Task(lambda: 3, outputs={"x": output.FromReturnValue()}),
+                    "l2-a": Task(lambda: 3, outputs={"x": FromReturnValue()}),
                     "l2-b": Task(
                         lambda x, y: x * y,
                         inputs={
-                            "x": input.FromNodeOutput("l2-a", "x"),
-                            "y": input.FromParam(
-                                "l1-b-y", serializer=non_default_serializer
-                            ),
+                            "x": FromNodeOutput("l2-a", "x"),
+                            "y": FromParam("l1-b-y", serializer=non_default_serializer),
                         },
-                        outputs={"x": output.FromReturnValue()},
+                        outputs={"x": FromReturnValue()},
                     ),
                 },
             ),
@@ -253,7 +249,7 @@ def test__invoke__nested_node_with_inputs_from_another_node_output():
 
 def test__invoke__with_missing_input_parameter():
     dag = DAG(
-        inputs={"x": input.FromParam()},
+        inputs={"x": FromParam()},
         nodes={"l1-a": Task(lambda: 1)},
     )
     with pytest.raises(ValueError) as e:
@@ -267,8 +263,8 @@ def test__invoke__with_missing_input_parameter():
 
 def test__invoke__with_missing_output_parameter():
     dag = DAG(
-        outputs={"x": DAGOutput("n", "x")},
-        nodes={"n": Task(lambda: 1, outputs={"x": output.FromReturnValue()})},
+        outputs={"x": FromNodeOutput("n", "x")},
+        nodes={"n": Task(lambda: 1, outputs={"x": FromReturnValue()})},
     )
     with pytest.raises(ValueError) as e:
         invoke(dag, argv=["--output", "y", "f"])

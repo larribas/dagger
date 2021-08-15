@@ -1,9 +1,11 @@
 """Generate Workflow specifications."""
 import itertools
 import os
-from typing import Any, Dict, List, Mapping, Optional
+from typing import Any, Dict, List, Mapping, Optional, Sequence
 
-from dagger.dag import DAG, Node, validate_parameters
+from dagger.dag import DAG, Node
+from dagger.dag import SupportedInputs as SupportedDAGInputs
+from dagger.dag import validate_parameters
 from dagger.input import FromNodeOutput, FromParam
 from dagger.runtime.argo.errors import IncompatibilityError
 from dagger.task import SupportedInputs as SupportedTaskInputs
@@ -18,7 +20,7 @@ def workflow_spec(
     dag: DAG,
     container_image: str,
     container_entrypoint_to_dag_cli: Optional[List[str]] = None,
-    params: Optional[Mapping[str, bytes]] = None,
+    params: Optional[Mapping[str, Any]] = None,
     service_account: Optional[str] = None,
 ) -> Mapping[str, Any]:
     """
@@ -58,6 +60,7 @@ def workflow_spec(
             node=dag,
             container_image=container_image,
             container_command=container_entrypoint_to_dag_cli,
+            params=params,
         ),
     }
 
@@ -70,11 +73,10 @@ def workflow_spec(
     return spec
 
 
-def _workflow_spec_arguments(params: Mapping[str, bytes]) -> Mapping[str, Any]:
+def _workflow_spec_arguments(params: Mapping[str, Any]) -> Mapping[str, Any]:
     return {
-        "artifacts": [
-            {"name": param_name, "raw": {"data": params[param_name]}}
-            for param_name in params
+        "parameters": [
+            {"name": param_name, "value": params[param_name]} for param_name in params
         ],
     }
 
@@ -83,6 +85,7 @@ def _templates(
     node: Node,
     container_image: str,
     container_command: List[str],
+    params: Mapping[str, Any],
     address: List[str] = None,
 ) -> List[Mapping[str, Any]]:
     """
@@ -103,6 +106,9 @@ def _templates(
 
     container_command
         The container's entrypoint.
+
+    params
+        The parameters supplied to the DAG.
 
     address
         A list of node names that point to this node.
@@ -134,6 +140,7 @@ def _templates(
                 [
                     _dag_template(
                         dag=dag,
+                        params=params,
                         address=address,
                     )
                 ],
@@ -143,6 +150,7 @@ def _templates(
                         address=address + [node_name],
                         container_image=container_image,
                         container_command=container_command,
+                        params=params,
                     )
                     for node_name in dag.nodes
                 ],
@@ -160,6 +168,7 @@ def _templates(
 
 def _dag_template(
     dag: DAG,
+    params: Mapping[str, Any],
     address: List[str] = None,
 ) -> Mapping[str, Any]:
     """
@@ -183,9 +192,15 @@ def _dag_template(
     }
 
     if dag.inputs:
-        template["inputs"] = {
-            "artifacts": [{"name": input_name} for input_name in dag.inputs]
-        }
+        is_root_dag = len(address) == 0
+        if is_root_dag:
+            template["inputs"] = {
+                "artifacts": _dag_root_artifacts_from_params(dag.inputs, params),
+            }
+        else:
+            template["inputs"] = {
+                "artifacts": [{"name": input_name} for input_name in dag.inputs]
+            }
 
     if dag.outputs:
         template["outputs"] = {
@@ -207,6 +222,33 @@ def _dag_template(
     )
 
     return template
+
+
+def _dag_root_artifacts_from_params(
+    inputs: Mapping[str, SupportedDAGInputs],
+    params: Mapping[str, Any],
+) -> Sequence[Mapping[str, Any]]:
+    """
+    Return a list of artifacts for the root dag template.
+
+    The workflow accepts parameters as plain values. In order to pass these parameters
+    to the CLI runtime we need to convert them into artifacts.
+
+    This conversion should only happen in the root dag template.
+    """
+    artifacts = []
+
+    for input_name in inputs:
+        data = "{{workflow.parameters." + input_name + "}}"
+
+        # Most plain values (booleans, numbers, objects or arrays) will work with the JSON serializer
+        # Strings, however, need to be surrounded by double quotation marks.
+        if isinstance(params[input_name], str):
+            data = f'"{data}"'
+
+        artifacts.append({"name": input_name, "raw": {"data": data}})
+
+    return artifacts
 
 
 def _dag_task(

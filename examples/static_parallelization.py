@@ -28,9 +28,9 @@ The resulting DAG will have `len(dag.nodes) == T + 1` nodes.
 """
 from typing import Callable
 
-import dagger.input as input
-import dagger.output as output
-from dagger import DAG, DAGOutput, Task
+from dagger import DAG, Task
+from dagger.input import FromNodeOutput, FromParam
+from dagger.output import FromReturnValue
 
 
 def multiply_by(multiplier: int) -> Callable[[int], int]:
@@ -56,10 +56,10 @@ dag = DAG(
             f"multiply-by-{i}": Task(
                 multiply_by(i),
                 inputs={
-                    "number": input.FromParam(),
+                    "number": FromParam(),
                 },
                 outputs={
-                    "multiplied-number": output.FromReturnValue(),
+                    "multiplied-number": FromReturnValue(),
                 },
             )
             for i in range(number_of_parallel_steps)
@@ -67,22 +67,22 @@ dag = DAG(
         "sum-results": Task(
             sum_results,
             inputs={
-                f"results-from-{i}": input.FromNodeOutput(
+                f"results-from-{i}": FromNodeOutput(
                     node=f"multiply-by-{i}",
                     output="multiplied-number",
                 )
                 for i in range(number_of_parallel_steps)
             },
             outputs={
-                "sum": output.FromReturnValue(),
+                "sum": FromReturnValue(),
             },
         ),
     },
     inputs={
-        "number": input.FromParam(),
+        "number": FromParam(),
     },
     outputs={
-        "sum": DAGOutput(
+        "sum": FromNodeOutput(
             node="sum-results",
             output="sum",
         ),

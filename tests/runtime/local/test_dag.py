@@ -1,8 +1,8 @@
 import pytest
 
-import dagger.input as input
-import dagger.output as output
-from dagger.dag import DAG, DAGOutput
+from dagger.dag import DAG
+from dagger.input import FromNodeOutput, FromParam
+from dagger.output import FromKey, FromReturnValue
 from dagger.runtime.local.dag import invoke_dag
 from dagger.task import Task
 
@@ -23,12 +23,12 @@ def test__invoke_dag__with_inputs_and_outputs():
         nodes=dict(
             square=Task(
                 lambda x: x ** 2,
-                inputs=dict(x=input.FromParam()),
-                outputs=dict(x_squared=output.FromReturnValue()),
+                inputs=dict(x=FromParam()),
+                outputs=dict(x_squared=FromReturnValue()),
             ),
         ),
-        inputs=dict(x=input.FromParam()),
-        outputs=dict(x_squared=DAGOutput("square", "x_squared")),
+        inputs=dict(x=FromParam()),
+        outputs=dict(x_squared=FromNodeOutput("square", "x_squared")),
     )
     assert invoke_dag(dag, params=dict(x=3)) == dict(x_squared=b"9")
 
@@ -36,26 +36,26 @@ def test__invoke_dag__with_inputs_and_outputs():
 def test__invoke_dag__with_missing_input_parameter():
     dag = DAG(
         nodes=dict(one=Task(lambda: 1)),
-        inputs=dict(a=input.FromParam()),
+        inputs=dict(a=FromParam()),
     )
     with pytest.raises(ValueError) as e:
         invoke_dag(dag, params=dict(y=3))
 
     assert (
         str(e.value)
-        == "The parameters supplied to this DAG were supposed to contain a parameter named 'a', but only the following parameters were actually supplied: ['y']"
+        == "The parameters supplied to this DAG were supposed to contain the following parameters: ['a']. However, only the following parameters were actually supplied: ['y']. We are missing: ['a']."
     )
 
 
 def test__invoke_dag__mapping_dag_parameters_to_node_inputs():
     dag = DAG(
-        inputs=dict(a=input.FromParam()),
-        outputs=dict(x=DAGOutput("times3", "x")),
+        inputs=dict(a=FromParam()),
+        outputs=dict(x=FromNodeOutput("times3", "x")),
         nodes=dict(
             times3=Task(
                 lambda b: b * 3,
-                inputs=dict(b=input.FromParam("a")),
-                outputs=dict(x=output.FromReturnValue()),
+                inputs=dict(b=FromParam("a")),
+                outputs=dict(x=FromReturnValue()),
             )
         ),
     )
@@ -68,11 +68,11 @@ def test__invoke_dag__propagates_task_exceptions_extending_the_details():
         nodes=dict(
             square=Task(
                 lambda x: x ** 2,
-                inputs=dict(x=input.FromParam()),
-                outputs=dict(x_squared=output.FromKey("missing-key")),
+                inputs=dict(x=FromParam()),
+                outputs=dict(x_squared=FromKey("missing-key")),
             ),
         ),
-        inputs=dict(x=input.FromParam()),
+        inputs=dict(x=FromParam()),
     )
     with pytest.raises(TypeError) as e:
         invoke_dag(dag, params=dict(x=3))
@@ -88,20 +88,20 @@ def test__invoke_dag__invoke_dags_nodes_in_the_right_order_based_on_their_depend
         nodes={
             "square-number": Task(
                 lambda n: n ** 2,
-                inputs=dict(n=input.FromNodeOutput("generate-number", "n")),
-                outputs=dict(n=output.FromReturnValue()),
+                inputs=dict(n=FromNodeOutput("generate-number", "n")),
+                outputs=dict(n=FromReturnValue()),
             ),
             "divide-number-by-three": Task(
                 lambda n: n // 3,
-                inputs=dict(n=input.FromNodeOutput("square-number", "n")),
-                outputs=dict(n=output.FromReturnValue()),
+                inputs=dict(n=FromNodeOutput("square-number", "n")),
+                outputs=dict(n=FromReturnValue()),
             ),
             "generate-number": Task(
                 lambda: 9,
-                outputs=dict(n=output.FromReturnValue()),
+                outputs=dict(n=FromReturnValue()),
             ),
         },
-        outputs=dict(n=DAGOutput("divide-number-by-three", "n")),
+        outputs=dict(n=FromNodeOutput("divide-number-by-three", "n")),
     )
     assert invoke_dag(dag) == dict(n=b"27")
 
@@ -112,26 +112,24 @@ def test__invoke_dag__with_nested_dags():
             "outermost": DAG(
                 {
                     "come-up-with-a-number": Task(
-                        lambda: 1, outputs=dict(x=output.FromReturnValue())
+                        lambda: 1, outputs=dict(x=FromReturnValue())
                     ),
                     "middle": DAG(
                         {
                             "innermost": Task(
                                 lambda x: 2 * x,
-                                inputs=dict(x=input.FromParam()),
-                                outputs=dict(y=output.FromReturnValue()),
+                                inputs=dict(x=FromParam()),
+                                outputs=dict(y=FromReturnValue()),
                             )
                         },
-                        inputs=dict(
-                            x=input.FromNodeOutput("come-up-with-a-number", "x")
-                        ),
-                        outputs=dict(yy=DAGOutput("innermost", "y")),
+                        inputs=dict(x=FromNodeOutput("come-up-with-a-number", "x")),
+                        outputs=dict(yy=FromNodeOutput("innermost", "y")),
                     ),
                 },
-                outputs=dict(yyy=DAGOutput("middle", "yy")),
+                outputs=dict(yyy=FromNodeOutput("middle", "yy")),
             )
         },
-        outputs=dict(yyyy=DAGOutput("outermost", "yyy")),
+        outputs=dict(yyyy=FromNodeOutput("outermost", "yyy")),
     )
 
     assert invoke_dag(dag) == dict(yyyy=b"2")

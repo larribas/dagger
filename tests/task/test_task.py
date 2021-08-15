@@ -2,8 +2,8 @@ from itertools import combinations
 
 import pytest
 
-import dagger.input as input
-import dagger.output as output
+from dagger.input import FromParam
+from dagger.output import FromKey, FromReturnValue
 from dagger.serializer import DefaultSerializer
 from dagger.task import Task
 
@@ -17,7 +17,7 @@ def test__init__with_an_invalid_input_name():
         Task(
             lambda: 1,
             inputs={
-                "invalid name": input.FromParam(),
+                "invalid name": FromParam(),
             },
         )
 
@@ -46,7 +46,7 @@ def test__init__with_an_invalid_output_name():
         Task(
             lambda: 1,
             outputs={
-                "invalid name": output.FromKey("name"),
+                "invalid name": FromKey("name"),
             },
         )
 
@@ -81,7 +81,7 @@ def test__init__with_input_and_signature_mismatch():
         Task(
             f,
             inputs={
-                "a": input.FromParam(),
+                "a": FromParam(),
             },
         )
 
@@ -97,10 +97,10 @@ def test__init__with_input_and_signature_mismatch():
 
 
 def test__inputs__cannot_be_mutated():
-    task = Task(lambda x: x, inputs=dict(x=input.FromParam()))
+    task = Task(lambda x: x, inputs=dict(x=FromParam()))
 
     with pytest.raises(TypeError) as e:
-        task.inputs["y"] = input.FromParam()
+        task.inputs["y"] = FromParam()
 
     assert (
         str(e.value)
@@ -109,10 +109,10 @@ def test__inputs__cannot_be_mutated():
 
 
 def test__outputs__cannot_be_mutated():
-    task = Task(lambda: 1, outputs=dict(x=output.FromReturnValue()))
+    task = Task(lambda: 1, outputs=dict(x=FromReturnValue()))
 
     with pytest.raises(TypeError) as e:
-        task.outputs["x"] = output.FromKey("k")
+        task.outputs["x"] = FromKey("k")
 
     assert (
         str(e.value)
@@ -135,8 +135,8 @@ def test__eq():
     def f(**kwargs):
         return 11
 
-    inputs = dict(x=input.FromParam())
-    outputs = dict(x=output.FromReturnValue())
+    inputs = dict(x=FromParam())
+    outputs = dict(x=FromReturnValue())
     runtime_options = {"my": "options"}
 
     same = [

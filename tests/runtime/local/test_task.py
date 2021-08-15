@@ -2,11 +2,11 @@ import warnings
 
 import pytest
 
-import dagger.input as input
-import dagger.output as output
-from dagger import Task
+from dagger.input import FromParam
+from dagger.output import FromKey, FromReturnValue
 from dagger.runtime.local.task import invoke_task
 from dagger.serializer import AsJSON, SerializationError
+from dagger.task import Task
 
 
 def test__invoke_task__without_inputs_or_outputs():
@@ -19,8 +19,8 @@ def test__invoke_task__without_inputs_or_outputs():
 def test__invoke_task__with_single_input_and_output():
     task = Task(
         lambda number: number * 2,
-        inputs=dict(number=input.FromParam()),
-        outputs=dict(doubled_number=output.FromReturnValue()),
+        inputs=dict(number=FromParam()),
+        outputs=dict(doubled_number=FromReturnValue()),
     )
     assert invoke_task(task, params=dict(number=2)) == dict(doubled_number=b"4")
 
@@ -32,12 +32,12 @@ def test__invoke_task__with_multiple_inputs_and_outputs():
             name_length=len(first_name) + len(last_name),
         ),
         inputs=dict(
-            first_name=input.FromParam(),
-            last_name=input.FromParam(),
+            first_name=FromParam(),
+            last_name=FromParam(),
         ),
         outputs=dict(
-            message=output.FromKey("message"),
-            name_length=output.FromKey("name_length"),
+            message=FromKey("message"),
+            name_length=FromKey("name_length"),
         ),
     )
     assert invoke_task(task, params=dict(first_name="John", last_name="Doe",),) == dict(
@@ -50,8 +50,8 @@ def test__invoke_task__with_missing_input_parameter():
     task = Task(
         lambda a, b: 1,
         inputs=dict(
-            a=input.FromParam(),
-            b=input.FromParam(),
+            a=FromParam(),
+            b=FromParam(),
         ),
     )
     with pytest.raises(ValueError) as e:
@@ -64,7 +64,7 @@ def test__invoke_task__with_missing_input_parameter():
 
 
 def test__invoke_task__with_mismatched_outputs():
-    task = Task(lambda: 1, outputs=dict(a=output.FromKey("x")))
+    task = Task(lambda: 1, outputs=dict(a=FromKey("x")))
     with pytest.raises(TypeError) as e:
         invoke_task(task, params={})
 
@@ -75,7 +75,7 @@ def test__invoke_task__with_mismatched_outputs():
 
 
 def test__invoke_task__with_missing_outputs():
-    task = Task(lambda: dict(a=1), outputs=dict(x=output.FromKey("x")))
+    task = Task(lambda: dict(a=1), outputs=dict(x=FromKey("x")))
     with pytest.raises(ValueError) as e:
         invoke_task(task, params={})
 
@@ -86,7 +86,7 @@ def test__invoke_task__with_missing_outputs():
 
 
 def test__invoke_task__with_unserializable_outputs():
-    task = Task(lambda: dict(a=lambda: 2), outputs=dict(x=output.FromKey("a")))
+    task = Task(lambda: dict(a=lambda: 2), outputs=dict(x=FromKey("a")))
     with pytest.raises(SerializationError) as e:
         invoke_task(task, params={})
 
@@ -99,7 +99,7 @@ def test__invoke_task__with_unserializable_outputs():
 def test__invoke_task__overriding_the_serializer():
     task = Task(
         lambda: {"a": 2},
-        outputs=dict(x=output.FromReturnValue(serializer=AsJSON(indent=1))),
+        outputs=dict(x=FromReturnValue(serializer=AsJSON(indent=1))),
     )
     assert invoke_task(task, params={}) == {
         "x": b'{\n "a": 2\n}',

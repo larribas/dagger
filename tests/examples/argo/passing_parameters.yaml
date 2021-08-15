@@ -4,16 +4,17 @@ metadata:
   generateName: passing-parameters-
 spec:
   arguments:
-    artifacts:
+    parameters:
     - name: number
-      raw:
-        data: !!binary "NQ=="
+      value: 5
   entrypoint: dag
   templates:
   - name: dag
     inputs:
       artifacts:
       - name: number
+        raw:
+          data: "{{workflow.parameters.number}}"
     outputs:
       artifacts:
       - name: number-doubled-and-squared

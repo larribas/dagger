@@ -3,10 +3,10 @@ from itertools import combinations
 
 import pytest
 
-import dagger.input as input
-import dagger.output as output
-from dagger.dag import DAG, CyclicDependencyError, DAGOutput, validate_parameters
-from dagger.serializer import DefaultSerializer, SerializationError
+from dagger.dag import DAG, CyclicDependencyError, validate_parameters
+from dagger.input import FromNodeOutput, FromParam
+from dagger.output import FromReturnValue
+from dagger.serializer import AsPickle, DefaultSerializer, SerializationError
 from dagger.task import Task
 
 #
@@ -61,7 +61,7 @@ def test__init__with_an_invalid_input_name():
     with pytest.raises(ValueError):
         DAG(
             nodes={"my-node": Task(lambda: 1)},
-            inputs={"invalid name": input.FromParam()},
+            inputs={"invalid name": FromParam()},
         )
 
 
@@ -75,7 +75,7 @@ def test__init__with_invalid_input_type():
             nodes=dict(
                 n=Task(
                     lambda x: x,
-                    inputs=dict(x=input.FromParam()),
+                    inputs=dict(x=FromParam()),
                 ),
             ),
             inputs=dict(x=UnsupportedInput()),
@@ -90,10 +90,8 @@ def test__init__with_invalid_input_type():
 def test__init__with_an_invalid_output_name():
     with pytest.raises(ValueError):
         DAG(
-            nodes={
-                "my-node": Task(lambda: 1, outputs=dict(x=output.FromReturnValue()))
-            },
-            outputs={"invalid name": DAGOutput("my-node", "x")},
+            nodes={"my-node": Task(lambda: 1, outputs=dict(x=FromReturnValue()))},
+            outputs={"invalid name": FromNodeOutput("my-node", "x")},
         )
 
 
@@ -101,7 +99,7 @@ def test__init__with_an_output_that_references_a_nonexistent_node():
     with pytest.raises(ValueError) as e:
         DAG(
             nodes={"my-node": Task(lambda: 1)},
-            outputs=dict(x=DAGOutput("missing-node", "y")),
+            outputs=dict(x=FromNodeOutput("missing-node", "y")),
         )
 
     assert (
@@ -113,10 +111,8 @@ def test__init__with_an_output_that_references_a_nonexistent_node():
 def test__init__with_an_output_that_references_a_nonexistent_node_output():
     with pytest.raises(ValueError) as e:
         DAG(
-            nodes={
-                "my-node": Task(lambda: 1, outputs=dict(x=output.FromReturnValue()))
-            },
-            outputs=dict(y=DAGOutput("my-node", "z")),
+            nodes={"my-node": Task(lambda: 1, outputs=dict(x=FromReturnValue()))},
+            outputs=dict(y=FromNodeOutput("my-node", "z")),
         )
 
     assert (
@@ -131,7 +127,7 @@ def test__init__with_a_node_that_references_another_that_does_not_exist():
             {
                 "my-node": Task(
                     lambda x: 1,
-                    inputs=dict(x=input.FromNodeOutput("missing-node", "x")),
+                    inputs=dict(x=FromNodeOutput("missing-node", "x")),
                 ),
             }
         )
@@ -148,11 +144,11 @@ def test__init__with_a_node_that_references_an_output_that_does_not_exist():
             {
                 "first-node": Task(
                     lambda: 1,
-                    outputs=dict(z=output.FromReturnValue()),
+                    outputs=dict(z=FromReturnValue()),
                 ),
                 "second-node": Task(
                     lambda x: 1,
-                    inputs=dict(x=input.FromNodeOutput("first-node", "y")),
+                    inputs=dict(x=FromNodeOutput("first-node", "y")),
                 ),
             }
         )
@@ -163,16 +159,37 @@ def test__init__with_a_node_that_references_an_output_that_does_not_exist():
     )
 
 
+def test__init__with_mismatched_inputs_from_node_output():
+    with pytest.raises(ValueError) as e:
+        DAG(
+            nodes={
+                "first-node": Task(
+                    lambda: 1,
+                    outputs=dict(x=FromReturnValue(serializer=AsPickle())),
+                ),
+                "second-node": Task(
+                    lambda x: 1,
+                    inputs=dict(x=FromNodeOutput("first-node", "x")),
+                ),
+            },
+        )
+
+    assert (
+        str(e.value)
+        == "Error validating input 'x' of node 'second-node': This input is serialized AsJSON(indent=None, allow_nan=False). However, the output it references is serialized AsPickle()."
+    )
+
+
 def test__init__with_a_node_that_references_a_dag_input_that_does_not_exist():
     with pytest.raises(ValueError) as e:
         DAG(
             nodes={
                 "my-node": Task(
                     lambda x: 1,
-                    inputs=dict(x=input.FromParam()),
+                    inputs=dict(x=FromParam()),
                 ),
             },
-            inputs=dict(z=input.FromParam()),
+            inputs=dict(z=FromParam()),
         )
 
     assert (
@@ -181,15 +198,33 @@ def test__init__with_a_node_that_references_a_dag_input_that_does_not_exist():
     )
 
 
+def test__init__with_mismatched_inputs_from_param():
+    with pytest.raises(ValueError) as e:
+        DAG(
+            nodes={
+                "my-node": Task(
+                    lambda x: 1,
+                    inputs=dict(x=FromParam()),
+                ),
+            },
+            inputs=dict(x=FromParam(serializer=AsPickle())),
+        )
+
+    assert (
+        str(e.value)
+        == "Error validating input 'x' of node 'my-node': This input is serialized AsJSON(indent=None, allow_nan=False). However, the input it references is serialized AsPickle()."
+    )
+
+
 def test__init__with_a_node_that_references_an_existing_dag_input_explicitly():
     DAG(
         nodes={
             "my-node": Task(
                 lambda x: 1,
-                inputs=dict(x=input.FromParam("z")),
+                inputs=dict(x=FromParam("z")),
             ),
         },
-        inputs=dict(z=input.FromParam()),
+        inputs=dict(z=FromParam()),
     )
     # We are expecting no validation errors to be raised
 
@@ -200,8 +235,8 @@ def test__init__with_a_cyclic_dependency():
             nodes=dict(
                 a=Task(
                     lambda x: x,
-                    inputs=dict(x=input.FromNodeOutput("a", "x")),
-                    outputs=dict(x=output.FromReturnValue()),
+                    inputs=dict(x=FromNodeOutput("a", "x")),
+                    outputs=dict(x=FromReturnValue()),
                 ),
             ),
         )
@@ -213,26 +248,24 @@ def test__init__with_nested_dags():
             "outermost": DAG(
                 {
                     "come-up-with-a-number": Task(
-                        lambda: 1, outputs=dict(x=output.FromReturnValue())
+                        lambda: 1, outputs=dict(x=FromReturnValue())
                     ),
                     "middle": DAG(
                         {
                             "innermost": Task(
                                 lambda x: x,
-                                inputs=dict(x=input.FromParam()),
-                                outputs=dict(y=output.FromReturnValue()),
+                                inputs=dict(x=FromParam()),
+                                outputs=dict(y=FromReturnValue()),
                             )
                         },
-                        inputs=dict(
-                            x=input.FromNodeOutput("come-up-with-a-number", "x")
-                        ),
-                        outputs=dict(yy=DAGOutput("innermost", "y")),
+                        inputs=dict(x=FromNodeOutput("come-up-with-a-number", "x")),
+                        outputs=dict(yy=FromNodeOutput("innermost", "y")),
                     ),
                 },
-                outputs=dict(yyy=DAGOutput("middle", "yy")),
+                outputs=dict(yyy=FromNodeOutput("middle", "yy")),
             )
         },
-        outputs=dict(yyyy=DAGOutput("outermost", "yyy")),
+        outputs=dict(yyyy=FromNodeOutput("outermost", "yyy")),
     )
     # Then, no validation exceptions are raised
 
@@ -257,16 +290,16 @@ def test__node_execution_order__is_based_on_dependencies():
         nodes=dict(
             second=Task(
                 lambda x: x * 2,
-                inputs=dict(x=input.FromNodeOutput("first", "x")),
-                outputs=dict(x=output.FromReturnValue()),
+                inputs=dict(x=FromNodeOutput("first", "x")),
+                outputs=dict(x=FromReturnValue()),
             ),
             third=Task(
                 lambda x: x * 2,
-                inputs=dict(x=input.FromNodeOutput("second", "x")),
+                inputs=dict(x=FromNodeOutput("second", "x")),
             ),
             first=Task(
                 lambda: 1,
-                outputs=dict(x=output.FromReturnValue()),
+                outputs=dict(x=FromReturnValue()),
             ),
         ),
     )
@@ -281,11 +314,11 @@ def test__node_execution_order__is_based_on_dependencies():
 def test__inputs__cannot_be_mutated():
     dag = DAG(
         {"my-node": Task(lambda: 1)},
-        inputs=dict(x=input.FromParam()),
+        inputs=dict(x=FromParam()),
     )
 
     with pytest.raises(TypeError) as e:
-        dag.inputs["y"] = input.FromParam()
+        dag.inputs["y"] = FromParam()
 
     assert (
         str(e.value)
@@ -298,14 +331,14 @@ def test__outputs__cannot_be_mutated():
         {
             "my-node": Task(
                 lambda: 1,
-                outputs=dict(x=output.FromReturnValue()),
+                outputs=dict(x=FromReturnValue()),
             )
         },
-        outputs=dict(x=DAGOutput("my-node", "x")),
+        outputs=dict(x=FromNodeOutput("my-node", "x")),
     )
 
     with pytest.raises(TypeError) as e:
-        dag.outputs["x"] = DAGOutput("my-node", "y")
+        dag.outputs["x"] = FromNodeOutput("my-node", "y")
 
     assert (
         str(e.value)
@@ -343,9 +376,9 @@ def test__eq():
     def f(**kwargs):
         return 11
 
-    nodes = {"my-node": Task(lambda: 1, outputs=dict(x=output.FromReturnValue()))}
-    inputs = dict(x=input.FromParam())
-    outputs = dict(x=DAGOutput("my-node", "x"))
+    nodes = {"my-node": Task(lambda: 1, outputs=dict(x=FromReturnValue()))}
+    inputs = dict(x=FromParam())
+    outputs = dict(x=FromNodeOutput("my-node", "x"))
     runtime_options = {"my": "options"}
 
     same = [
@@ -366,9 +399,7 @@ def test__eq():
         DAG(nodes=nodes, inputs=inputs, runtime_options=runtime_options),
         DAG(nodes=nodes, outputs=outputs, runtime_options=runtime_options),
         DAG(
-            nodes={
-                "my-node": Task(lambda: 2, outputs=dict(x=output.FromReturnValue()))
-            },
+            nodes={"my-node": Task(lambda: 2, outputs=dict(x=FromReturnValue()))},
             inputs=inputs,
             outputs=outputs,
             runtime_options=runtime_options,
@@ -387,8 +418,8 @@ def test__eq():
 def test__validate_parameters__when_params_match_inputs():
     validate_parameters(
         inputs={
-            "a": input.FromParam(),
-            "b": input.FromNodeOutput("n", "o"),
+            "a": FromParam(),
+            "b": FromNodeOutput("n", "o"),
         },
         params={
             "a": 1,
@@ -402,9 +433,9 @@ def test__validate_parameters__when_input_is_missing():
     with pytest.raises(ValueError) as e:
         validate_parameters(
             inputs={
-                "c": input.FromParam(),
-                "a": input.FromParam(),
-                "b": input.FromNodeOutput("n", "o"),
+                "c": FromParam(),
+                "a": FromParam(),
+                "b": FromNodeOutput("n", "o"),
             },
             params={
                 "c": 1,
@@ -422,8 +453,8 @@ def test__validate_parameters__when_param_is_superfluous():
     with warnings.catch_warnings(record=True) as w:
         validate_parameters(
             inputs={
-                "c": input.FromParam(),
-                "a": input.FromParam(),
+                "c": FromParam(),
+                "a": FromParam(),
             },
             params={
                 "z": 1,
@@ -443,7 +474,7 @@ def test__validate_parameters__when_param_value_is_not_compatible_with_serialize
     with pytest.raises(SerializationError) as e:
         validate_parameters(
             inputs={
-                "a": input.FromParam(),
+                "a": FromParam(),
             },
             params={
                 "a": {1},

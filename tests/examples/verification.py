@@ -1,7 +1,7 @@
 """Verify examples work with the provided runtimes."""
 
 from pathlib import Path
-from typing import Callable, Mapping
+from typing import Any, Callable, Mapping
 
 import yaml
 from deepdiff import DeepDiff
@@ -51,7 +51,7 @@ def verify_dag_works_with_all_runtimes(
 
 def verify_dag_works_with_local_runtime(
     dag: DAG,
-    params: Mapping[str, bytes],
+    params: Mapping[str, Any],
     validate_results: Callable[[Mapping[str, bytes]], None],
 ):
     """
@@ -76,7 +76,7 @@ def verify_dag_works_with_local_runtime(
 
 def verify_dag_works_with_cli_runtime(
     dag: DAG,
-    params: Mapping[str, bytes],
+    params: Mapping[str, Any],
     validate_results: Callable[[Mapping[str, bytes]], None],
 ):
     """
@@ -103,7 +103,8 @@ def verify_dag_works_with_cli_runtime(
 
         for param_name, param_value in params.items():
             with open(os.path.join(tmp, param_name), "wb") as f:
-                f.write(param_value)
+                serializer = dag.inputs[param_name].serializer
+                f.write(serializer.serialize(param_value))
 
         invoke(
             dag,

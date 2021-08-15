@@ -5,7 +5,8 @@ from contextvars import copy_context
 from itertools import groupby
 from typing import Any, Callable, List, Mapping, Union
 
-from dagger.dag import DAG, DAGOutput, Node
+from dagger.dag import DAG, Node
+from dagger.dag import SupportedOutputs as SupportedDAGOutputs
 from dagger.dsl.context import node_invocations
 from dagger.dsl.errors import POTENTIAL_BUG_MESSAGE
 from dagger.dsl.node_invocation_recorder import NodeInvocationRecorder
@@ -123,7 +124,7 @@ def _build_dag_outputs(
         Mapping[str, NodeOutputReference],
     ],
     node_names_by_id: Mapping[str, str],
-) -> Mapping[str, DAGOutput]:
+) -> Mapping[str, SupportedDAGOutputs]:
     """
     Build the outputs of a DAG and explicitly mark them as consumed, if it applies.
 
@@ -146,7 +147,7 @@ def _build_dag_outputs(
             output_ref.consume()
 
     return {
-        output_name: DAGOutput(
+        output_name: FromNodeOutput(
             node=node_names_by_id[output_ref.invocation_id],
             output=output_ref.output_name,
         )
