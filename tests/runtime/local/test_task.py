@@ -1,10 +1,12 @@
+import warnings
+
 import pytest
 
 import dagger.input as input
 import dagger.output as output
 from dagger import Task
 from dagger.runtime.local.task import invoke_task
-from dagger.serializer import SerializationError
+from dagger.serializer import AsJSON, SerializationError
 
 
 def test__invoke_task__without_inputs_or_outputs():
@@ -20,7 +22,7 @@ def test__invoke_task__with_single_input_and_output():
         inputs=dict(number=input.FromParam()),
         outputs=dict(doubled_number=output.FromReturnValue()),
     )
-    assert invoke_task(task, params=dict(number=b"2")) == dict(doubled_number=b"4")
+    assert invoke_task(task, params=dict(number=2)) == dict(doubled_number=b"4")
 
 
 def test__invoke_task__with_multiple_inputs_and_outputs():
@@ -38,26 +40,26 @@ def test__invoke_task__with_multiple_inputs_and_outputs():
             name_length=output.FromKey("name_length"),
         ),
     )
-    assert invoke_task(
-        task,
-        params=dict(
-            first_name=b'"John"',
-            last_name=b'"Doe"',
-        ),
-    ) == dict(
+    assert invoke_task(task, params=dict(first_name="John", last_name="Doe",),) == dict(
         message=b'"Hello John Doe"',
         name_length=b"7",
     )
 
 
 def test__invoke_task__with_missing_input_parameter():
-    task = Task(lambda a: 1, inputs=dict(a=input.FromParam()))
+    task = Task(
+        lambda a, b: 1,
+        inputs=dict(
+            a=input.FromParam(),
+            b=input.FromParam(),
+        ),
+    )
     with pytest.raises(ValueError) as e:
         invoke_task(task, params={})
 
     assert (
         str(e.value)
-        == "The parameters supplied to this task were supposed to contain a parameter named 'a', but only the following parameters were actually supplied: []"
+        == "The following parameters are required by the task but were not supplied: ['a', 'b']"
     )
 
 
@@ -92,3 +94,25 @@ def test__invoke_task__with_unserializable_outputs():
         str(e.value)
         == "We encountered the following error while attempting to serialize the results of this task: Object of type function is not JSON serializable"
     )
+
+
+def test__invoke_task__overriding_the_serializer():
+    task = Task(
+        lambda: {"a": 2},
+        outputs=dict(x=output.FromReturnValue(serializer=AsJSON(indent=1))),
+    )
+    assert invoke_task(task, params={}) == {
+        "x": b'{\n "a": 2\n}',
+    }
+
+
+def test__invoke_task__with_superfluous_parameters():
+    task = Task(lambda: 1)
+
+    with warnings.catch_warnings(record=True) as w:
+        invoke_task(task, params={"a": 1, "b": 2})
+        assert len(w) == 1
+        assert (
+            str(w[0].message)
+            == "The following parameters were supplied to the task, but are not necessary: ['a', 'b']"
+        )

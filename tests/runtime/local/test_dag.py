@@ -30,7 +30,7 @@ def test__invoke_dag__with_inputs_and_outputs():
         inputs=dict(x=input.FromParam()),
         outputs=dict(x_squared=DAGOutput("square", "x_squared")),
     )
-    assert invoke_dag(dag, params=dict(x=b"3")) == dict(x_squared=b"9")
+    assert invoke_dag(dag, params=dict(x=3)) == dict(x_squared=b"9")
 
 
 def test__invoke_dag__with_missing_input_parameter():
@@ -39,7 +39,7 @@ def test__invoke_dag__with_missing_input_parameter():
         inputs=dict(a=input.FromParam()),
     )
     with pytest.raises(ValueError) as e:
-        invoke_dag(dag, params=dict(y=b"3"))
+        invoke_dag(dag, params=dict(y=3))
 
     assert (
         str(e.value)
@@ -60,7 +60,7 @@ def test__invoke_dag__mapping_dag_parameters_to_node_inputs():
         ),
     )
 
-    assert invoke_dag(dag, params=dict(a=b"1")) == {"x": b"3"}
+    assert invoke_dag(dag, params=dict(a=1)) == {"x": b"3"}
 
 
 def test__invoke_dag__propagates_task_exceptions_extending_the_details():
@@ -75,7 +75,7 @@ def test__invoke_dag__propagates_task_exceptions_extending_the_details():
         inputs=dict(x=input.FromParam()),
     )
     with pytest.raises(TypeError) as e:
-        invoke_dag(dag, params=dict(x=b"3"))
+        invoke_dag(dag, params=dict(x=3))
 
     assert (
         str(e.value)

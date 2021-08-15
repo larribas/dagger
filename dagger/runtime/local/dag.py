@@ -1,16 +1,17 @@
 """Run a DAG in memory."""
 import itertools
-from typing import Dict, Mapping, Optional
+from typing import Any, Dict, Mapping, Optional
 
 from dagger.dag import DAG, validate_parameters
 from dagger.input import FromNodeOutput, FromParam
 from dagger.runtime.local.task import invoke_task
-from dagger.serializer import SerializationError
+from dagger.serializer import SerializationError, Serializer
+from dagger.task import Task
 
 
 def invoke_dag(
     dag: DAG,
-    params: Optional[Mapping[str, bytes]] = None,
+    params: Optional[Mapping[str, Any]] = None,
 ) -> Mapping[str, bytes]:
     """
     Invoke a DAG with a series of parameters.
@@ -21,9 +22,7 @@ def invoke_dag(
         DAG to execute
 
     params
-        Inputs to the DAG.
-        Serialized into their binary format.
-        Indexed by input/parameter name.
+        Inputs to the DAG, indexed by input/parameter name.
 
 
     Returns
@@ -57,7 +56,9 @@ def invoke_dag(
             if isinstance(node_input, FromParam):
                 node_params[input_name] = params[node_input.name or input_name]
             elif isinstance(node_input, FromNodeOutput):
-                node_params[input_name] = outputs[node_input.node][node_input.output]
+                node_params[input_name] = node_input.serializer.deserialize(
+                    outputs[node_input.node][node_input.output]
+                )
             else:
                 raise TypeError(
                     f"Input type '{type(node_input)}' is not supported by the local runtime. The use of unsupported inputs should have been validated by the DAG object. This may be a bug in the library. Please open an issue in our GitHub repository."
