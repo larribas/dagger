@@ -2,13 +2,12 @@
 from typing import Any, Iterable, List, Mapping
 
 import dagger.runtime.local as local
-from dagger.dag import DAG, Node
+from dagger.dag import DAG
 from dagger.runtime.cli.locations import (
     retrieve_input_from_location,
     store_output_in_location,
 )
 from dagger.runtime.cli.nested_nodes import NodeWithParent, find_nested_node
-from dagger.task import Task
 
 
 def invoke_with_locations(
@@ -56,7 +55,7 @@ def invoke_with_locations(
 
     params = _deserialized_params(nested_node, input_locations)
 
-    outputs = _invoke_node(nested_node.node, params)
+    outputs = local.invoke(nested_node.node, params)
 
     for output_name in output_locations:
         store_output_in_location(outputs[output_name], output_locations[output_name])
@@ -99,15 +98,3 @@ def _deserialized_params(
         params[input_name] = input_value
 
     return params
-
-
-def _invoke_node(node: Node, params: Mapping[str, Any]) -> Mapping[str, bytes]:
-    """Invoke a node using the local runtime and return its serialized outputs."""
-    if isinstance(node, Task):
-        return local.invoke_task(node, params)
-    elif isinstance(node, DAG):
-        return local.invoke_dag(node, params)
-    else:
-        raise NotImplementedError(
-            f"Nodes of type {type(node).__name__} are not supported by the library. This is most likely a bug. Please report it to our GitHub repository."
-        )

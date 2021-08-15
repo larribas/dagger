@@ -68,9 +68,9 @@ def verify_dag_works_with_local_runtime(
     validate_results
         A function validating the outputs of the DAG
     """
-    from dagger.runtime.local import invoke_dag
+    from dagger.runtime.local import invoke
 
-    results = invoke_dag(dag, params=params)
+    results = invoke(dag, params=params)
     validate_results(results)
 
 

@@ -6,39 +6,10 @@ from dagger.serializer import SerializationError
 from dagger.task import SupportedInputs, SupportedOutputs, Task
 
 
-def invoke_task(
+def _invoke_task(
     task: Task,
     params: Optional[Mapping[str, Any]] = None,
 ) -> Mapping[str, bytes]:
-    """
-    Invoke a task with a series of parameters.
-
-    Parameters
-    ----------
-    task
-        Task to execute
-
-    params
-        Inputs to the task, indexed by input/parameter name.
-
-
-    Returns
-    -------
-    Mappingionary of str -> bytes
-        Serialized outputs of the task, indexed by output name.
-
-
-    Raises
-    ------
-    ValueError
-        When any required parameters are missing
-
-    TypeError
-        When any of the outputs cannot be obtained from the return value of the task's function
-
-    SerializationError
-        When some of the outputs cannot be serialized with the specified Serializer
-    """
     params = params or {}
     inputs = _validate_and_filter_inputs(inputs=task.inputs, params=params)
 
