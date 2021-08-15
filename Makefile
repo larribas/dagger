@@ -27,6 +27,10 @@ check-types:
 check-docs:
 	poetry run pydocstyle --explain .
 
+.PHONY: ci
+ci: lint check-types check-docs test
+	@echo "All checks have passed"
+
 .PHONY: build
 build:
 	poetry build -f wheel

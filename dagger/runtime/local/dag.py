@@ -5,8 +5,7 @@ from typing import Any, Dict, Mapping, Optional
 from dagger.dag import DAG, validate_parameters
 from dagger.input import FromNodeOutput, FromParam
 from dagger.runtime.local.task import invoke_task
-from dagger.serializer import SerializationError, Serializer
-from dagger.task import Task
+from dagger.serializer import SerializationError
 
 
 def invoke_dag(
