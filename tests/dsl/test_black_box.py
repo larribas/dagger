@@ -82,6 +82,35 @@ def test__input_from_param():
     )
 
 
+def test__input_from_literal_value():
+    class ArbitraryObject:
+        pass
+
+    literal_values = [
+        "string literal",
+        2,
+        5.5,
+        True,
+        ["a", "list"],
+        {"complex": ArbitraryObject()},
+    ]
+
+    @dsl.task
+    def inspect(hello, value):
+        return f"{hello} {value} of type {type(value).__name__}"
+
+    @dsl.DAG
+    def dag(hello):
+        for value in literal_values:
+            inspect(hello="hello...", value=value)
+
+    for i, value in enumerate(literal_values):
+        assert (
+            dsl.build(dag).nodes[f"inspect-{i + 1}"].func()
+            == f"hello... {value} of type {type(value).__name__}"
+        )
+
+
 def test__input_from_param_with_different_names():
     @dsl.task
     def say_hello(first_name):
