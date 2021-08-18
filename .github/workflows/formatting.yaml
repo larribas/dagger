@@ -24,7 +24,4 @@ jobs:
           make install
       - name: Verify code format
         run: |
-          poetry run black . --check --diff
-      - name: Verify imports are sorted
-        run: |
-          poetry run isort . --check --diff
+          make check-format

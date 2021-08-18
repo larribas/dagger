@@ -27,8 +27,13 @@ check-types:
 check-docs:
 	poetry run pydocstyle --explain .
 
+.PHONY: check-format
+check-format:
+	poetry run black . --check --diff
+	poetry run isort . --check --diff
+
 .PHONY: ci
-ci: lint check-types check-docs test
+ci: lint check-types check-format check-docs test
 	@echo "All checks have passed"
 
 .PHONY: build
