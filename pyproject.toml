@@ -5,8 +5,8 @@ description = ""
 authors = ["larribas <lorenzo.s.arribas@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
-PyYAML = "^5.4.1"
+python = ">=3.9,<4.0"
+PyYAML = "^5"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

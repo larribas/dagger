@@ -13,6 +13,7 @@ from dagger.dsl.node_invocations import (
     is_node_input_reference,
 )
 from dagger.dsl.node_outputs import NodeOutputUsage
+from dagger.dsl.serialize import Serialize, find_serialize_annotation
 
 
 class NodeInvocationRecorder:
@@ -59,7 +60,10 @@ class NodeInvocationRecorder:
         invocation_id = self._overridden_id or uuid.uuid4().hex
         arguments = self._bind_arguments(*args, **kwargs)
         self._consume_node_output_references(list(arguments.values()))
-        output = NodeOutputUsage(invocation_id=invocation_id)
+        output = NodeOutputUsage(
+            invocation_id=invocation_id,
+            serialize_annotation=find_serialize_annotation(self._func) or Serialize(),
+        )
 
         invocations = node_invocations.get([])
         invocations.append(
