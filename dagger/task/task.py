@@ -122,6 +122,7 @@ class Task:
     def __repr__(self) -> str:
         """Return a human-readable representation of the task."""
         return f"""Task(
+            task={self._func},
             inputs={str(self._inputs)}, 
             outputs={str(self._outputs)}, 
             runtime_options={str(self._runtime_options)}, 

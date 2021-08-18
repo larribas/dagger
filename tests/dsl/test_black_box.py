@@ -6,11 +6,14 @@ from the standpoint of a user of the library. That is, without any explicit
 knowledge about the internal data structures that build the DAG under the hood.
 """
 
+import random
+from typing import Annotated, Mapping
 
 import dagger.dsl as dsl
 from dagger.dag import DAG
 from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromKey, FromReturnValue
+from dagger.serializer import AsJSON, AsPickle
 from dagger.task import Task
 from tests.dsl.verification import verify_dags_are_equivalent
 
@@ -139,8 +142,6 @@ def test__input_from_param_with_different_names():
 def test__input_from_node_output():
     @dsl.task
     def generate_random_number():
-        import random
-
         return random.random()
 
     @dsl.task
@@ -335,8 +336,6 @@ def test__nested_dags_complex():
 
     @dsl.task
     def generate_random_number(seed: int) -> int:
-        import random
-
         random.seed(seed)
         return random.randint(0, 1000)
 
@@ -435,6 +434,110 @@ def test__runtime_options():
                         ),
                     },
                     runtime_options=dag_options,
+                ),
+            },
+        ),
+    )
+
+
+def test__overriding_serializers():
+    @dsl.task
+    def generate_single_number() -> Annotated[int, dsl.Serialize(AsPickle())]:
+        return random.randint(1, 100)
+
+    @dsl.task
+    def generate_multiple_numbers() -> Annotated[
+        Mapping[str, int],
+        dsl.Serialize(json=AsJSON(indent=5), pickle=AsPickle()),
+    ]:
+        return {
+            "json": 2,
+            "pickle": 3,
+        }
+
+    @dsl.task
+    def announce_number(n: int):
+        print(f"the number was {n}")
+
+    @dsl.DAG
+    def announce_numbers(param: int, rand: int, json: int, pickle: int):
+        announce_number(param)
+        announce_number(rand)
+        announce_number(json)
+        announce_number(pickle)
+
+    @dsl.DAG
+    def dag(param: int):
+        rand = generate_single_number()
+        mult = generate_multiple_numbers()
+        announce_numbers(
+            param=param,
+            rand=rand,
+            json=mult["json"],
+            pickle=mult["pickle"],
+        )
+
+    verify_dags_are_equivalent(
+        dsl.build(dag),
+        DAG(
+            inputs={"param": FromParam("param")},
+            nodes={
+                "generate-single-number": Task(
+                    generate_single_number.func,
+                    outputs={"return_value": FromReturnValue(serializer=AsPickle())},
+                ),
+                "generate-multiple-numbers": Task(
+                    generate_multiple_numbers.func,
+                    outputs={
+                        "key_json": FromKey(key="json", serializer=AsJSON(indent=5)),
+                        "key_pickle": FromKey(key="pickle", serializer=AsPickle()),
+                    },
+                ),
+                "announce-numbers": DAG(
+                    inputs={
+                        "param": FromParam("param"),
+                        "rand": FromNodeOutput(
+                            "generate-single-number",
+                            "return_value",
+                            serializer=AsPickle(),
+                        ),
+                        "json": FromNodeOutput(
+                            "generate-multiple-numbers",
+                            "key_json",
+                            serializer=AsJSON(indent=5),
+                        ),
+                        "pickle": FromNodeOutput(
+                            "generate-multiple-numbers",
+                            "key_pickle",
+                            serializer=AsPickle(),
+                        ),
+                    },
+                    nodes={
+                        "announce-number-1": Task(
+                            announce_number.func,
+                            inputs={
+                                "n": FromParam("param"),
+                            },
+                        ),
+                        "announce-number-2": Task(
+                            announce_number.func,
+                            inputs={
+                                "n": FromParam("rand", serializer=AsPickle()),
+                            },
+                        ),
+                        "announce-number-3": Task(
+                            announce_number.func,
+                            inputs={
+                                "n": FromParam("json", serializer=AsJSON(indent=5)),
+                            },
+                        ),
+                        "announce-number-4": Task(
+                            announce_number.func,
+                            inputs={
+                                "n": FromParam("pickle", serializer=AsPickle()),
+                            },
+                        ),
+                    },
                 ),
             },
         ),

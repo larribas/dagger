@@ -1,4 +1,5 @@
 from contextvars import copy_context
+from typing import Annotated
 
 import pytest
 
@@ -8,6 +9,8 @@ from dagger.dsl.node_invocation_recorder import NodeInvocationRecorder
 from dagger.dsl.node_invocations import NodeInvocation, NodeType
 from dagger.dsl.node_outputs import NodeOutputUsage
 from dagger.dsl.parameter_usage import ParameterUsage
+from dagger.dsl.serialize import Serialize
+from dagger.serializer import AsPickle
 
 
 def test__task_invocation__with_too_many_positional_arguments():
@@ -53,7 +56,10 @@ def test__task_invocation__returns_node_output_usage():
     )
     output = ctx.run(recorder)
 
-    assert output == NodeOutputUsage(invocation_id)
+    assert output == NodeOutputUsage(
+        invocation_id,
+        serialize_annotation=Serialize(),
+    )
 
 
 def test__task_invocation__records_inputs_from_different_sources():
@@ -64,7 +70,10 @@ def test__task_invocation__records_inputs_from_different_sources():
     invocation_id = "y"
     param_usage = ParameterUsage()
     param_with_name_usage = ParameterUsage(name="overridden")
-    node_output_usage = NodeOutputUsage(invocation_id="x")
+    node_output_usage = NodeOutputUsage(
+        invocation_id="x",
+        serialize_annotation=Serialize(),
+    )
 
     recorder = NodeInvocationRecorder(
         func=my_func,
@@ -91,7 +100,7 @@ def test__task_invocation__records_inputs_from_different_sources():
                 "param_with_name": ParameterUsage(name=param_with_name_usage.name),
                 "node_output": node_output_usage,
             },
-            output=NodeOutputUsage(invocation_id),
+            output=NodeOutputUsage(invocation_id, serialize_annotation=Serialize()),
             runtime_options={},
         ),
     ]
@@ -110,3 +119,17 @@ def test__task_invocation__generates_unique_invocation_ids():
 
     assert len(ctx[node_invocations]) == n_invocations
     assert len({inv.id for inv in ctx[node_invocations]}) == n_invocations
+
+
+def test__task_invocation__takes_into_account_serialize_annotations():
+    def my_func(x: int) -> Annotated[int, Serialize(AsPickle())]:
+        return x
+
+    ctx = copy_context()
+    recorder = NodeInvocationRecorder(func=my_func, node_type=NodeType.TASK)
+    ctx.run(recorder, x=33)
+
+    assert len(ctx[node_invocations]) == 1
+
+    output = ctx[node_invocations][0].output
+    assert output.serializer == AsPickle()

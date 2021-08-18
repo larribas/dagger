@@ -2,6 +2,9 @@
 
 from typing import NamedTuple, Protocol, Set, runtime_checkable
 
+from dagger.dsl.serialize import Serialize
+from dagger.serializer import Serializer
+
 
 @runtime_checkable
 class NodeOutputReference(Protocol):
@@ -39,6 +42,11 @@ class NodeOutputReference(Protocol):
         """Return the outputs name of this reference."""
         ...
 
+    @property
+    def serializer(self) -> Serializer:
+        """Return the serializer assigned to this output."""
+        ...
+
 
 class NodeOutputKeyUsage(NamedTuple):
     """
@@ -60,6 +68,15 @@ class NodeOutputKeyUsage(NamedTuple):
     invocation_id: str
     output_name: str
     key_name: str
+    serializer: Serializer
+
+    def __hash__(self) -> int:
+        """
+        Return a hash that will be the same for two equivalent instances of this type.
+
+        It's important to note that two tuples of this type will only be equal if all their attributes are exactly the same, but they will be equivalent if they reference the same invocation (by id) and key accessed (by name).
+        """
+        return hash((self.invocation_id, self.key_name))
 
 
 class NodeOutputPropertyUsage(NamedTuple):
@@ -82,6 +99,15 @@ class NodeOutputPropertyUsage(NamedTuple):
     invocation_id: str
     output_name: str
     property_name: str
+    serializer: Serializer
+
+    def __hash__(self) -> int:
+        """
+        Return a hash that will be the same for two equivalent instances of this type.
+
+        It's important to note that two tuples of this type will only be equal if all their attributes are exactly the same, but they will be equivalent if they reference the same invocation (by id) and property accessed (by name).
+        """
+        return hash((self.invocation_id, self.property_name))
 
 
 class NodeOutputUsage:
@@ -133,9 +159,11 @@ class NodeOutputUsage:
     def __init__(
         self,
         invocation_id: str,
+        serialize_annotation: Serialize,
     ):
         self._invocation_id = invocation_id
         self._references: Set[NodeOutputReference] = set()
+        self._serialize_annotation = serialize_annotation
 
     @property
     def invocation_id(self) -> str:
@@ -152,6 +180,11 @@ class NodeOutputUsage:
         that there will never be two outputs of the same node with the same name.
         """
         return "return_value"
+
+    @property
+    def serializer(self) -> Serializer:
+        """Return the serializer assigned to this output."""
+        return self._serialize_annotation.root
 
     def consume(self):
         """
@@ -192,6 +225,8 @@ class NodeOutputUsage:
             invocation_id=self._invocation_id,
             output_name=f"property_{name}",
             property_name=name,
+            serializer=self._serialize_annotation.sub_output(name)
+            or self._serialize_annotation.root,
         )
         self._references.add(ref)
         return ref
@@ -202,6 +237,8 @@ class NodeOutputUsage:
             invocation_id=self._invocation_id,
             output_name=f"key_{name}",
             key_name=name,
+            serializer=self._serialize_annotation.sub_output(name)
+            or self._serialize_annotation.root,
         )
         self._references.add(ref)
         return ref
@@ -227,7 +264,7 @@ class NodeOutputUsage:
             and self.references == obj.references
         )
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """
         Return a hash of the current object.
 

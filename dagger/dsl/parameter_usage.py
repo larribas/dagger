@@ -2,8 +2,11 @@
 
 from typing import NamedTuple, Optional
 
+from dagger.serializer import DefaultSerializer, Serializer
+
 
 class ParameterUsage(NamedTuple):
     """Represents the use of a parameters supplied to the DAG."""
 
     name: Optional[str] = None
+    serializer: Serializer = DefaultSerializer
