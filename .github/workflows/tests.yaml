@@ -11,11 +11,16 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version:
+        - 3.9.0
+        - 3.9.6
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.8.7
+          python-version: ${{ matrix.python_version }}
       - uses: Gr1N/setup-poetry@v4
         with:
           poetry-version: 1.1.5
