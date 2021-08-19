@@ -163,10 +163,12 @@ def verify_dag_matches_expected_manifest_when_using_argo_runtime(
 
     generated_manifest = argo.workflow_manifest(
         dag,
-        params=params,
         metadata=argo.Metadata(name="some-name"),
-        container_image="local.registry/dagger",
-        container_entrypoint_to_dag_cli=container_entrypoint,
+        workflow=argo.Workflow(
+            params=params,
+            container_image="local.registry/dagger",
+            container_entrypoint_to_dag_cli=container_entrypoint,
+        ),
     )
 
     diff = DeepDiff(

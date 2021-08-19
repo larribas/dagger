@@ -5,7 +5,7 @@ from typing import Any, List, Mapping, Optional
 from dagger.dag import DAG
 from dagger.runtime.argo.cron_workflow_spec import Cron, cron_workflow_spec
 from dagger.runtime.argo.metadata import Metadata, object_meta
-from dagger.runtime.argo.workflow_spec import workflow_spec
+from dagger.runtime.argo.workflow_spec import Workflow, workflow_spec
 
 API_VERSION = "argoproj.io/v1alpha1"
 
@@ -13,56 +13,123 @@ API_VERSION = "argoproj.io/v1alpha1"
 def workflow_manifest(
     dag: DAG,
     metadata: Metadata,
-    container_image: str,
-    params: Optional[Mapping[str, bytes]] = None,
-    container_entrypoint_to_dag_cli: Optional[List[str]] = None,
-    service_account: Optional[str] = None,
+    workflow: Workflow,
 ) -> Mapping[str, Any]:
     """
     Return a minimal representation of a Workflow to execute the supplied DAG with the specified metadata.
 
     Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#workflow
+
+
+    Parameters
+    ----------
+    dag
+        The DAG to convert into an Argo Workflow
+
+    metadata
+        Kubernetes metadata (name, namespace, labels, ...) to inject to the workflow
+
+    workflow
+        Workflow configuration (parameters, container image and entrypoint, ...)
+
+
+    Raises
+    ------
+    ValueError
+        If any of the extra_spec_options collides with a property used by the runtime.
+
+    IncompatibilityError
+        If the runtime is not compatible with the DAG supplied. This is usually the result of an internal bug.
     """
     return {
         "apiVersion": API_VERSION,
         "kind": "Workflow",
         "metadata": object_meta(metadata),
-        "spec": workflow_spec(
-            dag=dag,
-            params=params,
-            container_image=container_image,
-            container_entrypoint_to_dag_cli=container_entrypoint_to_dag_cli,
-            service_account=service_account,
-        ),
+        "spec": workflow_spec(dag, workflow),
+    }
+
+
+def workflow_template_manifest(
+    dag: DAG,
+    metadata: Metadata,
+    workflow: Workflow,
+) -> Mapping[str, Any]:
+    """
+    Return a minimal representation of a WorkflowTemplate to execute the supplied DAG with the specified metadata.
+
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#workflowtemplate
+
+    To see the parameters required and exceptions raised by this function, please refer to the `workflow_manifest` function.
+    """
+    return {
+        "apiVersion": API_VERSION,
+        "kind": "WorkflowTemplate",
+        "metadata": object_meta(metadata),
+        "spec": workflow_spec(dag, workflow),
+    }
+
+
+def cluster_workflow_template_manifest(
+    dag: DAG,
+    metadata: Metadata,
+    workflow: Workflow,
+) -> Mapping[str, Any]:
+    """
+    Return a minimal representation of a ClusterWorkflowTemplate to execute the supplied DAG with the specified metadata.
+
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#workflowtemplate
+
+    To see the parameters required and exceptions raised by this function, please refer to the `workflow_manifest` function.
+    """
+    return {
+        "apiVersion": API_VERSION,
+        "kind": "ClusterWorkflowTemplate",
+        "metadata": object_meta(metadata),
+        "spec": workflow_spec(dag, workflow),
     }
 
 
 def cron_workflow_manifest(
     dag: DAG,
     metadata: Metadata,
+    workflow: Workflow,
     cron: Cron,
-    container_image: str,
-    params: Optional[Mapping[str, bytes]] = None,
-    container_entrypoint_to_dag_cli: Optional[List[str]] = None,
-    service_account: Optional[str] = None,
 ) -> Mapping[str, Any]:
     """
     Return a minimal representation of a CronWorkflow to execute the supplied DAG with the specified metadata and scheduling parameters.
 
     Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#cronworkflow
+
+    Parameters
+    ----------
+    dag
+        The DAG to convert into an Argo Workflow
+
+    metadata
+        Kubernetes metadata (name, namespace, labels, ...) to inject to the workflow
+
+    workflow
+        Workflow configuration (parameters, container image and entrypoint, ...)
+
+    cron
+        Cron configuration (schedule, concurrency, ...)
+
+
+    Raises
+    ------
+    ValueError
+        If any of the extra_spec_options collides with a property used by the runtime.
+
+    IncompatibilityError
+        If the runtime is not compatible with the DAG supplied. This is usually the result of an internal bug.
     """
     return {
         "apiVersion": API_VERSION,
         "kind": "CronWorkflow",
         "metadata": object_meta(metadata),
         "spec": cron_workflow_spec(
+            dag=dag,
             cron=cron,
-            workflow_spec=workflow_spec(
-                dag=dag,
-                params=params,
-                container_image=container_image,
-                container_entrypoint_to_dag_cli=container_entrypoint_to_dag_cli,
-                service_account=service_account,
-            ),
+            workflow=workflow,
         ),
     }
