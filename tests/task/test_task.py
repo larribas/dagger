@@ -87,7 +87,24 @@ def test__init__with_input_and_signature_mismatch():
 
     assert (
         str(e.value)
-        == "This node was declared with the following inputs: ['a']. However, the node's function has the following signature: (a, b). The inputs could not be bound to the parameters because: missing a required argument: 'b'"
+        == "This node was declared with the following inputs: ['a']. However, the node's function has the following signature: (a, b). The inputs could not be bound to the parameters because: missing a required argument: 'b'."
+    )
+
+
+def test__init__partitioned_by_nonexistent_input():
+    with pytest.raises(ValueError) as e:
+        Task(
+            lambda a, z: a + z,
+            inputs={
+                "z": FromParam(),
+                "a": FromParam(),
+            },
+            partition_by_input="b",
+        )
+
+    assert (
+        str(e.value)
+        == "This node is partitioned by 'b'. However, 'b' is not an input of the node. The available inputs are ['a', 'z']."
     )
 
 
@@ -129,6 +146,18 @@ def test__runtime_options__returns_specified_options():
     options = {"my-runtime": {"my": "options"}}
     task = Task(lambda: 1, runtime_options=options)
     assert task.runtime_options == options
+
+
+def test__partition_by_input():
+    assert Task(lambda: 1).partition_by_input is None
+    assert (
+        Task(
+            lambda x: 1,
+            inputs={"x": FromParam()},
+            partition_by_input="x",
+        ).partition_by_input
+        == "x"
+    )
 
 
 def test__eq():

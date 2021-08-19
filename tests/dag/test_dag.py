@@ -270,6 +270,25 @@ def test__init__with_nested_dags():
     # Then, no validation exceptions are raised
 
 
+def test__init__partitioned_by_nonexistent_input():
+    with pytest.raises(ValueError) as e:
+        DAG(
+            inputs={
+                "z": FromParam(),
+                "a": FromParam(),
+            },
+            nodes={
+                "x": Task(lambda: 1),
+            },
+            partition_by_input="b",
+        )
+
+    assert (
+        str(e.value)
+        == "This node is partitioned by 'b'. However, 'b' is not an input of the node. The available inputs are ['a', 'z']."
+    )
+
+
 #
 # Node execution order
 #
@@ -370,6 +389,18 @@ def test__runtime_options__returns_specified_options():
         runtime_options=options,
     )
     assert dag.runtime_options == options
+
+
+def test__partition_by_input():
+    assert DAG({"my-node": Task(lambda: 1)}).partition_by_input is None
+    assert (
+        DAG(
+            inputs={"a": FromParam()},
+            nodes={"x": Task(lambda: 1)},
+            partition_by_input="a",
+        ).partition_by_input
+        == "a"
+    )
 
 
 def test__eq():

@@ -1,7 +1,7 @@
 """Define the data structure for a DAG and validate all its components upon initialization."""
 import re
 import warnings
-from typing import Any, List, Mapping, Set, Union
+from typing import Any, List, Mapping, Optional, Set, Union
 from typing import get_args as get_type_args
 
 from dagger.dag.topological_sort import topological_sort
@@ -47,6 +47,7 @@ class DAG:
         inputs: Mapping[str, SupportedInputs] = None,
         outputs: Mapping[str, SupportedOutputs] = None,
         runtime_options: Mapping[str, Any] = None,
+        partition_by_input: Optional[str] = None,
     ):
         """
         Validate and initialize a DAG.
@@ -70,6 +71,9 @@ class DAG:
             This allows you to take full advantage of the features of each runtime. For instance, you can use it to manipulate node affinities and tolerations in Kubernetes.
             Check the documentation of each runtime to see potential options.
 
+        partition_by_input
+            If specified, it signals the task should be run as many times as partitions in the specified input.
+            Each of the executions will only receive one of the partitions of that input.
 
         Returns
         -------
@@ -115,10 +119,16 @@ class DAG:
         _validate_node_input_dependencies(nodes, inputs)
         _validate_outputs(nodes, outputs)
 
+        if partition_by_input and partition_by_input not in inputs:
+            raise ValueError(
+                f"This node is partitioned by '{partition_by_input}'. However, '{partition_by_input}' is not an input of the node. The available inputs are {sorted(list(inputs))}."
+            )
+
         self._nodes = nodes
         self._inputs = inputs
         self._outputs = outputs
         self._runtime_options = runtime_options or {}
+        self._partition_by_input = partition_by_input
         self._node_execution_order = topological_sort(
             {
                 node_name: _node_dependencies(nodes[node_name].inputs)
@@ -145,6 +155,11 @@ class DAG:
     def runtime_options(self) -> Mapping[str, Any]:
         """Get the specified runtime options."""
         return self._runtime_options
+
+    @property
+    def partition_by_input(self) -> Optional[str]:
+        """Return the input this task should be partitioned by, if any."""
+        return self._partition_by_input
 
     @property
     def node_execution_order(self) -> List[Set[str]]:
