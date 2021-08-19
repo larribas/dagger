@@ -53,6 +53,5 @@ def store_output_in_location(serialized_output: bytes, output_location: str):
     PermissionError
         If the current execution context doesn't have enough permissions to read the file.
     """
-    # TODO: Support extra locations (s3, memory, etc.)
     with open(output_location, "wb") as f:
         f.write(serialized_output)

@@ -17,7 +17,6 @@ def _invoke_dag(
 
     validate_parameters(dag.inputs, params)
 
-    # TODO: Support both sequential and parallel execution
     sequential_node_order = itertools.chain(*dag.node_execution_order)
     for node_name in sequential_node_order:
         node = dag.nodes[node_name]
