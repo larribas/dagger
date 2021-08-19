@@ -7,9 +7,20 @@ from dagger.serializer import Serializer
 
 @runtime_checkable
 class Output(Protocol):
-    """Protocol all outputs conform to."""
+    """
+    Protocol all outputs conform to.
+
+    Properties
+    ----------
+    serializer
+        The serializer to use for the values of this output.
+
+    is_partitioned
+        A flag indicating whether this output should be partitioned. Partitioned outputs are assumed to come from an Iterable object. Each item in the Iterable should be serializable with the specified serializer.
+    """
 
     serializer: Serializer
+    is_partitioned: bool
 
     def from_function_return_value(self, return_value: Any) -> Any:
         """

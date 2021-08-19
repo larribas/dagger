@@ -15,6 +15,7 @@ class FromKey(Generic[K, V]):
         self,
         key: K,
         serializer: Serializer = DefaultSerializer,
+        is_partitioned: bool = False,
     ):
         """
         Validate and initialize an output retrieved from a key.
@@ -27,14 +28,23 @@ class FromKey(Generic[K, V]):
         serializer
             Serialization strategy to use with this output.
             If not specified, a default serializer will be used. Check the current default to be sure it will work with your data.
+
+        is_partitioned
+            A flag indicating whether this output should be partitioned. Partitioned outputs are assumed to come from an Iterable object. Each item in the Iterable should be serializable with the specified serializer.
         """
         self._key = key
         self._serializer = serializer
+        self._is_partitioned = is_partitioned
 
     @property
     def serializer(self) -> Serializer:
         """Get the strategy to use in order to serialize the output."""
         return self._serializer
+
+    @property
+    def is_partitioned(self) -> bool:
+        """Return true if the output should be partitioned."""
+        return self._is_partitioned
 
     def from_function_return_value(self, return_value: Mapping[K, V]) -> V:
         """
