@@ -1,6 +1,6 @@
 """Functions that compile a DAG into Argo CRDs (e.g. Workflow and CronWorkflow) using the v1alpha1 API version."""
 
-from typing import Any, List, Mapping, Optional
+from typing import Any, Mapping
 
 from dagger.dag import DAG
 from dagger.runtime.argo.cron_workflow_spec import Cron, cron_workflow_spec

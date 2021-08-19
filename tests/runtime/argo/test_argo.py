@@ -1,7 +1,6 @@
 from dagger.dag import DAG
 from dagger.runtime.argo import (
     Cron,
-    CronConcurrencyPolicy,
     Metadata,
     cluster_workflow_template_manifest,
     cron_workflow_manifest,
