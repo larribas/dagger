@@ -1,7 +1,8 @@
 """Run tasks in memory."""
 import warnings
-from typing import Any, Mapping, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
+from dagger.runtime.local.types import NodeOutput
 from dagger.serializer import SerializationError
 from dagger.task import SupportedInputs, SupportedOutputs, Task
 
@@ -9,7 +10,7 @@ from dagger.task import SupportedInputs, SupportedOutputs, Task
 def _invoke_task(
     task: Task,
     params: Optional[Mapping[str, Any]] = None,
-) -> Mapping[str, bytes]:
+) -> Mapping[str, NodeOutput]:
     params = params or {}
     inputs = _validate_and_filter_inputs(inputs=task.inputs, params=params)
 
@@ -43,17 +44,37 @@ def _validate_and_filter_inputs(
 def _serialize_outputs(
     outputs: Mapping[str, SupportedOutputs],
     return_value: Any,
-) -> Mapping[str, bytes]:
+) -> Mapping[str, NodeOutput]:
 
-    serialized_outputs = {}
+    node_outputs: Dict[str, List[bytes]] = {}
     for output_name in outputs:
         output_type = outputs[output_name]
         try:
-            output = output_type.from_function_return_value(return_value)
-            serialized_outputs[output_name] = output_type.serializer.serialize(output)
+            node_outputs[output_name] = _serialize_output(
+                output_name=output_name,
+                output_type=outputs[output_name],
+                output_value=output_type.from_function_return_value(return_value),
+            )
+
         except (TypeError, ValueError, SerializationError) as e:
             raise e.__class__(
                 f"We encountered the following error while attempting to serialize the results of this task: {str(e)}"
             )
 
-    return serialized_outputs
+    return node_outputs
+
+
+def _serialize_output(
+    output_name: str,
+    output_type: SupportedOutputs,
+    output_value: Any,
+) -> NodeOutput:
+    if output_type.is_partitioned:
+        if not isinstance(output_value, List):
+            raise ValueError(
+                f"Output '{output_name}' was declared as a partitioned output, but the return value was not a list (instead, it was of type '{type(output_value).__name__}'). Partitioned outputs should be lists of values. Each value in the list must be serializable with the serializer defined in the output."
+            )
+
+        return [output_type.serializer.serialize(o) for o in output_value]
+    else:
+        return output_type.serializer.serialize(output_value)
