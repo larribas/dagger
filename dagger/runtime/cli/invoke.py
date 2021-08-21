@@ -58,7 +58,10 @@ def invoke_with_locations(
     outputs = local.invoke(nested_node.node, params)
 
     for output_name in output_locations:
-        store_output_in_location(outputs[output_name], output_locations[output_name])
+        store_output_in_location(
+            output_location=output_locations[output_name],
+            output_value=outputs[output_name],
+        )
 
 
 def _validate_inputs(
@@ -92,9 +95,15 @@ def _deserialized_params(
     """Retrieve and deserialize all the parameters expected by a Node."""
     params = {}
     for input_name in input_locations:
-        serialized_input = retrieve_input_from_location(input_locations[input_name])
-        input_ = nested_node.node.inputs[input_name]
-        input_value = input_.serializer.deserialize(serialized_input)
-        params[input_name] = input_value
+        input_value = retrieve_input_from_location(input_locations[input_name])
+        input_type = nested_node.node.inputs[input_name]
+
+        if isinstance(input_value, local.Partitioned):
+            params[input_name] = [
+                input_type.serializer.deserialize(partition)
+                for partition in input_value
+            ]
+        else:
+            params[input_name] = input_type.serializer.deserialize(input_value)
 
     return params

@@ -1,4 +1,5 @@
 import itertools
+import json
 import os
 import tempfile
 
@@ -8,6 +9,10 @@ from dagger.dag import DAG
 from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromReturnValue
 from dagger.runtime.cli.cli import invoke
+from dagger.runtime.cli.locations import (
+    PARTITION_MANIFEST_FILENAME,
+    store_output_in_location,
+)
 from dagger.serializer import AsPickle
 from dagger.task import Task
 
@@ -273,3 +278,75 @@ def test__invoke__with_missing_output_parameter():
         str(e.value)
         == "This node is supposed to receive a pointer to an output named 'x'. However, only the following output pointers were supplied: ['y']"
     )
+
+
+def test__invoke__node_with_partitioned_output():
+    dag = DAG(
+        {
+            "t": Task(
+                lambda: [1, 2, 3],
+                outputs={"list": FromReturnValue(is_partitioned=True)},
+            ),
+        }
+    )
+
+    with tempfile.TemporaryDirectory() as tmp:
+        list_output = os.path.join(tmp, "list_output")
+
+        invoke(
+            dag,
+            argv=itertools.chain(
+                *[
+                    ["--node-name", "t"],
+                    ["--output", "list", list_output],
+                ]
+            ),
+        )
+
+        assert os.path.isdir(list_output)
+
+        partitions = []
+        with open(os.path.join(list_output, PARTITION_MANIFEST_FILENAME), "rb") as f:
+            partition_filenames = json.load(f)
+
+            for partition_filename in partition_filenames:
+                with open(os.path.join(list_output, partition_filename), "rb") as p:
+                    partitions.append(p.read())
+
+        assert partitions == [b"1", b"2", b"3"]
+
+
+def test__invoke__node_with_partitioned_input():
+    dag = DAG(
+        inputs={"partitioned": FromParam()},
+        outputs={"together": FromNodeOutput("t", "together")},
+        nodes={
+            "t": Task(
+                lambda partitioned: partitioned,
+                inputs={"partitioned": FromParam()},
+                outputs={"together": FromReturnValue()},
+            ),
+        },
+    )
+
+    with tempfile.TemporaryDirectory() as tmp:
+        partitioned_input = os.path.join(tmp, "partitioned_input")
+        together_output = os.path.join(tmp, "together_output")
+
+        store_output_in_location(
+            output_location=partitioned_input, output_value=[b"1", b"2", b"3"]
+        )
+        assert os.path.isdir(partitioned_input)
+
+        invoke(
+            dag,
+            argv=itertools.chain(
+                *[
+                    ["--input", "partitioned", partitioned_input],
+                    ["--output", "together", together_output],
+                ]
+            ),
+        )
+
+        with open(together_output, "rb") as f:
+            assert f.read() == b"[1, 2, 3]"
