@@ -5,7 +5,13 @@ from typing import Any, Dict, List, Mapping, Optional, Union
 from dagger.dag import DAG, Node, validate_parameters
 from dagger.input import FromNodeOutput, FromParam
 from dagger.runtime.local.task import _invoke_task
-from dagger.runtime.local.types import NodeOutput, NodeParams, NodePartitions
+from dagger.runtime.local.types import (
+    NodeExecutions,
+    NodeOutput,
+    NodeOutputs,
+    NodeParams,
+    Partitioned,
+)
 from dagger.serializer import SerializationError, Serializer
 from dagger.task import Task
 
@@ -55,10 +61,10 @@ def invoke(
 def _invoke_dag(
     dag: DAG,
     params: Optional[Mapping[str, Any]] = None,
-) -> Mapping[str, NodeOutput]:
+) -> NodeOutputs:
     params = params or {}
 
-    outputs: Dict[str, NodePartitions] = {}
+    outputs: Dict[str, NodeExecutions] = {}
 
     validate_parameters(dag.inputs, params)
 
@@ -66,34 +72,35 @@ def _invoke_dag(
     for node_name in sequential_node_order:
         node = dag.nodes[node_name]
 
-        # Depending on whether or not the node is partitioned,
-        # we will need to execute it any number of times.
-        node_param_partitions = _node_param_partitions(
-            node=node,
-            params=params,
-            outputs=outputs,
-        )
-
-        # TODO: Try if the code would be simplified by making everything a partition, and assuming 1 is the default number of partitions
         try:
-            if len(node_param_partitions) == 1:
-                outputs[node_name] = invoke(node, params=node_param_partitions[0])
-            else:
-                outputs[node_name] = [
-                    invoke(node, params=p) for p in node_param_partitions
-                ]
+            outputs[node_name] = [
+                invoke(node, params=p)
+                for p in _node_param_partitions(
+                    node=node,
+                    params=params,
+                    outputs=outputs,
+                )
+            ]
+
+            if not node.partition_by_input:
+                outputs[node_name] = outputs[node_name][0]
 
         except (ValueError, TypeError, SerializationError) as e:
             raise e.__class__(f"Error when invoking node '{node_name}'. {str(e)}")
 
     dag_outputs = {}
     for output_name in dag.outputs:
+        # TODO: Extract to a private function and control outputs that don't come from other nodes
         from_node_output = dag.outputs[output_name]
-        output_value = outputs[from_node_output.node]
-        if isinstance(output_value, list):
-            dag_outputs[output_name] = itertools.chain(*output_value)
+        if dag.nodes[from_node_output.node].partition_by_input:
+            dag_outputs[output_name] = [
+                partition[from_node_output.output]
+                for partition in outputs[from_node_output.node]
+            ]
         else:
-            dag_outputs[output_name] = output_value[from_node_output.output]
+            dag_outputs[output_name] = outputs[from_node_output.node][
+                from_node_output.output
+            ]
 
     return dag_outputs
 
@@ -101,11 +108,8 @@ def _invoke_dag(
 def _node_param_partitions(
     node: Node,
     params: Mapping[str, Any],
-    outputs: Mapping[str, NodePartitions],
-) -> List[NodeParams]:
-
-    fixed_param_names = node.inputs.keys() - {node.partition_by_input}
-
+    outputs: Mapping[str, NodeOutputs],
+) -> Partitioned[NodeParams]:
     fixed_params = {
         name: _node_param(
             input_name=name,
@@ -113,20 +117,22 @@ def _node_param_partitions(
             params=params,
             outputs=outputs,
         )
-        for name in fixed_param_names
+        for name in node.inputs.keys() - {node.partition_by_input}
     }
 
     if node.partition_by_input:
-        partitioned_output = _node_param(
+        input_value = _node_param(
             input_name=node.partition_by_input,
             input_type=node.inputs[node.partition_by_input],
             params=params,
             outputs=outputs,
         )
-        # TODO: If we don't end up treating everything as a list, we'll have to control the error of partitioned_output not being a list here.
-        return [
-            {node.partition_by_input: p, **fixed_params} for p in partitioned_output
-        ]
+        if not isinstance(input_value, Partitioned):
+            raise TypeError(
+                f"This node is supposed to be partitioned by input '{node.partition_by_input}'. When a node is partitioned, the value of the input that determines the partition should be a list. Instead, we found a value of type '{type(input_value).__name__}'."
+            )
+
+        return [{node.partition_by_input: p, **fixed_params} for p in input_value]
     else:
         return [fixed_params]
 
@@ -135,47 +141,36 @@ def _node_param(
     input_name: str,
     input_type: Union[FromParam, FromNodeOutput],
     params: Mapping[str, Any],
-    outputs: Mapping[str, NodePartitions],
+    outputs: Mapping[str, NodeOutputs],
 ) -> Any:
     if isinstance(input_type, FromParam):
         return params[input_type.name or input_name]
     elif isinstance(input_type, FromNodeOutput):
-        # TODO: If the output is a list, deserialize each individual item
-        return _deserialize_from_node_output_partitions(
-            input_type=input_type,
-            partitions=outputs[input_type.node],
-        )
+        if isinstance(outputs[input_type.node], Partitioned):
+            return [
+                _node_param_from_output(
+                    serializer=input_type.serializer,
+                    node_output=partition[input_type.output],
+                )
+                for partition in outputs[input_type.node]
+            ]
+        else:
+            return _node_param_from_output(
+                serializer=input_type.serializer,
+                node_output=outputs[input_type.node][input_type.output],
+            )
+
     else:
         raise TypeError(
             f"Input type '{type(input_type)}' is not supported by the local runtime. The use of unsupported inputs should have been validated by the DAG object. This may be a bug in the library. Please open an issue in our GitHub repository."
         )
 
 
-def _deserialize_from_node_output_partitions(
-    input_type: FromNodeOutput,
-    partitions: NodePartitions,
-) -> Any:
-    if isinstance(partitions, list):
-        return [
-            _deserialize_output(
-                serializer=input_type.serializer,
-                output_value=v[input_type.output],
-            )
-            for v in partitions
-        ]
-    else:
-        return _deserialize_output(
-            serializer=input_type.serializer,
-            output_value=partitions[input_type.output],
-        )
-
-
-def _deserialize_output(
+def _node_param_from_output(
     serializer: Serializer,
-    output_value: NodeOutput,
-) -> Any:
-    if isinstance(output_value, list):
-        # TODO: Either control error or assume everything is a list
-        return [serializer.deserialize(v) for v in output_value]
+    node_output: NodeOutput,
+) -> Union[Any, Partitioned[Any]]:
+    if isinstance(node_output, Partitioned):
+        return [serializer.deserialize(v) for v in node_output]
     else:
-        return serializer.deserialize(output_value)
+        return serializer.deserialize(node_output)

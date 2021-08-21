@@ -175,3 +175,69 @@ def test__invoke__dag_with_dynamic_partitions():
     assert invoke(dag) == dict(
         result=b"\"Got messages: letter 'a', and letter 'b', and letter 'c'.\""
     )
+
+
+def test__invoke__dag_with_dynamic_partitions_from_param():
+    dag = DAG(
+        inputs=dict(numbers=FromParam()),
+        outputs=dict(result=FromNodeOutput("reduce", "result")),
+        nodes={
+            "map-1": Task(
+                lambda n: n * 2,
+                inputs=dict(n=FromParam("numbers")),
+                outputs=dict(n=FromReturnValue()),
+                partition_by_input="n",
+            ),
+            "map-2": Task(
+                lambda n: n ** 2,
+                inputs=dict(n=FromNodeOutput("map-1", "n")),
+                outputs=dict(n=FromReturnValue()),
+                partition_by_input="n",
+            ),
+            "reduce": Task(
+                lambda numbers: sum(numbers),
+                inputs=dict(numbers=FromNodeOutput("map-2", "n")),
+                outputs=dict(result=FromReturnValue()),
+            ),
+        },
+    )
+
+    assert invoke(dag, params={"numbers": [1, 2, 3]}) == dict(result=b"56")
+
+
+def test__invoke__dag_with_dynamic_partitions_with_partitioned_node_output():
+    dag = DAG(
+        inputs=dict(numbers=FromParam()),
+        outputs=dict(result=FromNodeOutput("multiple-results", "n")),
+        nodes={
+            "multiple-results": Task(
+                lambda n: n * 2,
+                inputs=dict(n=FromParam("numbers")),
+                outputs=dict(n=FromReturnValue()),
+                partition_by_input="n",
+            ),
+        },
+    )
+
+    assert invoke(dag, params={"numbers": [1, 2, 3]}) == dict(result=[b"2", b"4", b"6"])
+
+
+def test__invoke__dag_with_partitions_but_invalid_outputs():
+    dag = DAG(
+        inputs=dict(p=FromParam()),
+        nodes={
+            "poorly-partitioned-task": Task(
+                lambda x: x,
+                inputs=dict(x=FromParam("p")),
+                partition_by_input="x",
+            ),
+        },
+    )
+
+    with pytest.raises(TypeError) as e:
+        invoke(dag, params={"p": "not a list"})
+
+    assert (
+        str(e.value)
+        == "Error when invoking node 'poorly-partitioned-task'. This node is supposed to be partitioned by input 'x'. When a node is partitioned, the value of the input that determines the partition should be a list. Instead, we found a value of type 'str'."
+    )

@@ -2,7 +2,7 @@
 import warnings
 from typing import Any, Dict, List, Mapping, Optional
 
-from dagger.runtime.local.types import NodeOutput
+from dagger.runtime.local.types import NodeOutput, NodeOutputs
 from dagger.serializer import SerializationError
 from dagger.task import SupportedInputs, SupportedOutputs, Task
 
@@ -10,7 +10,7 @@ from dagger.task import SupportedInputs, SupportedOutputs, Task
 def _invoke_task(
     task: Task,
     params: Optional[Mapping[str, Any]] = None,
-) -> Mapping[str, NodeOutput]:
+) -> NodeOutputs:
     params = params or {}
     inputs = _validate_and_filter_inputs(inputs=task.inputs, params=params)
 
@@ -71,7 +71,7 @@ def _serialize_output(
 ) -> NodeOutput:
     if output_type.is_partitioned:
         if not isinstance(output_value, List):
-            raise ValueError(
+            raise TypeError(
                 f"Output '{output_name}' was declared as a partitioned output, but the return value was not a list (instead, it was of type '{type(output_value).__name__}'). Partitioned outputs should be lists of values. Each value in the list must be serializable with the serializer defined in the output."
             )
 

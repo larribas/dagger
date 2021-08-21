@@ -139,7 +139,7 @@ def test__invoke__task_with_partitioned_output_that_cannot_be_partitioned():
             "not_partitioned": FromReturnValue(is_partitioned=True),
         },
     )
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(TypeError) as e:
         invoke(task, params={})
 
     assert (
