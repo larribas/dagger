@@ -2,7 +2,7 @@
 import itertools
 from typing import Any, Dict, List, Mapping, Optional, Union
 
-from dagger.dag import DAG, Node, validate_parameters
+from dagger.dag import DAG, Node, SupportedOutputs, validate_parameters
 from dagger.input import FromNodeOutput, FromParam
 from dagger.runtime.local.task import _invoke_task
 from dagger.runtime.local.types import (
@@ -63,10 +63,9 @@ def _invoke_dag(
     params: Optional[Mapping[str, Any]] = None,
 ) -> NodeOutputs:
     params = params or {}
+    validate_parameters(dag.inputs, params)
 
     outputs: Dict[str, NodeExecutions] = {}
-
-    validate_parameters(dag.inputs, params)
 
     sequential_node_order = itertools.chain(*dag.node_execution_order)
     for node_name in sequential_node_order:
@@ -88,19 +87,10 @@ def _invoke_dag(
         except (ValueError, TypeError, SerializationError) as e:
             raise e.__class__(f"Error when invoking node '{node_name}'. {str(e)}")
 
-    dag_outputs = {}
-    for output_name in dag.outputs:
-        # TODO: Extract to a private function and control outputs that don't come from other nodes
-        from_node_output = dag.outputs[output_name]
-        if dag.nodes[from_node_output.node].partition_by_input:
-            dag_outputs[output_name] = [
-                partition[from_node_output.output]
-                for partition in outputs[from_node_output.node]
-            ]
-        else:
-            dag_outputs[output_name] = outputs[from_node_output.node][
-                from_node_output.output
-            ]
+    dag_outputs = {
+        output_name: _dag_output(output_name, output_type, outputs)
+        for output_name, output_type in dag.outputs.items()
+    }
 
     return dag_outputs
 
@@ -174,3 +164,21 @@ def _node_param_from_output(
         return [serializer.deserialize(v) for v in node_output]
     else:
         return serializer.deserialize(node_output)
+
+
+def _dag_output(
+    output_name: str,
+    output_type: SupportedOutputs,
+    outputs: Mapping[str, NodeOutputs],
+) -> NodeOutput:
+    if isinstance(output_type, FromNodeOutput):
+        if isinstance(outputs[output_type.node], Partitioned):
+            return [
+                partition[output_type.output] for partition in outputs[output_type.node]
+            ]
+        else:
+            return outputs[output_type.node][output_type.output]
+    else:
+        raise NotImplementedError(
+            f"Whoops, we were not expecting a dag output of type '{type(output_type).__name__}'. This type of outputs are not supported by the local runtime at the moment. If you believe this may be a bug, please report it to our GitHub repository."
+        )
