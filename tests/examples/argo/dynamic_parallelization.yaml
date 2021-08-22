@@ -1,0 +1,395 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: dynamic-parallelization-
+spec:
+  arguments:
+    parameters:
+    - name: multiplier
+      value: 2
+  entrypoint: dag
+  templates:
+  - name: dag
+    inputs:
+      artifacts:
+      - name: multiplier
+        raw:
+          data: "{{workflow.parameters.multiplier}}"
+    outputs:
+      artifacts:
+      - name: sum
+        from: '{{tasks.sum-results.outputs.artifacts.sum}}'
+    dag:
+      tasks:
+      - name: generate-numbers
+        template: dag-generate-numbers
+      - name: multiply-by
+        template: dag-multiply-by
+        dependencies:
+        - generate-numbers
+        withParam: "{{tasks.generate-numbers.outputs.parameters.partitions}}"
+        arguments:
+          parameters:
+          - name: partition
+            from: "{{item}}"
+          artifacts:
+          - name: multiplier
+            from: "{{inputs.artifacts.multiplier}}"
+      - name: sum-results
+        template: dag-sum-results
+        dependencies:
+        - multiply-by
+        arguments:
+          artifacts:
+          - name: numbers
+            from: "{{tasks.multiply-by.outputs.artifacts.number}}"
+
+  - name: dag-generate-numbers
+    container:
+      args:
+      - --node-name
+      - multiply-by-0
+      - --input
+      - number
+      - '{{inputs.artifacts.number.path}}'
+      - --output
+      - multiplied-number
+      - '{{outputs.artifacts.multiplied-number.path}}'
+      command:
+      - static-parallelization
+      image: local.registry/dagger
+      volumeMounts:
+      - mountPath: /tmp/outputs/
+        name: outputs
+    outputs:
+      artifacts:
+      - name: numbers
+        path: /tmp/outputs/.json
+    volumes:
+    - emptyDir: {}
+      name: outputs
+  - container:
+      args:
+      - --node-name
+      - multiply-by-1
+      - --input
+      - number
+      - '{{inputs.artifacts.number.path}}'
+      - --output
+      - multiplied-number
+      - '{{outputs.artifacts.multiplied-number.path}}'
+      command:
+      - static-parallelization
+      image: local.registry/dagger
+      volumeMounts:
+      - mountPath: /tmp/outputs/
+        name: outputs
+    inputs:
+      artifacts:
+      - name: number
+        path: /tmp/inputs/number.json
+    name: dag-multiply-by-1
+    outputs:
+      artifacts:
+      - name: multiplied-number
+        path: /tmp/outputs/multiplied-number.json
+    volumes:
+    - emptyDir: {}
+      name: outputs
+  - container:
+      args:
+      - --node-name
+      - multiply-by-2
+      - --input
+      - number
+      - '{{inputs.artifacts.number.path}}'
+      - --output
+      - multiplied-number
+      - '{{outputs.artifacts.multiplied-number.path}}'
+      command:
+      - static-parallelization
+      image: local.registry/dagger
+      volumeMounts:
+      - mountPath: /tmp/outputs/
+        name: outputs
+    inputs:
+      artifacts:
+      - name: number
+        path: /tmp/inputs/number.json
+    name: dag-multiply-by-2
+    outputs:
+      artifacts:
+      - name: multiplied-number
+        path: /tmp/outputs/multiplied-number.json
+    volumes:
+    - emptyDir: {}
+      name: outputs
+  - container:
+      args:
+      - --node-name
+      - multiply-by-3
+      - --input
+      - number
+      - '{{inputs.artifacts.number.path}}'
+      - --output
+      - multiplied-number
+      - '{{outputs.artifacts.multiplied-number.path}}'
+      command:
+      - static-parallelization
+      image: local.registry/dagger
+      volumeMounts:
+      - mountPath: /tmp/outputs/
+        name: outputs
+    inputs:
+      artifacts:
+      - name: number
+        path: /tmp/inputs/number.json
+    name: dag-multiply-by-3
+    outputs:
+      artifacts:
+      - name: multiplied-number
+        path: /tmp/outputs/multiplied-number.json
+    volumes:
+    - emptyDir: {}
+      name: outputs
+  - container:
+      args:
+      - --node-name
+      - multiply-by-4
+      - --input
+      - number
+      - '{{inputs.artifacts.number.path}}'
+      - --output
+      - multiplied-number
+      - '{{outputs.artifacts.multiplied-number.path}}'
+      command:
+      - static-parallelization
+      image: local.registry/dagger
+      volumeMounts:
+      - mountPath: /tmp/outputs/
+        name: outputs
+    inputs:
+      artifacts:
+      - name: number
+        path: /tmp/inputs/number.json
+    name: dag-multiply-by-4
+    outputs:
+      artifacts:
+      - name: multiplied-number
+        path: /tmp/outputs/multiplied-number.json
+    volumes:
+    - emptyDir: {}
+      name: outputs
+  - container:
+      args:
+      - --node-name
+      - multiply-by-5
+      - --input
+      - number
+      - '{{inputs.artifacts.number.path}}'
+      - --output
+      - multiplied-number
+      - '{{outputs.artifacts.multiplied-number.path}}'
+      command:
+      - static-parallelization
+      image: local.registry/dagger
+      volumeMounts:
+      - mountPath: /tmp/outputs/
+        name: outputs
+    inputs:
+      artifacts:
+      - name: number
+        path: /tmp/inputs/number.json
+    name: dag-multiply-by-5
+    outputs:
+      artifacts:
+      - name: multiplied-number
+        path: /tmp/outputs/multiplied-number.json
+    volumes:
+    - emptyDir: {}
+      name: outputs
+  - container:
+      args:
+      - --node-name
+      - multiply-by-6
+      - --input
+      - number
+      - '{{inputs.artifacts.number.path}}'
+      - --output
+      - multiplied-number
+      - '{{outputs.artifacts.multiplied-number.path}}'
+      command:
+      - static-parallelization
+      image: local.registry/dagger
+      volumeMounts:
+      - mountPath: /tmp/outputs/
+        name: outputs
+    inputs:
+      artifacts:
+      - name: number
+        path: /tmp/inputs/number.json
+    name: dag-multiply-by-6
+    outputs:
+      artifacts:
+      - name: multiplied-number
+        path: /tmp/outputs/multiplied-number.json
+    volumes:
+    - emptyDir: {}
+      name: outputs
+  - container:
+      args:
+      - --node-name
+      - multiply-by-7
+      - --input
+      - number
+      - '{{inputs.artifacts.number.path}}'
+      - --output
+      - multiplied-number
+      - '{{outputs.artifacts.multiplied-number.path}}'
+      command:
+      - static-parallelization
+      image: local.registry/dagger
+      volumeMounts:
+      - mountPath: /tmp/outputs/
+        name: outputs
+    inputs:
+      artifacts:
+      - name: number
+        path: /tmp/inputs/number.json
+    name: dag-multiply-by-7
+    outputs:
+      artifacts:
+      - name: multiplied-number
+        path: /tmp/outputs/multiplied-number.json
+    volumes:
+    - emptyDir: {}
+      name: outputs
+  - container:
+      args:
+      - --node-name
+      - multiply-by-8
+      - --input
+      - number
+      - '{{inputs.artifacts.number.path}}'
+      - --output
+      - multiplied-number
+      - '{{outputs.artifacts.multiplied-number.path}}'
+      command:
+      - static-parallelization
+      image: local.registry/dagger
+      volumeMounts:
+      - mountPath: /tmp/outputs/
+        name: outputs
+    inputs:
+      artifacts:
+      - name: number
+        path: /tmp/inputs/number.json
+    name: dag-multiply-by-8
+    outputs:
+      artifacts:
+      - name: multiplied-number
+        path: /tmp/outputs/multiplied-number.json
+    volumes:
+    - emptyDir: {}
+      name: outputs
+  - container:
+      args:
+      - --node-name
+      - multiply-by-9
+      - --input
+      - number
+      - '{{inputs.artifacts.number.path}}'
+      - --output
+      - multiplied-number
+      - '{{outputs.artifacts.multiplied-number.path}}'
+      command:
+      - static-parallelization
+      image: local.registry/dagger
+      volumeMounts:
+      - mountPath: /tmp/outputs/
+        name: outputs
+    inputs:
+      artifacts:
+      - name: number
+        path: /tmp/inputs/number.json
+    name: dag-multiply-by-9
+    outputs:
+      artifacts:
+      - name: multiplied-number
+        path: /tmp/outputs/multiplied-number.json
+    volumes:
+    - emptyDir: {}
+      name: outputs
+  - container:
+      args:
+      - --node-name
+      - sum-results
+      - --input
+      - results-from-0
+      - '{{inputs.artifacts.results-from-0.path}}'
+      - --input
+      - results-from-1
+      - '{{inputs.artifacts.results-from-1.path}}'
+      - --input
+      - results-from-2
+      - '{{inputs.artifacts.results-from-2.path}}'
+      - --input
+      - results-from-3
+      - '{{inputs.artifacts.results-from-3.path}}'
+      - --input
+      - results-from-4
+      - '{{inputs.artifacts.results-from-4.path}}'
+      - --input
+      - results-from-5
+      - '{{inputs.artifacts.results-from-5.path}}'
+      - --input
+      - results-from-6
+      - '{{inputs.artifacts.results-from-6.path}}'
+      - --input
+      - results-from-7
+      - '{{inputs.artifacts.results-from-7.path}}'
+      - --input
+      - results-from-8
+      - '{{inputs.artifacts.results-from-8.path}}'
+      - --input
+      - results-from-9
+      - '{{inputs.artifacts.results-from-9.path}}'
+      - --output
+      - sum
+      - '{{outputs.artifacts.sum.path}}'
+      command:
+      - static-parallelization
+      image: local.registry/dagger
+      volumeMounts:
+      - mountPath: /tmp/outputs/
+        name: outputs
+    inputs:
+      artifacts:
+      - name: results-from-0
+        path: /tmp/inputs/results-from-0.json
+      - name: results-from-1
+        path: /tmp/inputs/results-from-1.json
+      - name: results-from-2
+        path: /tmp/inputs/results-from-2.json
+      - name: results-from-3
+        path: /tmp/inputs/results-from-3.json
+      - name: results-from-4
+        path: /tmp/inputs/results-from-4.json
+      - name: results-from-5
+        path: /tmp/inputs/results-from-5.json
+      - name: results-from-6
+        path: /tmp/inputs/results-from-6.json
+      - name: results-from-7
+        path: /tmp/inputs/results-from-7.json
+      - name: results-from-8
+        path: /tmp/inputs/results-from-8.json
+      - name: results-from-9
+        path: /tmp/inputs/results-from-9.json
+    name: dag-sum-results
+    outputs:
+      artifacts:
+      - name: sum
+        path: /tmp/outputs/sum.json
+    volumes:
+    - emptyDir: {}
+      name: outputs
