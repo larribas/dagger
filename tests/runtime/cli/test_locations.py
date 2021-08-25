@@ -42,15 +42,17 @@ def test__retrieve_input_from_location__can_read_partitioned_directory():
         assert retrieve_input_from_location(dir_path) == partitions
 
 
-def test__retrieve_input_from_location__pointing_to_a_directory_with_the_wrong_structure():
+def test__retrieve_input_from_location__can_read_partitioned_directory_without_a_partitions_manifest():
     with tempfile.TemporaryDirectory() as tmp:
-        with pytest.raises(FileNotFoundError) as e:
-            retrieve_input_from_location(tmp)
+        dir_path = os.path.join(tmp, "partitioned_dir")
+        os.mkdir(dir_path)
 
-        assert (
-            str(e.value)
-            == f"The input location ({tmp}) is a directory. When inputs are a directory, the CLI runtime assumes the input is partitioned, and there should be a file named partitions.json in the directory. In this case, such file was not found."
-        )
+        partitions = [b"1", b"2", b"3"]
+        for i, partition in enumerate(partitions):
+            with open(os.path.join(dir_path, str(i)), "wb") as f:
+                f.write(partition)
+
+        assert retrieve_input_from_location(dir_path) == partitions
 
 
 def test__store_output_in_location__with_simple_output():

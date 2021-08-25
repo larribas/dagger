@@ -21,7 +21,8 @@ def retrieve_input_from_location(input_location: str) -> NodeOutput:
     input_location
         A pointer to a path (e.g. "/my/filesystem/file.txt").
         If the path is a directory, the runtime will assume the input is partitioned,
-        and concatenate all existing partitions.
+        and concatenate all existing partitions based on the lexicographical order
+        of their filenames.
 
 
     Returns
@@ -38,17 +39,15 @@ def retrieve_input_from_location(input_location: str) -> NodeOutput:
         If the current execution context doesn't have enough permissions to read the file.
     """
     if os.path.isdir(input_location):
-        partition_manifest_path = os.path.join(
-            input_location, PARTITION_MANIFEST_FILENAME
+        partition_filenames = sorted(
+            [
+                fname
+                for fname in os.listdir(input_location)
+                if os.path.isfile(os.path.join(input_location, fname))
+                and fname != PARTITION_MANIFEST_FILENAME
+            ]
         )
-        if not os.path.isfile(partition_manifest_path):
-            raise FileNotFoundError(
-                f"The input location ({input_location}) is a directory. When inputs are a directory, the CLI runtime assumes the input is partitioned, and there should be a file named {PARTITION_MANIFEST_FILENAME} in the directory. In this case, such file was not found."
-            )
-
-        with open(partition_manifest_path, "rb") as p:
-            partition_filenames = json.load(p)
-
+        print(22, partition_filenames)
         partitions = []
         for partition_filename in partition_filenames:
             with open(os.path.join(input_location, partition_filename), "rb") as f:
@@ -76,6 +75,8 @@ def store_output_in_location(output_location: str, output_value: NodeOutput):
         It may be partitioned. If it is, we will treat the output_location as a directory
         and dump each partition separately, together with a file named "partitions.json"
         containing a json-serialized list with all the partitions.
+        Partitions filenames follow a lexicographical order, so they can be joined later
+        in the same order.
 
 
     Raises
