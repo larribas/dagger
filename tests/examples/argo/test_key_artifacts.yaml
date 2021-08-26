@@ -6,21 +6,47 @@ spec:
   entrypoint: main
   templates:
     - name: main
+      outputs:
+        artifacts:
+        - name: result
+          from: "{{tasks.map.outputs.artifacts.number}}"
       dag:
         tasks:
           - name: generate
             template: generate
-          - name: consume
-            template: consume
+            arguments:
+              parameters:
+              - name: numbers_output_path
+                value: "{{workflow.uid}}/generate/numbers.json"
+          - name: map
+            template: map
             dependencies:
               - generate
             arguments:
+              parameters:
+              - name: number_output_path
+                value: "{{workflow.uid}}/map/number.json/{{item}}"
               artifacts:
               - name: number
                 s3:
                   key: "{{workflow.uid}}/generate/numbers.json/{{item}}"
             withParam: "{{tasks.generate.outputs.parameters.partitions}}"
+          - name: reduce
+            template: reduce
+            dependencies:
+            - map
+            arguments:
+              parameters:
+              - name: number_output_path
+                value: "{{workflow.uid}}/reduce/number.json"
+              artifacts:
+              - name: numbers
+                s3:
+                  key: "{{workflow.uid}}/map/number.json"
     - name: generate
+      inputs:
+        parameters:
+        - name: numbers_output_path
       outputs:
         artifacts:
         - name: numbers
@@ -28,7 +54,7 @@ spec:
           archive:
             none: { }
           s3:
-            key: "{{workflow.uid}}/generate/numbers.json"
+            key: "{{inputs.parameters.numbers_output_path}}"
         parameters:
         - name: partitions
           valueFrom:
@@ -41,7 +67,7 @@ spec:
           os.mkdir("/tmp/outputs/numbers.json")
 
           import random
-          partitions = [i+4 for i in list(range(random.randint(3,10)))]
+          partitions = [i+4 for i in list(range(random.randint(3,5)))]
           for i in partitions:
             with open(f"/tmp/outputs/numbers.json/{i}", "w") as f:
               f.write(str(i))
@@ -59,18 +85,79 @@ spec:
       - emptyDir: {}
         name: outputs
 
-    - name: consume
+    - name: map
       inputs:
+        parameters:
+        - name: number_output_path
         artifacts:
         - name: number
           path: /tmp/inputs/number.json
+      outputs:
+        artifacts:
+        - name: number
+          path: /tmp/outputs/number.json
+          archive:
+            none: { }
+          s3:
+            key: "{{inputs.parameters.number_output_path}}"
+        parameters:
+        - name: partitions
+          valueFrom:
+            path: "{{outputs.artifacts.number.path}}"
+      script:
+        image: python:alpine3.6
+        command: [python]
+        source: |
+          import json
+          with open("/tmp/inputs/number.json", "r") as f:
+            n = json.loads(f.read())
+
+          with open("/tmp/outputs/number.json", "w") as f:
+            f.write(json.dumps(n * 2))
+        volumeMounts:
+        - mountPath: /tmp/outputs/
+          name: outputs
+      volumes:
+      - emptyDir: {}
+        name: outputs
+
+
+    - name: reduce
+      inputs:
+        parameters:
+        - name: number_output_path
+        artifacts:
+        - name: numbers
+          path: /tmp/inputs/numbers.json
+      outputs:
+        artifacts:
+        - name: number
+          path: /tmp/outputs/number.json
+          archive:
+            none: { }
+          s3:
+            key: "{{inputs.parameters.number_output_path}}"
       script:
         image: python:alpine3.6
         command: [python]
         source: |
           import glob
-          print(glob.glob("/tmp/inputs/numbers.json/*"))
+          print(glob.glob("/tmp/inputs/numbers.json"))
 
           import json
-          with open("/tmp/inputs/number.json", "r") as f:
-            print(json.loads(f.read()))
+          numbers = []
+          for path in glob.glob("/tmp/inputs/numbers.json/*"):
+            with open(path, "r") as f:
+              numbers.append(json.loads(f.read()))
+
+          print(numbers)
+
+          with open("/tmp/outputs/number.json", "w") as f:
+            f.write(json.dumps(sum(numbers)))
+
+        volumeMounts:
+        - mountPath: /tmp/outputs/
+          name: outputs
+      volumes:
+      - emptyDir: {}
+        name: outputs

@@ -1,5 +1,5 @@
 """
-# Dynamic Parallelization.
+# Map-Reduce.
 
 This DAG shows how to create a dynamic fan-out and fan-in operation.
 

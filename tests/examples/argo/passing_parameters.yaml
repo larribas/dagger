@@ -11,6 +11,9 @@ spec:
   templates:
   - name: dag
     inputs:
+      parameters:
+      - name: name
+        value: dag
       artifacts:
       - name: number
         raw:
@@ -24,6 +27,9 @@ spec:
       - name: double
         template: dag-double
         arguments:
+          parameters:
+          - name: doubled-number_output_path
+            value: "{{workflow.uid}}/{{inputs.parameters.name}}/double/doubled-number.json"
           artifacts:
           - name: number
             from: "{{inputs.artifacts.number}}"
@@ -31,12 +37,18 @@ spec:
         template: dag-square
         dependencies: [double]
         arguments:
+          parameters:
+          - name: squared-number_output_path
+            value: "{{workflow.uid}}/{{inputs.parameters.name}}/square/squared-number.json"
           artifacts:
           - name: number
-            from: "{{tasks.double.outputs.artifacts.doubled-number}}"
+            s3:
+              key: "{{workflow.uid}}/{{inputs.parameters.name}}/double/doubled-number.json"
 
   - name: dag-double
     inputs:
+      parameters:
+      - name: doubled-number_output_path
       artifacts:
       - name: number
         path: /tmp/inputs/number.json
@@ -44,6 +56,11 @@ spec:
       artifacts:
       - name: doubled-number
         path: /tmp/outputs/doubled-number.json
+        archive:
+          none: {}
+        s3:
+          key: "{{inputs.parameters.doubled-number_output_path}}"
+
     container:
       image: local.registry/dagger
       command: [passing-parameters]
@@ -61,6 +78,8 @@ spec:
 
   - name: dag-square
     inputs:
+      parameters:
+      - name: squared-number_output_path
       artifacts:
       - name: number
         path: /tmp/inputs/number.json
@@ -68,6 +87,10 @@ spec:
       artifacts:
       - name: squared-number
         path: /tmp/outputs/squared-number.json
+        archive:
+          none: {}
+        s3:
+          key: "{{inputs.parameters.squared-number_output_path}}"
     container:
       image: local.registry/dagger
       command: [passing-parameters]

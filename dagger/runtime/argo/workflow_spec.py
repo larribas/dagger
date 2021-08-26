@@ -2,7 +2,7 @@
 import itertools
 import os
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Mapping, Sequence
+from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from dagger.dag import DAG, Node
 from dagger.dag import SupportedInputs as SupportedDAGInputs
@@ -204,11 +204,15 @@ def _dag_template(
 
     template: dict = {
         "name": _template_name(address),
+        "inputs": {
+            "parameters": _dag_template_parameters(address),
+        },
         "dag": {
             "tasks": [
                 _dag_task(
                     node=dag.nodes[node_name],
                     node_address=address + [node_name],
+                    parent=dag,
                 )
                 for node_name in dag.nodes
             ]
@@ -218,26 +222,16 @@ def _dag_template(
     if dag.inputs:
         is_root_dag = len(address) == 0
         if is_root_dag:
-            template["inputs"] = {
-                "artifacts": _dag_root_artifacts_from_params(dag.inputs, params),
-            }
+            template["inputs"]["artifacts"] = _dag_root_artifacts_from_params(
+                dag.inputs, params
+            )
         else:
-            template["inputs"] = {
-                "artifacts": [{"name": input_name} for input_name in dag.inputs]
-            }
+            template["inputs"]["artifacts"] = [
+                {"name": input_name} for input_name in dag.inputs
+            ]
 
     if dag.outputs:
-        template["outputs"] = {
-            "artifacts": [
-                {
-                    "name": output_name,
-                    "from": "{{"
-                    + f"tasks.{dag.outputs[output_name].node}.outputs.artifacts.{dag.outputs[output_name].output}"
-                    + "}}",
-                }
-                for output_name in dag.outputs
-            ]
-        }
+        template["outputs"] = _dag_template_outputs(dag.outputs)
 
     template["dag"] = with_extra_spec_options(
         original=template["dag"],
@@ -246,6 +240,16 @@ def _dag_template(
     )
 
     return template
+
+
+def _dag_template_parameters(address: List[str]) -> Sequence[Mapping[str, Any]]:
+    """Return a list of parameters for a DAG template."""
+    if len(address) == 0:
+        name_param = {"name": "name", "value": "dag"}
+    else:
+        name_param = {"name": "name"}
+
+    return [name_param]
 
 
 def _dag_root_artifacts_from_params(
@@ -275,9 +279,25 @@ def _dag_root_artifacts_from_params(
     return artifacts
 
 
+def _dag_template_outputs(outputs: Mapping[str, FromNodeOutput]) -> Mapping[str, Any]:
+    """Return a structure representing the outputs of a DAG template."""
+    return {
+        "artifacts": [
+            {
+                "name": output_name,
+                "from": "{{"
+                + f"tasks.{output_type.node}.outputs.artifacts.{output_type.output}"
+                + "}}",
+            }
+            for output_name, output_type in outputs.items()
+        ]
+    }
+
+
 def _dag_task(
     node: Node,
     node_address: List[str],
+    parent: DAG,
 ) -> Mapping[str, Any]:
     """
     Return a minimal representation of a DAGTask for a specific node.
@@ -293,11 +313,13 @@ def _dag_task(
     if dependencies:
         dag_task["dependencies"] = dependencies
 
-    if node.inputs:
-        dag_task["arguments"] = _dag_task_arguments(
-            node=node,
-            node_address=node_address,
-        )
+    arguments = _dag_task_arguments(
+        node=node,
+        node_address=node_address,
+        parent=parent,
+    )
+    if arguments:
+        dag_task["arguments"] = arguments
 
     return dag_task
 
@@ -318,41 +340,82 @@ def _dag_task_dependencies(node: Node) -> List[str]:
 def _dag_task_arguments(
     node: Node,
     node_address: List[str],
+    parent: DAG,
 ) -> Mapping[str, Any]:
     """
     Return a minimal representation of an Arguments object, retrieving each of the node's inputs from the right source.
 
     Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#arguments
     """
-    return {
-        "artifacts": [
+    if isinstance(node, DAG):
+        parameters = [
             {
-                "name": input_name,
-                "from": _dag_task_argument_artifact_from(
-                    node_address=node_address,
-                    input_name=input_name,
-                    input=node.inputs[input_name],
-                ),
-            }
-            for input_name in node.inputs
+                "name": "name",
+                "value": "{{inputs.parameters.name}}-" + node_address[-1],
+            },
         ]
-    }
+    else:
+        parameters = [
+            {
+                "name": f"{output_name}_output_path",
+                "value": "{{workflow.uid}}/{{inputs.parameters.name}}/"
+                + f"{node_address[-1]}/{output_name}.{output_type.serializer.extension}",
+            }
+            for output_name, output_type in node.outputs.items()
+        ]
+
+    artifacts = [
+        _dag_task_argument_artifact(
+            node_address=node_address,
+            input_name=input_name,
+            input_type=node.inputs[input_name],
+            parent=parent,
+        )
+        for input_name in node.inputs
+    ]
+
+    arguments: Dict[str, Any] = {}
+    if parameters:
+        arguments["parameters"] = parameters
+
+    if artifacts:
+        arguments["artifacts"] = artifacts
+
+    return arguments
 
 
-def _dag_task_argument_artifact_from(
+def _dag_task_argument_artifact(
     node_address: List[str],
     input_name: str,
-    input: SupportedTaskInputs,
-) -> str:
+    input_type: SupportedTaskInputs,
+    parent: DAG,
+) -> Mapping[str, Any]:
     """
     Return a pointer to the source of a specific artifact, based on the type of each input, and using Argo's workflow variables.
 
     Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/variables.md
     """
-    if isinstance(input, FromParam):
-        return "{{" + f"inputs.artifacts.{input.name or input_name}" + "}}"
-    elif isinstance(input, FromNodeOutput):
-        return "{{" + f"tasks.{input.node}.outputs.artifacts.{input.output}" + "}}"
+    if isinstance(input_type, FromParam):
+        return {
+            "name": input_name,
+            "from": "{{" + f"inputs.artifacts.{input_type.name or input_name}" + "}}",
+        }
+    elif isinstance(input_type, FromNodeOutput):
+        if isinstance(parent.nodes[input_type.node], DAG):
+            return {
+                "name": input_name,
+                "from": "{{"
+                + f"tasks.{input_type.node}.outputs.artifacts.{input_type.output}"
+                + "}}",
+            }
+        else:
+            return {
+                "name": input_name,
+                "s3": {
+                    "key": "{{workflow.uid}}/{{inputs.parameters.name}}/"
+                    + f"{input_type.node}/{input_type.output}.{input_type.serializer.extension}",
+                },
+            }
     else:
         node_name = ".".join(node_address)
         raise IncompatibilityError(
@@ -386,8 +449,9 @@ def _task_template(
         # of the entrypoints without affecting the rest
         template["container"]["command"] = container_command[:]
 
-    if task.inputs:
-        template["inputs"] = _task_template_inputs(task)
+    task_inputs = _task_template_inputs(task)
+    if task_inputs:
+        template["inputs"] = task_inputs
 
     if task.outputs:
         template["outputs"] = _task_template_outputs(task)
@@ -416,18 +480,30 @@ def _task_template_inputs(task: Task) -> Mapping[str, Any]:
 
     Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#inputs
     """
-    return {
-        "artifacts": [
-            {
-                "name": input_name,
-                "path": os.path.join(
-                    INPUT_PATH,
-                    f"{input_name}.{task.inputs[input_name].serializer.extension}",
-                ),
-            }
-            for input_name in task.inputs
-        ]
-    }
+    parameters = [
+        {"name": f"{output_name}_output_path"} for output_name in task.outputs
+    ]
+
+    artifacts = [
+        {
+            "name": input_name,
+            "path": os.path.join(
+                INPUT_PATH,
+                f"{input_name}.{task.inputs[input_name].serializer.extension}",
+            ),
+        }
+        for input_name in task.inputs
+    ]
+
+    inputs = {}
+
+    if parameters:
+        inputs["parameters"] = parameters
+
+    if artifacts:
+        inputs["artifacts"] = artifacts
+
+    return inputs
 
 
 def _task_template_outputs(task: Task) -> Mapping[str, Any]:
@@ -444,6 +520,10 @@ def _task_template_outputs(task: Task) -> Mapping[str, Any]:
                     OUTPUT_PATH,
                     f"{output_name}.{task.outputs[output_name].serializer.extension}",
                 ),
+                "archive": {"none": {}},
+                "s3": {
+                    "key": "{{inputs.parameters." + output_name + "_output_path}}",
+                },
             }
             for output_name in task.outputs
         ]
