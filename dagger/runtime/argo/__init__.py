@@ -18,7 +18,6 @@ We provide examples and tutorials in the project's documentation.
 """
 
 from dagger.runtime.argo.cron_workflow_spec import Cron, CronConcurrencyPolicy  # noqa
-from dagger.runtime.argo.errors import IncompatibilityError  # noqa
 from dagger.runtime.argo.metadata import Metadata  # noqa
 from dagger.runtime.argo.v1alpha1 import (  # noqa
     cluster_workflow_template_manifest,

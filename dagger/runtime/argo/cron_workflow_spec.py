@@ -64,9 +64,6 @@ def cron_workflow_spec(
     ------
     ValueError
         If any of the cron.extra_spec_options collides with a property used by the runtime.
-
-    IncompatibilityError
-        If the runtime is not compatible with the DAG supplied. This is usually the result of an internal bug.
     """
     spec = {
         "schedule": cron.schedule,

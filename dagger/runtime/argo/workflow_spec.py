@@ -8,9 +8,7 @@ from dagger.dag import DAG, Node
 from dagger.dag import SupportedInputs as SupportedDAGInputs
 from dagger.dag import validate_parameters
 from dagger.input import FromNodeOutput, FromParam
-from dagger.runtime.argo.errors import IncompatibilityError
 from dagger.runtime.argo.extra_spec_options import with_extra_spec_options
-from dagger.task import SupportedInputs as SupportedTaskInputs
 from dagger.task import Task
 
 BASE_DAG_NAME = "dag"
@@ -70,9 +68,6 @@ def workflow_spec(
     ------
     ValueError
         If any of the extra_spec_options collides with a property used by the runtime.
-
-    IncompatibilityError
-        If the runtime is not compatible with the DAG supplied. This is usually the result of an internal bug.
     """
     validate_parameters(inputs=dag.inputs, params=workflow.params)
 
@@ -107,7 +102,7 @@ def _workflow_spec_arguments(params: Mapping[str, Any]) -> Mapping[str, Any]:
 
 
 def _templates(
-    node: Node,
+    node: Union[Task, DAG],
     container_image: str,
     container_command: List[str],
     params: Mapping[str, Any],
@@ -158,7 +153,7 @@ def _templates(
                 container_command=container_command,
             )
         ]
-    elif isinstance(node, DAG):
+    else:
         dag = node
         return list(
             itertools.chain(
@@ -180,13 +175,6 @@ def _templates(
                     for node_name in dag.nodes
                 ],
             )
-        )
-    else:
-        human_readable_node_address = (
-            f"Node '{'.'.join(address)}'" if address else "This node"
-        )
-        raise IncompatibilityError(
-            f"Whoops. {human_readable_node_address} is of type '{type(node).__name__}'. While this node type may be supported by the DAG, the current version of the Argo runtime does not support it. Please, check the GitHub project to see if this issue has already been reported and addressed in a newer version. Otherwise, please report this as a bug in our GitHub tracker. Sorry for the inconvenience."
         )
 
 
@@ -349,15 +337,12 @@ def _dag_task_with_param(
     """
     if isinstance(input_type, FromParam):
         return "{{" + f"workflow.parameters.{input_type.name or input_name}" + "}}"
-    elif isinstance(input_type, FromNodeOutput):
+    else:
         return (
             "{{"
             + f"tasks.{input_type.node}.outputs.parameters.{input_type.output}_partitions"
             + "}}"
         )
-    else:
-        # TODO
-        raise IncompatibilityError("")
 
 
 def _dag_task_dependencies(node: Node) -> List[str]:
@@ -374,7 +359,7 @@ def _dag_task_dependencies(node: Node) -> List[str]:
 
 
 def _dag_task_arguments(
-    node: Node,
+    node: Union[Task, DAG],
     node_address: List[str],
     parent: DAG,
 ) -> Mapping[str, Any]:
@@ -427,7 +412,7 @@ def _dag_task_arguments(
 def _dag_task_argument_artifact(
     node_address: List[str],
     input_name: str,
-    input_type: SupportedTaskInputs,
+    input_type: Union[FromParam, FromNodeOutput],
     parent: DAG,
     is_partitioned: bool,
 ) -> Mapping[str, Any]:
@@ -441,7 +426,7 @@ def _dag_task_argument_artifact(
             "name": input_name,
             "from": "{{" + f"inputs.artifacts.{input_type.name or input_name}" + "}}",
         }
-    elif isinstance(input_type, FromNodeOutput):
+    else:
         if isinstance(parent.nodes[input_type.node], DAG):
             return {
                 "name": input_name,
@@ -462,11 +447,6 @@ def _dag_task_argument_artifact(
                 "name": input_name,
                 "s3": {"key": key},
             }
-    else:
-        node_name = ".".join(node_address)
-        raise IncompatibilityError(
-            f"Whoops. Input '{input_name}' of node '{node_name}' is of type '{type(input_type).__name__}'. While this input type may be supported by the DAG, the current version of the Argo runtime does not support it. Please, check the GitHub project to see if this issue has already been reported and addressed in a newer version. Otherwise, please report this as a bug in our GitHub tracker. Sorry for the inconvenience."
-        )
 
 
 def _task_template(

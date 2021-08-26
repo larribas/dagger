@@ -7,19 +7,6 @@ from dagger.runtime.local import invoke
 from dagger.task import Task
 
 
-def test__invoke__unsupported_node():
-    class UnsupportedNode:
-        pass
-
-    with pytest.raises(NotImplementedError) as e:
-        invoke(UnsupportedNode())
-
-    assert (
-        str(e.value)
-        == "Whoops, we were not expecting a node of type 'UnsupportedNode'. This type of nodes are not supported by the local runtime at the moment. If you believe this may be a bug, please report it to our GitHub repository."
-    )
-
-
 def test__invoke_dag__with_no_inputs_or_outputs():
     invocations = []
     dag = DAG(

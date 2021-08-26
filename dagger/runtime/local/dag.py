@@ -3,7 +3,7 @@ import itertools
 from collections.abc import Iterable
 from typing import Any, Dict, Mapping, Optional, Union
 
-from dagger.dag import DAG, Node, SupportedOutputs, validate_parameters
+from dagger.dag import DAG, Node, validate_parameters
 from dagger.input import FromNodeOutput, FromParam
 from dagger.runtime.local.task import _invoke_task
 from dagger.runtime.local.types import (
@@ -18,7 +18,7 @@ from dagger.task import Task
 
 
 def invoke(
-    node: Node,
+    node: Union[DAG, Task],
     params: Optional[Mapping[str, Any]] = None,
 ) -> Mapping[str, NodeOutput]:
     """
@@ -51,12 +51,8 @@ def invoke(
     """
     if isinstance(node, DAG):
         return _invoke_dag(node, params=params)
-    elif isinstance(node, Task):
-        return _invoke_task(node, params=params)
     else:
-        raise NotImplementedError(
-            f"Whoops, we were not expecting a node of type '{type(node).__name__}'. This type of nodes are not supported by the local runtime at the moment. If you believe this may be a bug, please report it to our GitHub repository."
-        )
+        return _invoke_task(node, params=params)
 
 
 def _invoke_dag(
@@ -144,24 +140,18 @@ def _node_param(
 ) -> Any:
     if isinstance(input_type, FromParam):
         return params[input_type.name or input_name]
-    elif isinstance(input_type, FromNodeOutput):
-        if isinstance(outputs[input_type.node], PartitionedOutput):
-            return [
-                _node_param_from_output(
-                    serializer=input_type.serializer,
-                    node_output=partition[input_type.output],
-                )
-                for partition in outputs[input_type.node]
-            ]
-        else:
-            return _node_param_from_output(
+    elif isinstance(outputs[input_type.node], PartitionedOutput):
+        return [
+            _node_param_from_output(
                 serializer=input_type.serializer,
-                node_output=outputs[input_type.node][input_type.output],
+                node_output=partition[input_type.output],
             )
-
+            for partition in outputs[input_type.node]
+        ]
     else:
-        raise TypeError(
-            f"Input type '{type(input_type)}' is not supported by the local runtime. The use of unsupported inputs should have been validated by the DAG object. This may be a bug in the library. Please open an issue in our GitHub repository."
+        return _node_param_from_output(
+            serializer=input_type.serializer,
+            node_output=outputs[input_type.node][input_type.output],
         )
 
 
@@ -177,17 +167,12 @@ def _node_param_from_output(
 
 def _dag_output(
     output_name: str,
-    output_type: SupportedOutputs,
+    output_type: FromNodeOutput,
     outputs: Mapping[str, NodeOutputs],
 ) -> NodeOutput:
-    if isinstance(output_type, FromNodeOutput):
-        if isinstance(outputs[output_type.node], PartitionedOutput):
-            return PartitionedOutput(
-                map(lambda p: p[output_type.output], outputs[output_type.node])
-            )
-        else:
-            return outputs[output_type.node][output_type.output]
-    else:
-        raise NotImplementedError(
-            f"Whoops, we were not expecting a dag output of type '{type(output_type).__name__}'. This type of outputs are not supported by the local runtime at the moment. If you believe this may be a bug, please report it to our GitHub repository."
+    if isinstance(outputs[output_type.node], PartitionedOutput):
+        return PartitionedOutput(
+            map(lambda p: p[output_type.output], outputs[output_type.node])
         )
+    else:
+        return outputs[output_type.node][output_type.output]
