@@ -2,7 +2,7 @@ from itertools import combinations
 
 import pytest
 
-from dagger.input import FromParam
+from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromKey, FromReturnValue
 from dagger.serializer import DefaultSerializer
 from dagger.task import Task
@@ -108,6 +108,39 @@ def test__init__partitioned_by_nonexistent_input():
     )
 
 
+def test__init__with_node_partitioned_by_param():
+    with pytest.raises(ValueError) as e:
+        Task(
+            lambda n: n,
+            inputs={"n": FromParam("p")},
+            partition_by_input="n",
+        )
+
+    assert (
+        str(e.value)
+        == "Nodes may not be partitioned by an input that comes from a parameter. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+    )
+
+
+def test__init__with_partitioned_node_with_partitioned_output():
+    with pytest.raises(ValueError) as e:
+        Task(
+            lambda n: [n, n],
+            inputs={
+                "n": FromNodeOutput("fan-out", "nums"),
+            },
+            outputs={
+                "more_nums": FromReturnValue(is_partitioned=True),
+            },
+            partition_by_input="n",
+        )
+
+    assert (
+        str(e.value)
+        == "Partitioned nodes may not generate partitioned outputs. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+    )
+
+
 #
 # Properties
 #
@@ -153,7 +186,7 @@ def test__partition_by_input():
     assert (
         Task(
             lambda x: 1,
-            inputs={"x": FromParam()},
+            inputs={"x": FromNodeOutput("a", "b")},
             partition_by_input="x",
         ).partition_by_input
         == "x"

@@ -289,6 +289,63 @@ def test__init__partitioned_by_nonexistent_input():
     )
 
 
+def test__init__with_dag_output_from_a_partitioned_node():
+    with pytest.raises(ValueError) as e:
+        DAG(
+            outputs={"r": FromNodeOutput("map", "n")},
+            nodes={
+                "fan-out": Task(
+                    lambda: [1, 2, 3],
+                    outputs={"n": FromReturnValue(is_partitioned=True)},
+                ),
+                "map": Task(
+                    lambda n: n,
+                    inputs={
+                        "n": FromNodeOutput("fan-out", "n"),
+                    },
+                    outputs={
+                        "n": FromReturnValue(),
+                    },
+                    partition_by_input="n",
+                ),
+            },
+        )
+
+    assert (
+        str(e.value)
+        == "Output 'r' comes from node 'map', which is partitioned. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+    )
+
+
+def test__init__partitioned_by_output_of_partitioned_node():
+    with pytest.raises(ValueError) as e:
+        DAG(
+            {
+                "fan-out": Task(
+                    lambda: [1, 2],
+                    outputs={"numbers": FromReturnValue(is_partitioned=True)},
+                ),
+                "map-1": Task(
+                    lambda n: n,
+                    inputs={"n": FromNodeOutput("fan-out", "numbers")},
+                    outputs={"n": FromReturnValue()},
+                    partition_by_input="n",
+                ),
+                "map-2": Task(
+                    lambda n: n,
+                    inputs={"n": FromNodeOutput("map-1", "n")},
+                    outputs={"n": FromReturnValue()},
+                    partition_by_input="n",
+                ),
+            }
+        )
+
+    assert (
+        str(e.value)
+        == "Error validating input 'n' of node 'map-2': This node is partitioned by an input that comes from the output of another partitioned node. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+    )
+
+
 #
 # Node execution order
 #

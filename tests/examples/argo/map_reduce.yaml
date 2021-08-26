@@ -1,0 +1,164 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: map-reduce-
+spec:
+  arguments:
+    parameters:
+    - name: multiplier
+      value: 3
+    - name: parallel_steps
+      value: 5
+  entrypoint: dag
+  templates:
+  - name: dag
+    inputs:
+      parameters:
+      - name: name
+        value: dag
+      artifacts:
+      - name: multiplier
+        raw:
+          data: "{{workflow.parameters.multiplier}}"
+      - name: parallel_steps
+        raw:
+          data: "{{workflow.parameters.parallel_steps}}"
+    outputs:
+      artifacts:
+      - name: sum
+        from: "{{tasks.sum-results.outputs.artifacts.sum}}"
+    dag:
+      tasks:
+      - name: generate-numbers
+        template: dag-generate-numbers
+        arguments:
+          parameters:
+          - name: numbers_output_path
+            value: "{{workflow.uid}}/{{inputs.parameters.name}}/generate-numbers/numbers.json"
+          artifacts:
+          - name: parallel_steps
+            from: "{{inputs.artifacts.parallel_steps}}"
+      - name: multiply-by
+        template: dag-multiply-by
+        dependencies:
+        - generate-numbers
+        arguments:
+          parameters:
+          - name: number_output_path
+            value: "{{workflow.uid}}/{{inputs.parameters.name}}/multiply-by/number.json/{{item}}"
+          artifacts:
+          - name: multiplier
+            from: "{{inputs.artifacts.multiplier}}"
+          - name: number
+            s3:
+              key: "{{workflow.uid}}/{{inputs.parameters.name}}/generate-numbers/numbers.json/{{item}}"
+        withParam: "{{tasks.generate-numbers.outputs.parameters.numbers_partitions}}"
+      - name: sum-results
+        template: dag-sum-results
+        dependencies:
+        - multiply-by
+        arguments:
+          parameters:
+          - name: sum_output_path
+            value: "{{workflow.uid}}/{{inputs.parameters.name}}/sum-results/sum.json"
+          artifacts:
+          - name: numbers
+            s3:
+              key: "{{workflow.uid}}/{{inputs.parameters.name}}/multiply-by/number.json"
+
+  - name: dag-generate-numbers
+    inputs:
+      parameters:
+      - name: numbers_output_path
+      artifacts:
+      - name: parallel_steps
+        path: /tmp/inputs/parallel_steps.json
+    outputs:
+      parameters:
+      - name: numbers_partitions
+        valueFrom:
+          path: "{{outputs.artifacts.numbers.path}}/partitions.json"
+      artifacts:
+      - name: numbers
+        path: /tmp/outputs/numbers.json
+        archive:
+          none: {}
+        s3:
+          key: "{{inputs.parameters.numbers_output_path}}"
+    container:
+      image: local.registry/dagger
+      command: [map-reduce]
+      args: [
+        --node-name, "generate-numbers",
+        --input, parallel_steps, "{{inputs.artifacts.parallel_steps.path}}",
+        --output, numbers, "{{outputs.artifacts.numbers.path}}"
+      ]
+      volumeMounts:
+      - name: outputs
+        mountPath: /tmp/outputs/
+    volumes:
+    - name: outputs
+      emptyDir: {}
+
+  - name: dag-multiply-by
+    inputs:
+      parameters:
+      - name: number_output_path
+      artifacts:
+      - name: multiplier
+        path: /tmp/inputs/multiplier.json
+      - name: number
+        path: /tmp/inputs/number.json
+    outputs:
+      artifacts:
+      - name: number
+        path: /tmp/outputs/number.json
+        archive:
+          none: {}
+        s3:
+          key: "{{inputs.parameters.number_output_path}}"
+    container:
+      image: local.registry/dagger
+      command: [map-reduce]
+      args: [
+        --node-name, "multiply-by",
+        --input, multiplier, "{{inputs.artifacts.multiplier.path}}",
+        --input, number, "{{inputs.artifacts.number.path}}",
+        --output, number, "{{outputs.artifacts.number.path}}"
+      ]
+      volumeMounts:
+      - name: outputs
+        mountPath: /tmp/outputs/
+    volumes:
+    - name: outputs
+      emptyDir: {}
+
+  - name: dag-sum-results
+    inputs:
+      parameters:
+      - name: sum_output_path
+      artifacts:
+      - name: numbers
+        path: /tmp/inputs/numbers.json
+    outputs:
+      artifacts:
+      - name: sum
+        path: /tmp/outputs/sum.json
+        archive:
+          none: {}
+        s3:
+          key: "{{inputs.parameters.sum_output_path}}"
+    container:
+      image: local.registry/dagger
+      command: [map-reduce]
+      args: [
+        --node-name, "sum-results",
+        --input, numbers, "{{inputs.artifacts.numbers.path}}",
+        --output, sum, "{{outputs.artifacts.sum.path}}"
+      ]
+      volumeMounts:
+      - name: outputs
+        mountPath: /tmp/outputs/
+    volumes:
+    - name: outputs
+      emptyDir: {}

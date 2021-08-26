@@ -98,7 +98,7 @@ def _deserialized_params(
         input_value = retrieve_input_from_location(input_locations[input_name])
         input_type = nested_node.node.inputs[input_name]
 
-        if isinstance(input_value, local.Partitioned):
+        if isinstance(input_value, local.PartitionedOutput):
             params[input_name] = [
                 input_type.serializer.deserialize(partition)
                 for partition in input_value

@@ -9,6 +9,7 @@ from dagger.runtime.cli.locations import (
     retrieve_input_from_location,
     store_output_in_location,
 )
+from dagger.runtime.local import PartitionedOutput
 
 
 def test__retrieve_input_from_location__when_location_doesnt_exist():
@@ -36,10 +37,37 @@ def test__retrieve_input_from_location__can_read_partitioned_directory():
         partitions = [b"1", b"2"]
         store_output_in_location(
             output_location=dir_path,
-            output_value=partitions,
+            output_value=PartitionedOutput(partitions),
         )
 
-        assert retrieve_input_from_location(dir_path) == partitions
+        assert list(retrieve_input_from_location(dir_path)) == partitions
+
+
+def test__retrieve_input_from_location__reads_partitions_lazily():
+    with tempfile.TemporaryDirectory() as tmp:
+        dir_path = os.path.join(tmp, "partitioned_dir")
+        os.mkdir(dir_path)
+
+        for c in ["a", "b", "c"]:
+            with open(os.path.join(dir_path, c), "wb") as f:
+                # Create the file but do not write anything yet
+                f.write(b"")
+
+        lazily_loaded_partitions = retrieve_input_from_location(dir_path)
+
+        with open(os.path.join(dir_path, "a"), "wb") as f:
+            f.write(b"1")
+        assert next(lazily_loaded_partitions) == b"1"
+
+        with open(os.path.join(dir_path, "b"), "wb") as f:
+            f.write(b"2")
+        assert next(lazily_loaded_partitions) == b"2"
+
+        # This one hasn't been written, so it should return an empty bytestring
+        assert next(lazily_loaded_partitions) == b""
+
+        with pytest.raises(StopIteration):
+            next(lazily_loaded_partitions)
 
 
 def test__retrieve_input_from_location__can_read_partitioned_directory_without_a_partitions_manifest():
@@ -52,7 +80,7 @@ def test__retrieve_input_from_location__can_read_partitioned_directory_without_a
             with open(os.path.join(dir_path, str(i)), "wb") as f:
                 f.write(partition)
 
-        assert retrieve_input_from_location(dir_path) == partitions
+        assert list(retrieve_input_from_location(dir_path)) == partitions
 
 
 def test__store_output_in_location__with_simple_output():
@@ -72,7 +100,7 @@ def test__store_output_in_location__with_partitioned_output():
         output_path = os.path.join(tmp, "output")
         store_output_in_location(
             output_location=output_path,
-            output_value=[b"1", b"2"],
+            output_value=PartitionedOutput([b"1", b"2"]),
         )
 
         with open(os.path.join(output_path, PARTITION_MANIFEST_FILENAME), "r") as f:
@@ -100,5 +128,5 @@ def test__store_output_in_location__when_partition_directory_already_exists():
         with pytest.raises(FileExistsError):
             store_output_in_location(
                 output_location=tmp,
-                output_value=[b"2"],
+                output_value=PartitionedOutput([b"2"]),
             )

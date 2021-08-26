@@ -91,10 +91,9 @@ class Task:
 
         _validate_callable_inputs_match_defined_inputs(func, list(inputs))
 
-        if partition_by_input and partition_by_input not in inputs:
-            raise ValueError(
-                f"This node is partitioned by '{partition_by_input}'. However, '{partition_by_input}' is not an input of the node. The available inputs are {sorted(list(inputs))}."
-            )
+        if partition_by_input:
+            _validate_partitioned_input(partition_by_input, inputs)
+            _validate_there_are_no_partitioned_outputs(outputs)
 
         self._inputs = inputs
         self._outputs = outputs
@@ -147,11 +146,34 @@ class Task:
         """
 
 
-def _validate_input_is_supported(input_name, input):
-    if not _is_type_supported(input, SupportedInputs):
+def _validate_input_is_supported(input_name, input_type):
+    if not _is_type_supported(input_type, SupportedInputs):
         raise TypeError(
-            f"Input '{input_name}' is of type '{type(input).__name__}'. However, nodes only support the following types of inputs: {[t.__name__ for t in get_type_args(SupportedInputs)]}"
+            f"Input '{input_name}' is of type '{type(input_type).__name__}'. However, nodes only support the following types of inputs: {[t.__name__ for t in get_type_args(SupportedInputs)]}"
         )
+
+
+def _validate_partitioned_input(
+    partition_by_input: str,
+    inputs: Mapping[str, SupportedInputs],
+):
+    if partition_by_input not in inputs:
+        raise ValueError(
+            f"This node is partitioned by '{partition_by_input}'. However, '{partition_by_input}' is not an input of the node. The available inputs are {sorted(list(inputs))}."
+        )
+
+    if isinstance(inputs[partition_by_input], FromParam):
+        raise ValueError(
+            "Nodes may not be partitioned by an input that comes from a parameter. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+        )
+
+
+def _validate_there_are_no_partitioned_outputs(outputs: Mapping[str, SupportedOutputs]):
+    for output_name, output_type in outputs.items():
+        if output_type.is_partitioned:
+            raise ValueError(
+                "Partitioned nodes may not generate partitioned outputs. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+            )
 
 
 def _validate_output_is_supported(output_name, output):

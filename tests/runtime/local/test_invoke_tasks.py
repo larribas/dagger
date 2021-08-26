@@ -118,9 +118,27 @@ def test__invoke__task_with_superfluous_parameters():
         )
 
 
-def test__invoke__task_with_partitioned_output():
+def test__invoke__task_with_partitioned_output_from_iterator():
+    class CustomIterator:
+        def __init__(self):
+            self.n = 2
+
+        def __iter__(self):
+            return self
+
+        def __next__(self):
+            if self.n <= 0:
+                raise StopIteration
+
+            self.n -= 1
+            return self.n
+
+    class CustomIterable:
+        def __iter__(self):
+            return CustomIterator()
+
     task = Task(
-        lambda: {"partitioned": [1, 2], "not_partitioned": 1},
+        lambda: {"partitioned": CustomIterable(), "not_partitioned": 1},
         outputs={
             "partitioned": FromKey("partitioned", is_partitioned=True),
             "not_partitioned": FromKey("not_partitioned"),
@@ -129,7 +147,7 @@ def test__invoke__task_with_partitioned_output():
     outputs = invoke(task, params={})
 
     assert outputs["not_partitioned"] == b"1"
-    assert outputs["partitioned"] == [b"1", b"2"]
+    assert list(outputs["partitioned"]) == [b"1", b"0"]
 
 
 def test__invoke__task_with_partitioned_output_that_cannot_be_partitioned():
@@ -144,5 +162,5 @@ def test__invoke__task_with_partitioned_output_that_cannot_be_partitioned():
 
     assert (
         str(e.value)
-        == "We encountered the following error while attempting to serialize the results of this task: Output 'not_partitioned' was declared as a partitioned output, but the return value was not a list (instead, it was of type 'int'). Partitioned outputs should be lists of values. Each value in the list must be serializable with the serializer defined in the output."
+        == "We encountered the following error while attempting to serialize the results of this task: Output 'not_partitioned' was declared as a partitioned output, but the return value was not an iterable (instead, it was of type 'int'). Partitioned outputs should be iterables of values (e.g. lists or sets). Each value in the iterable must be serializable with the serializer defined in the output."
     )

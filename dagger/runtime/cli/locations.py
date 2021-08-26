@@ -7,7 +7,7 @@ At the moment, only locations in the local filesystem are supported.
 import json
 import os
 
-from dagger.runtime.local import NodeOutput, Partitioned
+from dagger.runtime.local import NodeOutput, PartitionedOutput
 
 PARTITION_MANIFEST_FILENAME = "partitions.json"
 
@@ -47,13 +47,12 @@ def retrieve_input_from_location(input_location: str) -> NodeOutput:
                 and fname != PARTITION_MANIFEST_FILENAME
             ]
         )
-        print(22, partition_filenames)
-        partitions = []
-        for partition_filename in partition_filenames:
-            with open(os.path.join(input_location, partition_filename), "rb") as f:
-                partitions.append(f.read())
 
-        return partitions
+        def load_lazily(partition_filename: str):
+            with open(os.path.join(input_location, partition_filename), "rb") as f:
+                return f.read()
+
+        return PartitionedOutput(map(load_lazily, partition_filenames))
 
     else:
         with open(input_location, "rb") as f:
@@ -90,7 +89,7 @@ def store_output_in_location(output_location: str, output_value: NodeOutput):
     PermissionError
         If the current execution context doesn't have enough permissions to read the file.
     """
-    if isinstance(output_value, Partitioned):
+    if isinstance(output_value, PartitionedOutput):
         os.mkdir(output_location)
         partition_filenames = []
 

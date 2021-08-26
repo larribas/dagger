@@ -26,7 +26,6 @@ The "multiply-by" task is partitioned by the numbers, which means there will be 
 
 After all the instances of "multiply-by" are done, we have a fan-in step ("sum-results", which is not partitioned on purpose) that will depend on the outputs of "multiply-by". Because this task is not partitioned, it will receive a list with all the results of the executions of "multiply-by" as a single list. It will just sum all the partitions together and produce a single result.
 """
-import random
 from typing import List
 
 from dagger import DAG, Task
@@ -34,14 +33,18 @@ from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromReturnValue
 
 
-def generate_numbers() -> List[int]:
-    """Multiply 'number' by 'multiplier'."""
-    return [i for i in range(random.randint(1, 10))]
+def generate_numbers(parallel_steps: int) -> List[int]:
+    """Generate a list of numbers from 0 to 'parallel_steps'."""
+    numbers = [i for i in range(parallel_steps)]
+    print(f"Numbers: {numbers}")
+    return numbers
 
 
 def multiply_by(multiplier: int, number: int) -> int:
     """Multiply 'number' by 'multiplier'."""
-    return number * multiplier
+    result = number * multiplier
+    print(f"Result: {result}")
+    return result
 
 
 def sum_results(numbers: List[int]) -> int:
@@ -51,13 +54,19 @@ def sum_results(numbers: List[int]) -> int:
 
 
 dag = DAG(
-    inputs={"multiplier": FromParam()},
+    inputs={
+        "multiplier": FromParam(),
+        "parallel_steps": FromParam(),
+    },
     outputs={
         "sum": FromNodeOutput("sum-results", "sum"),
     },
     nodes={
         "generate-numbers": Task(
             generate_numbers,
+            inputs={
+                "parallel_steps": FromParam(),
+            },
             outputs={
                 "numbers": FromReturnValue(is_partitioned=True),
             },
@@ -69,7 +78,7 @@ dag = DAG(
                 "number": FromNodeOutput("generate-numbers", "numbers"),
             },
             outputs={
-                "number": FromReturnValue(is_partitioned=True),
+                "number": FromReturnValue(),
             },
             partition_by_input="number",
         ),

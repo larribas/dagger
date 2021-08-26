@@ -6,7 +6,7 @@ from dagger.output import FromReturnValue
 from dagger.runtime.argo.errors import IncompatibilityError
 from dagger.runtime.argo.workflow_spec import (
     Workflow,
-    _dag_task_argument_artifact_from,
+    _dag_task_argument_artifact,
     _templates,
     workflow_spec,
 )
@@ -33,6 +33,11 @@ def test__workflow_spec__simplest_dag():
         "templates": [
             {
                 "name": "dag",
+                "inputs": {
+                    "parameters": [
+                        {"name": "name", "value": "dag"},
+                    ],
+                },
                 "dag": {
                     "tasks": [
                         {
@@ -83,6 +88,11 @@ def test__workflow_spec__nested_dags():
         "templates": [
             {
                 "name": "dag",
+                "inputs": {
+                    "parameters": [
+                        {"name": "name", "value": "dag"},
+                    ],
+                },
                 "dag": {
                     "tasks": [
                         {
@@ -92,6 +102,14 @@ def test__workflow_spec__nested_dags():
                         {
                             "name": "deeply",
                             "template": "dag-deeply",
+                            "arguments": {
+                                "parameters": [
+                                    {
+                                        "name": "name",
+                                        "value": "{{inputs.parameters.name}}-deeply",
+                                    },
+                                ],
+                            },
                         },
                     ],
                 },
@@ -109,17 +127,35 @@ def test__workflow_spec__nested_dags():
             },
             {
                 "name": "dag-deeply",
+                "inputs": {
+                    "parameters": [
+                        {"name": "name"},
+                    ],
+                },
                 "dag": {
                     "tasks": [
                         {
                             "name": "nested",
                             "template": "dag-deeply-nested",
+                            "arguments": {
+                                "parameters": [
+                                    {
+                                        "name": "name",
+                                        "value": "{{inputs.parameters.name}}-nested",
+                                    },
+                                ],
+                            },
                         },
                     ],
                 },
             },
             {
                 "name": "dag-deeply-nested",
+                "inputs": {
+                    "parameters": [
+                        {"name": "name"},
+                    ],
+                },
                 "dag": {
                     "tasks": [
                         {
@@ -279,6 +315,11 @@ def test__workflow_spec__with_task_overrides():
         "templates": [
             {
                 "name": "dag",
+                "inputs": {
+                    "parameters": [
+                        {"name": "name", "value": "dag"},
+                    ],
+                },
                 "dag": {
                     "tasks": [
                         {
@@ -350,6 +391,11 @@ def test__workflow_spec__with_dag_template_overrides():
         "templates": [
             {
                 "name": "dag",
+                "inputs": {
+                    "parameters": [
+                        {"name": "name", "value": "dag"},
+                    ],
+                },
                 "dag": {
                     "failFast": False,
                     "extraAttribute": "extra",
@@ -386,6 +432,11 @@ def test__workflow_spec__with_workflow_spec_overrides():
         "templates": [
             {
                 "name": "dag",
+                "inputs": {
+                    "parameters": [
+                        {"name": "name", "value": "dag"},
+                    ],
+                },
                 "dag": {
                     "tasks": [
                         {
@@ -407,19 +458,23 @@ def test__workflow_spec__with_workflow_spec_overrides():
 
 
 #
-# dag_task_argument_artifact_from
+# dag_task_argument_artifact
 #
 
 
-def test__dag_task_argument_artifact_from__with_incompatible_input():
+def test__dag_task_argument_artifact__with_incompatible_input():
     class IncompatibleInput:
         pass
 
+    dag = DAG({"n": Task(lambda: 1)})
+
     with pytest.raises(IncompatibilityError) as e:
-        _dag_task_argument_artifact_from(
+        _dag_task_argument_artifact(
             node_address=["my", "nested", "node"],
             input_name="my-input",
-            input=IncompatibleInput(),
+            input_type=IncompatibleInput(),
+            parent=dag,
+            is_partitioned=False,
         )
 
     assert (

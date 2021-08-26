@@ -246,19 +246,23 @@ def _node_dependencies(node_inputs: Mapping[str, SupportedTaskInputs]) -> Set[st
 
 def _validate_outputs(
     dag_nodes: Mapping[str, Node],
-    dag_outputs: Mapping[str, SupportedOutputs],
+    dag_outputs: Mapping[str, Union[FromNodeOutput]],
 ):
-    for output_name in dag_outputs:
-        output = dag_outputs[output_name]
-        if output.node not in dag_nodes:
+    for output_name, output_type in dag_outputs.items():
+        if output_type.node not in dag_nodes:
             raise ValueError(
-                f"Output '{output_name}' depends on the output of a node named '{output.node}'. However, the DAG does not contain any node with such a name. These are the nodes contained by the DAG: {list(dag_nodes)}"
+                f"Output '{output_name}' depends on the output of a node named '{output_type.node}'. However, the DAG does not contain any node with such a name. These are the nodes contained by the DAG: {list(dag_nodes)}"
             )
 
-        referenced_node_outputs = dag_nodes[output.node].outputs
-        if output.output not in referenced_node_outputs:
+        referenced_node = dag_nodes[output_type.node]
+        if output_type.output not in referenced_node.outputs:
             raise ValueError(
-                f"Output '{output_name}' depends on the output '{output.output}' of another node named '{output.node}'. However, node '{output.node}' does not declare any output with such a name. These are the outputs defined by the node: {list(referenced_node_outputs)}"
+                f"Output '{output_name}' depends on the output '{output_type.output}' of another node named '{output_type.node}'. However, node '{output_type.node}' does not declare any output with such a name. These are the outputs defined by the node: {list(referenced_node.outputs)}"
+            )
+
+        if referenced_node.partition_by_input:
+            raise ValueError(
+                f"Output '{output_name}' comes from node '{output_type.node}', which is partitioned. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
             )
 
 
@@ -273,24 +277,23 @@ def _validate_node_input_dependencies(
 ):
     for node_name in dag_nodes:
         node = dag_nodes[node_name]
-        for input_name in node.inputs:
-            node_input = node.inputs[input_name]
+        for input_name, input_type in node.inputs.items():
             try:
-                if isinstance(node_input, FromParam):
+                if isinstance(input_type, FromParam):
                     _validate_input_from_param(
                         input_name=input_name,
-                        input=node_input,
+                        input_type=input_type,
                         dag_inputs=dag_inputs,
                     )
-                elif isinstance(node_input, FromNodeOutput):
+                elif isinstance(input_type, FromNodeOutput):
                     _validate_input_from_node_output(
                         node_name=node_name,
-                        input=node_input,
+                        input_type=input_type,
                         dag_nodes=dag_nodes,
                     )
                 else:
                     raise Exception(
-                        f"Whoops. The current version of the library doesn't seem to support inputs of type '{type(node_input)}'. This is most likely unintended. Please, check the GitHub project to see if this issue has already been reported and addressed in a newer version. Otherwise, please report this as a bug in our GitHub tracker. Sorry for the inconvenience."
+                        f"Whoops. The current version of the library doesn't seem to support inputs of type '{type(input_type)}'. This is most likely unintended. Please, check the GitHub project to see if this issue has already been reported and addressed in a newer version. Otherwise, please report this as a bug in our GitHub tracker. Sorry for the inconvenience."
                     )
 
             except (TypeError, ValueError) as e:
@@ -301,42 +304,50 @@ def _validate_node_input_dependencies(
 
 def _validate_input_from_param(
     input_name: str,
-    input: FromParam,
+    input_type: FromParam,
     dag_inputs: Mapping[str, SupportedInputs],
 ):
     # If the param name has not been overridden, we assume it has the same name as the input
-    name = input.name or input_name
+    name = input_type.name or input_name
 
     if name not in dag_inputs:
         raise ValueError(
             f"This input depends on a parameter named '{name}' being injected into the DAG. However, the DAG does not have any parameter with such a name. These are the parameters the DAG receives: {sorted(list(dag_inputs))}"
         )
 
-    if input.serializer != dag_inputs[name].serializer:
+    if input_type.serializer != dag_inputs[name].serializer:
         raise ValueError(
-            f"This input is serialized {input.serializer}. However, the input it references is serialized {dag_inputs[name].serializer}."
+            f"This input is serialized {input_type.serializer}. However, the input it references is serialized {dag_inputs[name].serializer}."
         )
 
 
 def _validate_input_from_node_output(
     node_name: str,
-    input: FromNodeOutput,
+    input_type: FromNodeOutput,
     dag_nodes: Mapping[str, Node],
 ):
-    if input.node not in dag_nodes:
+    if input_type.node not in dag_nodes:
         raise ValueError(
-            f"This input depends on the output of another node named '{input.node}'. However, the DAG does not define any node with such a name. These are the nodes contained by the DAG: {list(dag_nodes)}"
+            f"This input depends on the output of another node named '{input_type.node}'. However, the DAG does not define any node with such a name. These are the nodes contained by the DAG: {list(dag_nodes)}"
         )
 
-    referenced_node_outputs = dag_nodes[input.node].outputs
-    if input.output not in referenced_node_outputs:
+    referenced_node_outputs = dag_nodes[input_type.node].outputs
+    if input_type.output not in referenced_node_outputs:
         raise ValueError(
-            f"This input depends on the output '{input.output}' of another node named '{input.node}'. However, node '{input.node}' does not declare any output with such a name. These are the outputs defined by the node: {list(referenced_node_outputs)}"
+            f"This input depends on the output '{input_type.output}' of another node named '{input_type.node}'. However, node '{input_type.node}' does not declare any output with such a name. These are the outputs defined by the node: {list(referenced_node_outputs)}"
         )
 
-    if input.serializer != referenced_node_outputs[input.output].serializer:
+    if input_type.serializer != referenced_node_outputs[input_type.output].serializer:
         raise ValueError(
-            f"This input is serialized {input.serializer}. However, the output it references is serialized {referenced_node_outputs[input.output].serializer}."
+            f"This input is serialized {input_type.serializer}. However, the output it references is serialized {referenced_node_outputs[input_type.output].serializer}."
+        )
+
+    if (
+        dag_nodes[node_name].partition_by_input
+        and dag_nodes[input_type.node].partition_by_input
+    ):
+        raise ValueError(
+            "This node is partitioned by an input that comes from the output of another partitioned node. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
         )
 
 

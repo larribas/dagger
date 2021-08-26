@@ -2,7 +2,7 @@
 import itertools
 import os
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Mapping, Optional, Sequence
+from typing import Any, Dict, List, Mapping, Sequence, Union
 
 from dagger.dag import DAG, Node
 from dagger.dag import SupportedInputs as SupportedDAGInputs
@@ -231,7 +231,10 @@ def _dag_template(
             ]
 
     if dag.outputs:
-        template["outputs"] = _dag_template_outputs(dag.outputs)
+        template["outputs"] = _dag_template_outputs(
+            nodes=dag.nodes,
+            outputs=dag.outputs,
+        )
 
     template["dag"] = with_extra_spec_options(
         original=template["dag"],
@@ -279,19 +282,24 @@ def _dag_root_artifacts_from_params(
     return artifacts
 
 
-def _dag_template_outputs(outputs: Mapping[str, FromNodeOutput]) -> Mapping[str, Any]:
+def _dag_template_outputs(
+    nodes: Mapping[str, Node],
+    outputs: Mapping[str, FromNodeOutput],
+) -> Mapping[str, Any]:
     """Return a structure representing the outputs of a DAG template."""
-    return {
-        "artifacts": [
+    artifacts = []
+
+    for output_name, output_type in outputs.items():
+        artifacts.append(
             {
                 "name": output_name,
                 "from": "{{"
                 + f"tasks.{output_type.node}.outputs.artifacts.{output_type.output}"
                 + "}}",
             }
-            for output_name, output_type in outputs.items()
-        ]
-    }
+        )
+
+    return {"artifacts": artifacts}
 
 
 def _dag_task(
@@ -321,7 +329,35 @@ def _dag_task(
     if arguments:
         dag_task["arguments"] = arguments
 
+    if node.partition_by_input:
+        dag_task["withParam"] = _dag_task_with_param(
+            input_name=node.partition_by_input,
+            input_type=node.inputs[node.partition_by_input],
+        )
+
     return dag_task
+
+
+def _dag_task_with_param(
+    input_name: str,
+    input_type: Union[FromParam, FromNodeOutput],
+) -> str:
+    """
+    Return the value for the withParam field in a DAGTask spec.
+
+    Spec: https://argoproj.github.io/argo-workflows/fields/#dagtask
+    """
+    if isinstance(input_type, FromParam):
+        return "{{" + f"workflow.parameters.{input_type.name or input_name}" + "}}"
+    elif isinstance(input_type, FromNodeOutput):
+        return (
+            "{{"
+            + f"tasks.{input_type.node}.outputs.parameters.{input_type.output}_partitions"
+            + "}}"
+        )
+    else:
+        # TODO
+        raise IncompatibilityError("")
 
 
 def _dag_task_dependencies(node: Node) -> List[str]:
@@ -355,14 +391,17 @@ def _dag_task_arguments(
             },
         ]
     else:
-        parameters = [
-            {
+        parameters = []
+        for output_name, output_type in node.outputs.items():
+            output_path_param = {
                 "name": f"{output_name}_output_path",
                 "value": "{{workflow.uid}}/{{inputs.parameters.name}}/"
                 + f"{node_address[-1]}/{output_name}.{output_type.serializer.extension}",
             }
-            for output_name, output_type in node.outputs.items()
-        ]
+            if node.partition_by_input:
+                output_path_param["value"] += "/{{item}}"
+
+            parameters.append(output_path_param)
 
     artifacts = [
         _dag_task_argument_artifact(
@@ -370,6 +409,7 @@ def _dag_task_arguments(
             input_name=input_name,
             input_type=node.inputs[input_name],
             parent=parent,
+            is_partitioned=node.partition_by_input == input_name,
         )
         for input_name in node.inputs
     ]
@@ -389,6 +429,7 @@ def _dag_task_argument_artifact(
     input_name: str,
     input_type: SupportedTaskInputs,
     parent: DAG,
+    is_partitioned: bool,
 ) -> Mapping[str, Any]:
     """
     Return a pointer to the source of a specific artifact, based on the type of each input, and using Argo's workflow variables.
@@ -409,17 +450,22 @@ def _dag_task_argument_artifact(
                 + "}}",
             }
         else:
+            key = (
+                "{{workflow.uid}}/{{inputs.parameters.name}}/"
+                + f"{input_type.node}/{input_type.output}.{input_type.serializer.extension}"
+            )
+
+            if is_partitioned:
+                key += "/{{item}}"
+
             return {
                 "name": input_name,
-                "s3": {
-                    "key": "{{workflow.uid}}/{{inputs.parameters.name}}/"
-                    + f"{input_type.node}/{input_type.output}.{input_type.serializer.extension}",
-                },
+                "s3": {"key": key},
             }
     else:
         node_name = ".".join(node_address)
         raise IncompatibilityError(
-            f"Whoops. Input '{input_name}' of node '{node_name}' is of type '{type(input).__name__}'. While this input type may be supported by the DAG, the current version of the Argo runtime does not support it. Please, check the GitHub project to see if this issue has already been reported and addressed in a newer version. Otherwise, please report this as a bug in our GitHub tracker. Sorry for the inconvenience."
+            f"Whoops. Input '{input_name}' of node '{node_name}' is of type '{type(input_type).__name__}'. While this input type may be supported by the DAG, the current version of the Argo runtime does not support it. Please, check the GitHub project to see if this issue has already been reported and addressed in a newer version. Otherwise, please report this as a bug in our GitHub tracker. Sorry for the inconvenience."
         )
 
 
@@ -512,22 +558,42 @@ def _task_template_outputs(task: Task) -> Mapping[str, Any]:
 
     Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#outputs
     """
-    return {
-        "artifacts": [
-            {
-                "name": output_name,
-                "path": os.path.join(
-                    OUTPUT_PATH,
-                    f"{output_name}.{task.outputs[output_name].serializer.extension}",
-                ),
-                "archive": {"none": {}},
-                "s3": {
-                    "key": "{{inputs.parameters." + output_name + "_output_path}}",
-                },
-            }
-            for output_name in task.outputs
-        ]
-    }
+    parameters = [
+        {
+            "name": f"{output_name}_partitions",
+            "valueFrom": {
+                "path": "{{"
+                + f"outputs.artifacts.{output_name}.path"
+                + "}}/partitions.json",
+            },
+        }
+        for output_name, output_type in task.outputs.items()
+        if output_type.is_partitioned
+    ]
+
+    artifacts = [
+        {
+            "name": output_name,
+            "path": os.path.join(
+                OUTPUT_PATH,
+                f"{output_name}.{task.outputs[output_name].serializer.extension}",
+            ),
+            "archive": {"none": {}},
+            "s3": {
+                "key": "{{inputs.parameters." + output_name + "_output_path}}",
+            },
+        }
+        for output_name in task.outputs
+    ]
+
+    outputs = {}
+    if parameters:
+        outputs["parameters"] = parameters
+
+    if artifacts:
+        outputs["artifacts"] = artifacts
+
+    return outputs
 
 
 def _task_template_container_arguments(

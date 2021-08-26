@@ -1,8 +1,9 @@
 """Run tasks in memory."""
 import warnings
+from collections.abc import Iterable
 from typing import Any, Dict, List, Mapping, Optional
 
-from dagger.runtime.local.types import NodeOutput, NodeOutputs
+from dagger.runtime.local.types import NodeOutput, NodeOutputs, PartitionedOutput
 from dagger.serializer import SerializationError
 from dagger.task import SupportedInputs, SupportedOutputs, Task
 
@@ -16,10 +17,12 @@ def _invoke_task(
 
     return_value = task.func(**inputs)
 
-    return _serialize_outputs(
+    o = _serialize_outputs(
         outputs=task.outputs,
         return_value=return_value,
     )
+    print(66, o)
+    return o
 
 
 def _validate_and_filter_inputs(
@@ -59,7 +62,7 @@ def _serialize_outputs(
         except (TypeError, ValueError, SerializationError) as e:
             raise e.__class__(
                 f"We encountered the following error while attempting to serialize the results of this task: {str(e)}"
-            )
+            ) from e
 
     return node_outputs
 
@@ -70,11 +73,13 @@ def _serialize_output(
     output_value: Any,
 ) -> NodeOutput:
     if output_type.is_partitioned:
-        if not isinstance(output_value, List):
+        if not isinstance(output_value, Iterable):
             raise TypeError(
-                f"Output '{output_name}' was declared as a partitioned output, but the return value was not a list (instead, it was of type '{type(output_value).__name__}'). Partitioned outputs should be lists of values. Each value in the list must be serializable with the serializer defined in the output."
+                f"Output '{output_name}' was declared as a partitioned output, but the return value was not an iterable (instead, it was of type '{type(output_value).__name__}'). Partitioned outputs should be iterables of values (e.g. lists or sets). Each value in the iterable must be serializable with the serializer defined in the output."
             )
 
-        return [output_type.serializer.serialize(o) for o in output_value]
+        return PartitionedOutput(
+            map(lambda o: output_type.serializer.serialize(o), output_value)
+        )
     else:
         return output_type.serializer.serialize(output_value)

@@ -1,5 +1,6 @@
 """Run a DAG in memory."""
 import itertools
+from collections.abc import Iterable
 from typing import Any, Dict, Mapping, Optional, Union
 
 from dagger.dag import DAG, Node, SupportedOutputs, validate_parameters
@@ -10,7 +11,7 @@ from dagger.runtime.local.types import (
     NodeOutput,
     NodeOutputs,
     NodeParams,
-    Partitioned,
+    PartitionedOutput,
 )
 from dagger.serializer import SerializationError, Serializer
 from dagger.task import Task
@@ -72,23 +73,31 @@ def _invoke_dag(
         node = dag.nodes[node_name]
 
         try:
-            outputs[node_name] = [
-                invoke(node, params=p)
-                for p in _node_param_partitions(
-                    node=node,
-                    params=params,
-                    outputs=outputs,
-                )
-            ]
+            outputs[node_name] = PartitionedOutput(
+                [
+                    invoke(node, params=p)
+                    for p in _node_param_partitions(
+                        node=node,
+                        params=params,
+                        outputs=outputs,
+                    )
+                ]
+            )
 
             if not node.partition_by_input:
-                outputs[node_name] = outputs[node_name][0]
+                outputs[node_name] = next(outputs[node_name])
 
         except (ValueError, TypeError, SerializationError) as e:
-            raise e.__class__(f"Error when invoking node '{node_name}'. {str(e)}")
+            raise e.__class__(
+                f"Error when invoking node '{node_name}'. {str(e)}"
+            ) from e
 
     dag_outputs = {
-        output_name: _dag_output(output_name, output_type, outputs)
+        output_name: _dag_output(
+            output_name=output_name,
+            output_type=output_type,
+            outputs=outputs,
+        )
         for output_name, output_type in dag.outputs.items()
     }
 
@@ -99,7 +108,7 @@ def _node_param_partitions(
     node: Node,
     params: Mapping[str, Any],
     outputs: Mapping[str, NodeOutputs],
-) -> Partitioned[NodeParams]:
+) -> Iterable[NodeParams]:
     fixed_params = {
         name: _node_param(
             input_name=name,
@@ -117,9 +126,9 @@ def _node_param_partitions(
             params=params,
             outputs=outputs,
         )
-        if not isinstance(input_value, Partitioned):
+        if not isinstance(input_value, Iterable):
             raise TypeError(
-                f"This node is supposed to be partitioned by input '{node.partition_by_input}'. When a node is partitioned, the value of the input that determines the partition should be a list. Instead, we found a value of type '{type(input_value).__name__}'."
+                f"This node is supposed to be partitioned by input '{node.partition_by_input}'. When a node is partitioned, the value of the input that determines the partition should be an iterable. Instead, we found a value of type '{type(input_value).__name__}'."
             )
 
         return [{node.partition_by_input: p, **fixed_params} for p in input_value]
@@ -136,7 +145,7 @@ def _node_param(
     if isinstance(input_type, FromParam):
         return params[input_type.name or input_name]
     elif isinstance(input_type, FromNodeOutput):
-        if isinstance(outputs[input_type.node], Partitioned):
+        if isinstance(outputs[input_type.node], PartitionedOutput):
             return [
                 _node_param_from_output(
                     serializer=input_type.serializer,
@@ -159,9 +168,9 @@ def _node_param(
 def _node_param_from_output(
     serializer: Serializer,
     node_output: NodeOutput,
-) -> Union[Any, Partitioned[Any]]:
-    if isinstance(node_output, Partitioned):
-        return [serializer.deserialize(v) for v in node_output]
+) -> Union[Any, PartitionedOutput[Any]]:
+    if isinstance(node_output, PartitionedOutput):
+        return PartitionedOutput(map(lambda v: serializer.deserialize(v), node_output))
     else:
         return serializer.deserialize(node_output)
 
@@ -172,10 +181,10 @@ def _dag_output(
     outputs: Mapping[str, NodeOutputs],
 ) -> NodeOutput:
     if isinstance(output_type, FromNodeOutput):
-        if isinstance(outputs[output_type.node], Partitioned):
-            return [
-                partition[output_type.output] for partition in outputs[output_type.node]
-            ]
+        if isinstance(outputs[output_type.node], PartitionedOutput):
+            return PartitionedOutput(
+                map(lambda p: p[output_type.output], outputs[output_type.node])
+            )
         else:
             return outputs[output_type.node][output_type.output]
     else:

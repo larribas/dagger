@@ -13,6 +13,7 @@ from dagger.runtime.cli.locations import (
     PARTITION_MANIFEST_FILENAME,
     store_output_in_location,
 )
+from dagger.runtime.local import PartitionedOutput
 from dagger.serializer import AsPickle
 from dagger.task import Task
 
@@ -334,7 +335,8 @@ def test__invoke__node_with_partitioned_input():
         together_output = os.path.join(tmp, "together_output")
 
         store_output_in_location(
-            output_location=partitioned_input, output_value=[b"1", b"2", b"3"]
+            output_location=partitioned_input,
+            output_value=PartitionedOutput([b"1", b"2", b"3"]),
         )
         assert os.path.isdir(partitioned_input)
 
