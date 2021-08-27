@@ -16,6 +16,8 @@ spec:
       parameters:
       - name: name
         value: dag
+      - name: album_output_path
+        value: "{{workflow.uid}}/dag/album.json"
       artifacts:
       - name: album_name
         raw:
@@ -25,8 +27,9 @@ spec:
           data: '"{{workflow.parameters.style}}"'
     outputs:
       artifacts:
-      - from: '{{tasks.publish-album.outputs.artifacts.album}}'
-        name: album
+      - name: album
+        s3:
+          key: "{{inputs.parameters.album_output_path}}"
     dag:
       tasks:
       - name: brainstorm-themes
@@ -45,6 +48,8 @@ spec:
           parameters:
           - name: name
             value: "{{inputs.parameters.name}}-record-first-song"
+          - name: song_output_path
+            value: "{{workflow.uid}}/{{inputs.parameters.name}}/record-first-song/song.json"
           artifacts:
           - name: style
             from: "{{inputs.artifacts.style}}"
@@ -59,6 +64,8 @@ spec:
           parameters:
           - name: name
             value: "{{inputs.parameters.name}}-record-second-song"
+          - name: song_output_path
+            value: "{{workflow.uid}}/{{inputs.parameters.name}}/record-second-song/song.json"
           artifacts:
           - name: style
             from: "{{inputs.artifacts.style}}"
@@ -71,17 +78,18 @@ spec:
         - record-first-song
         - record-second-song
         arguments:
-          # TODO: Key-only artifacts with artifacts from DAG?
           parameters:
           - name: album_output_path
-            value: "{{workflow.uid}}/{{inputs.parameters.name}}/publish-album/album.json"
+            value: "{{inputs.parameters.album_output_path}}"
           artifacts:
           - name: album_name
             from: '{{inputs.artifacts.album_name}}'
           - name: first_song
-            from: '{{tasks.record-first-song.outputs.artifacts.song}}'
+            s3:
+              key: "{{workflow.uid}}/{{inputs.parameters.name}}/record-first-song/song.json"
           - name: second_song
-            from: '{{tasks.record-second-song.outputs.artifacts.song}}'
+            s3:
+              key: "{{workflow.uid}}/{{inputs.parameters.name}}/record-second-song/song.json"
 
   - name: dag-brainstorm-themes
     inputs:
@@ -126,13 +134,15 @@ spec:
     inputs:
       parameters:
       - name: name
+      - name: song_output_path
       artifacts:
       - name: theme
       - name: style
     outputs:
       artifacts:
       - name: song
-        from: '{{tasks.record.outputs.artifacts.recording}}'
+        s3:
+          key: "{{inputs.parameters.song_output_path}}"
     dag:
       tasks:
       - name: compose
@@ -153,7 +163,7 @@ spec:
         arguments:
           parameters:
           - name: recording_output_path
-            value: "{{workflow.uid}}/{{inputs.parameters.name}}/record/recording.json"
+            value: "{{inputs.parameters.song_output_path}}"
           artifacts:
           - name: composition
             s3:
@@ -238,13 +248,15 @@ spec:
     inputs:
       parameters:
       - name: name
+      - name: song_output_path
       artifacts:
       - name: theme
       - name: style
     outputs:
       artifacts:
       - name: song
-        from: '{{tasks.record.outputs.artifacts.recording}}'
+        s3:
+          key: "{{inputs.parameters.song_output_path}}"
     dag:
       tasks:
       - name: compose
@@ -265,7 +277,7 @@ spec:
         arguments:
           parameters:
           - name: recording_output_path
-            value: "{{workflow.uid}}/{{inputs.parameters.name}}/record/recording.json"
+            value: "{{inputs.parameters.song_output_path}}"
           artifacts:
           - name: composition
             s3:

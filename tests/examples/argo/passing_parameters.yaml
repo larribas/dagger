@@ -14,6 +14,8 @@ spec:
       parameters:
       - name: name
         value: dag
+      - name: number-doubled-and-squared_output_path
+        value: "{{workflow.uid}}/dag/number-doubled-and-squared.json"
       artifacts:
       - name: number
         raw:
@@ -21,7 +23,8 @@ spec:
     outputs:
       artifacts:
       - name: number-doubled-and-squared
-        from: "{{tasks.square.outputs.artifacts.squared-number}}"
+        s3:
+          key: "{{inputs.parameters.number-doubled-and-squared_output_path}}"
     dag:
       tasks:
       - name: double
@@ -39,7 +42,7 @@ spec:
         arguments:
           parameters:
           - name: squared-number_output_path
-            value: "{{workflow.uid}}/{{inputs.parameters.name}}/square/squared-number.json"
+            value: "{{inputs.parameters.number-doubled-and-squared_output_path}}"
           artifacts:
           - name: number
             s3:

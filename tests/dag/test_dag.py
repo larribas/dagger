@@ -121,6 +121,22 @@ def test__init__with_an_output_that_references_a_nonexistent_node_output():
     )
 
 
+def test__init__with_two_outputs_referencing_the_same_node_output():
+    with pytest.raises(ValueError) as e:
+        DAG(
+            nodes={"my-node": Task(lambda: 1, outputs=dict(x=FromReturnValue()))},
+            outputs=dict(
+                x1=FromNodeOutput("my-node", "x"),
+                x2=FromNodeOutput("my-node", "x"),
+            ),
+        )
+
+    assert (
+        str(e.value)
+        == "Multiple DAG outputs depend on the same node output. This is not a valid pattern in dagger due to the ambiguity and potential problems it may cause."
+    )
+
+
 def test__init__with_a_node_that_references_another_that_does_not_exist():
     with pytest.raises(ValueError) as e:
         DAG(

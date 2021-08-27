@@ -94,7 +94,7 @@ def store_output_in_location(output_location: str, output_value: NodeOutput):
         partition_filenames = []
 
         for i, partition in enumerate(output_value):
-            partition_filename = f"partition-{i}"
+            partition_filename = str(i)
             partition_filenames.append(partition_filename)
             with open(os.path.join(output_location, partition_filename), "wb") as f:
                 f.write(partition)

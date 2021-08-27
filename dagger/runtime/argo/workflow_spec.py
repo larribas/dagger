@@ -9,6 +9,7 @@ from dagger.dag import SupportedInputs as SupportedDAGInputs
 from dagger.dag import validate_parameters
 from dagger.input import FromNodeOutput, FromParam
 from dagger.runtime.argo.extra_spec_options import with_extra_spec_options
+from dagger.serializer import Serializer
 from dagger.task import Task
 
 BASE_DAG_NAME = "dag"
@@ -193,7 +194,10 @@ def _dag_template(
     template: dict = {
         "name": _template_name(address),
         "inputs": {
-            "parameters": _dag_template_parameters(address),
+            "parameters": _dag_template_parameters(
+                address=address,
+                dag_outputs=dag.outputs,
+            ),
         },
         "dag": {
             "tasks": [
@@ -218,11 +222,12 @@ def _dag_template(
                 {"name": input_name} for input_name in dag.inputs
             ]
 
-    if dag.outputs:
-        template["outputs"] = _dag_template_outputs(
-            nodes=dag.nodes,
-            outputs=dag.outputs,
-        )
+    dag_outputs = _dag_template_outputs(
+        nodes=dag.nodes,
+        outputs=dag.outputs,
+    )
+    if dag_outputs:
+        template["outputs"] = dag_outputs
 
     template["dag"] = with_extra_spec_options(
         original=template["dag"],
@@ -233,14 +238,31 @@ def _dag_template(
     return template
 
 
-def _dag_template_parameters(address: List[str]) -> Sequence[Mapping[str, Any]]:
+def _dag_template_parameters(
+    address: List[str],
+    dag_outputs: Mapping[str, FromNodeOutput],
+) -> Sequence[Mapping[str, Any]]:
     """Return a list of parameters for a DAG template."""
-    if len(address) == 0:
-        name_param = {"name": "name", "value": "dag"}
-    else:
-        name_param = {"name": "name"}
+    parameters = []
+    is_root_dag = len(address) == 0
 
-    return [name_param]
+    name_param = {"name": "name"}
+    if is_root_dag:
+        name_param["value"] = "dag"
+
+    parameters.append(name_param)
+
+    for output_name, output_type in dag_outputs.items():
+        output_param = {"name": f"{output_name}_output_path"}
+        if is_root_dag:
+            output_param["value"] = (
+                "{{workflow.uid}}/dag/"
+                + f"{output_name}.{output_type.serializer.extension}"
+            )
+
+        parameters.append(output_param)
+
+    return parameters
 
 
 def _dag_root_artifacts_from_params(
@@ -275,19 +297,21 @@ def _dag_template_outputs(
     outputs: Mapping[str, FromNodeOutput],
 ) -> Mapping[str, Any]:
     """Return a structure representing the outputs of a DAG template."""
-    artifacts = []
+    artifacts = [
+        {
+            "name": output_name,
+            "s3": {
+                "key": "{{inputs.parameters." + output_name + "_output_path}}",
+            },
+        }
+        for output_name in outputs
+    ]
 
-    for output_name, output_type in outputs.items():
-        artifacts.append(
-            {
-                "name": output_name,
-                "from": "{{"
-                + f"tasks.{output_type.node}.outputs.artifacts.{output_type.output}"
-                + "}}",
-            }
-        )
+    dag_outputs = {}
+    if artifacts:
+        dag_outputs["artifacts"] = artifacts
 
-    return {"artifacts": artifacts}
+    return dag_outputs
 
 
 def _dag_task(
@@ -368,33 +392,38 @@ def _dag_task_arguments(
 
     Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#arguments
     """
-    if isinstance(node, DAG):
-        parameters = [
-            {
-                "name": "name",
-                "value": "{{inputs.parameters.name}}-" + node_address[-1],
-            },
-        ]
-    else:
-        parameters = []
-        for output_name, output_type in node.outputs.items():
-            output_path_param = {
-                "name": f"{output_name}_output_path",
-                "value": "{{workflow.uid}}/{{inputs.parameters.name}}/"
-                + f"{node_address[-1]}/{output_name}.{output_type.serializer.extension}",
-            }
-            if node.partition_by_input:
-                output_path_param["value"] += "/{{item}}"
+    parameters = []
 
-            parameters.append(output_path_param)
+    if isinstance(node, DAG):
+        name_param = {
+            "name": "name",
+            "value": "{{inputs.parameters.name}}-" + node_address[-1],
+        }
+        if node.partition_by_input:
+            name_param["value"] += "-{{item}}"
+        parameters.append(name_param)
+
+    for output_name, output_type in node.outputs.items():
+        parameters.append(
+            {
+                "name": f"{output_name}_output_path",
+                "value": _dag_task_arguments_output_path(
+                    node_name=node_address[-1],
+                    output_name=output_name,
+                    serializer=output_type.serializer,
+                    dag_outputs=parent.outputs,
+                    is_partitioned=bool(node.partition_by_input),
+                ),
+            }
+        )
 
     artifacts = [
         _dag_task_argument_artifact(
             node_address=node_address,
             input_name=input_name,
             input_type=node.inputs[input_name],
-            parent=parent,
             is_partitioned=node.partition_by_input == input_name,
+            dag_outputs=parent.outputs,
         )
         for input_name in node.inputs
     ]
@@ -409,12 +438,41 @@ def _dag_task_arguments(
     return arguments
 
 
+def _dag_task_arguments_output_path(
+    node_name: str,
+    output_name: str,
+    serializer: Serializer,
+    dag_outputs: Mapping[str, FromNodeOutput],
+    is_partitioned: bool,
+) -> str:
+    corresponding_dag_output = [
+        dag_output_name
+        for dag_output_name, dag_output_type in dag_outputs.items()
+        if dag_output_type.node == node_name and dag_output_type.output == output_name
+    ]
+
+    if corresponding_dag_output:
+        output_path = (
+            "{{inputs.parameters." + f"{corresponding_dag_output[0]}_output_path" + "}}"
+        )
+    else:
+        output_path = (
+            "{{workflow.uid}}/{{inputs.parameters.name}}/"
+            + f"{node_name}/{output_name}.{serializer.extension}"
+        )
+
+    if is_partitioned:
+        output_path += "/{{item}}"
+
+    return output_path
+
+
 def _dag_task_argument_artifact(
     node_address: List[str],
     input_name: str,
     input_type: Union[FromParam, FromNodeOutput],
-    parent: DAG,
     is_partitioned: bool,
+    dag_outputs: Mapping[str, FromNodeOutput],
 ) -> Mapping[str, Any]:
     """
     Return a pointer to the source of a specific artifact, based on the type of each input, and using Argo's workflow variables.
@@ -427,26 +485,17 @@ def _dag_task_argument_artifact(
             "from": "{{" + f"inputs.artifacts.{input_type.name or input_name}" + "}}",
         }
     else:
-        if isinstance(parent.nodes[input_type.node], DAG):
-            return {
-                "name": input_name,
-                "from": "{{"
-                + f"tasks.{input_type.node}.outputs.artifacts.{input_type.output}"
-                + "}}",
-            }
-        else:
-            key = (
-                "{{workflow.uid}}/{{inputs.parameters.name}}/"
-                + f"{input_type.node}/{input_type.output}.{input_type.serializer.extension}"
-            )
-
-            if is_partitioned:
-                key += "/{{item}}"
-
-            return {
-                "name": input_name,
-                "s3": {"key": key},
-            }
+        key = _dag_task_arguments_output_path(
+            node_name=input_type.node,
+            output_name=input_type.output,
+            serializer=input_type.serializer,
+            dag_outputs=dag_outputs,
+            is_partitioned=is_partitioned,
+        )
+        return {
+            "name": input_name,
+            "s3": {"key": key},
+        }
 
 
 def _task_template(

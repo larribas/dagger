@@ -246,7 +246,7 @@ def _node_dependencies(node_inputs: Mapping[str, SupportedTaskInputs]) -> Set[st
 
 def _validate_outputs(
     dag_nodes: Mapping[str, Node],
-    dag_outputs: Mapping[str, Union[FromNodeOutput]],
+    dag_outputs: Mapping[str, FromNodeOutput],
 ):
     for output_name, output_type in dag_outputs.items():
         if output_type.node not in dag_nodes:
@@ -263,6 +263,11 @@ def _validate_outputs(
         if referenced_node.partition_by_input:
             raise ValueError(
                 f"Output '{output_name}' comes from node '{output_type.node}', which is partitioned. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+            )
+
+        if len(set(dag_outputs.values())) != len(dag_outputs):
+            raise ValueError(
+                "Multiple DAG outputs depend on the same node output. This is not a valid pattern in dagger due to the ambiguity and potential problems it may cause."
             )
 
 

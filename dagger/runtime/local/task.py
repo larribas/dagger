@@ -17,12 +17,10 @@ def _invoke_task(
 
     return_value = task.func(**inputs)
 
-    o = _serialize_outputs(
+    return _serialize_outputs(
         outputs=task.outputs,
         return_value=return_value,
     )
-    print(66, o)
-    return o
 
 
 def _validate_and_filter_inputs(
