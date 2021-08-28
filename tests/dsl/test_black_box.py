@@ -559,13 +559,12 @@ def test__map_reduce():
 
     @dsl.DAG
     def dag(exponent):
-        partitions = generate_numbers()
-
-        numbers = [
-            map_number(n=partition, exponent=exponent) for partition in partitions
-        ]
-
-        return sum_numbers(numbers)
+        return sum_numbers(
+            [
+                map_number(n=partition, exponent=exponent)
+                for partition in generate_numbers()
+            ]
+        )
 
     verify_dags_are_equivalent(
         dsl.build(dag),
@@ -598,6 +597,113 @@ def test__map_reduce():
                     sum_numbers.func,
                     inputs={
                         "numbers": FromNodeOutput("map-number", "return_value"),
+                    },
+                    outputs={
+                        "return_value": FromReturnValue(),
+                    },
+                ),
+            },
+        ),
+    )
+
+
+def test__nested_map_reduce():
+    @dsl.task
+    def generate_numbers(partitions):
+        return list(range(partitions))
+
+    @dsl.task
+    def map_number(n, exponent):
+        return n ** exponent
+
+    @dsl.task
+    def sum_numbers(numbers):
+        return sum(numbers)
+
+    @dsl.DAG
+    def map_reduce(partitions, exponent):
+        return sum_numbers(
+            [
+                map_number(n=partition, exponent=exponent)
+                for partition in generate_numbers(partitions)
+            ]
+        )
+
+    @dsl.DAG
+    def dag(partitions, exponent):
+        return sum_numbers(
+            [
+                map_reduce(partitions=partition, exponent=exponent)
+                for partition in generate_numbers(partitions)
+            ]
+        )
+
+    verify_dags_are_equivalent(
+        dsl.build(dag),
+        DAG(
+            inputs={
+                "exponent": FromParam("exponent"),
+                "partitions": FromParam("partitions"),
+            },
+            outputs={
+                "return_value": FromNodeOutput("sum-numbers", "return_value"),
+            },
+            nodes={
+                "generate-numbers": Task(
+                    generate_numbers.func,
+                    inputs={
+                        "partitions": FromParam("partitions"),
+                    },
+                    outputs={
+                        "return_value": FromReturnValue(is_partitioned=True),
+                    },
+                ),
+                "map-reduce": DAG(
+                    inputs={
+                        "exponent": FromParam("exponent"),
+                        "partitions": FromNodeOutput(
+                            "generate-numbers", "return_value"
+                        ),
+                    },
+                    outputs={
+                        "return_value": FromNodeOutput("sum-numbers", "return_value"),
+                    },
+                    nodes={
+                        "generate-numbers": Task(
+                            generate_numbers.func,
+                            inputs={
+                                "partitions": FromParam("partitions"),
+                            },
+                            outputs={
+                                "return_value": FromReturnValue(is_partitioned=True),
+                            },
+                        ),
+                        "map-number": Task(
+                            map_number.func,
+                            inputs={
+                                "n": FromNodeOutput("generate-numbers", "return_value"),
+                                "exponent": FromParam("exponent"),
+                            },
+                            outputs={
+                                "return_value": FromReturnValue(),
+                            },
+                            partition_by_input="n",
+                        ),
+                        "sum-numbers": Task(
+                            sum_numbers.func,
+                            inputs={
+                                "numbers": FromNodeOutput("map-number", "return_value"),
+                            },
+                            outputs={
+                                "return_value": FromReturnValue(),
+                            },
+                        ),
+                    },
+                ),
+                "sum-numbers": Task(
+                    sum_numbers.func,
+                    inputs={
+                        "numbers": FromNodeOutput("map-reduce", "return_value"),
                     },
                     outputs={
                         "return_value": FromReturnValue(),
