@@ -1,7 +1,6 @@
 """Data types used for local invocations."""
 
-from collections.abc import Iterable, Iterator
-from typing import Any, Generic, Mapping, TypeVar, Union
+from typing import Any, Generic, Iterable, Iterator, Mapping, TypeVar, Union
 
 T = TypeVar("T")
 

@@ -4,10 +4,10 @@ from typing import Annotated
 import pytest
 
 from dagger.dsl.context import node_invocations
-from dagger.dsl.errors import NodeInvokedWithMismatchedArgumentsError
 from dagger.dsl.node_invocation_recorder import NodeInvocationRecorder
 from dagger.dsl.node_invocations import NodeInvocation, NodeType
-from dagger.dsl.node_outputs import NodeOutputUsage
+from dagger.dsl.node_output_partition_usage import NodeOutputPartitionUsage
+from dagger.dsl.node_output_usage import NodeOutputUsage
 from dagger.dsl.parameter_usage import ParameterUsage
 from dagger.dsl.serialize import Serialize
 from dagger.serializer import AsPickle
@@ -18,7 +18,7 @@ def test__task_invocation__with_too_many_positional_arguments():
         pass
 
     recorder = NodeInvocationRecorder(f, node_type=NodeType.TASK)
-    with pytest.raises(NodeInvokedWithMismatchedArgumentsError) as e:
+    with pytest.raises(TypeError) as e:
         ctx = copy_context()
         ctx.run(recorder, 1, a=2)
 
@@ -33,12 +33,31 @@ def test__task_invocation__with_missing_argument():
         pass
 
     recorder = NodeInvocationRecorder(f, node_type=NodeType.TASK)
-    with pytest.raises(NodeInvokedWithMismatchedArgumentsError) as e:
+    with pytest.raises(TypeError) as e:
         recorder(1)
 
     assert (
         str(e.value)
         == "You have invoked the task 'f' with the following arguments: args=(1,) kwargs={}. However, the signature of the function is '(a: int, b: str)'. The following error was raised as a result of this mismatch: missing a required argument: 'b'"
+    )
+
+
+def test__task_invocation__with_a_sequence_of_mixed_types():
+    def f(x):
+        pass
+
+    output_from_another_node = NodeOutputUsage(
+        invocation_id="x",
+        serialize_annotation=Serialize(),
+    )
+
+    recorder = NodeInvocationRecorder(f, node_type=NodeType.TASK)
+    with pytest.raises(ValueError) as e:
+        recorder([1, output_from_another_node])
+
+    assert (
+        str(e.value)
+        == "Argument 'x' of type 'list' is invalid. Arguments of this type may only contain literal/hardcoded values, or references to the same output from a partitioned node."
     )
 
 
@@ -133,3 +152,60 @@ def test__task_invocation__takes_into_account_serialize_annotations():
 
     output = ctx[node_invocations][0].output
     assert output.serializer == AsPickle()
+
+
+def test__task_invocation__with_several_partitioned_inputs():
+    def my_func(x, y):
+        return x + y
+
+    ctx = copy_context()
+    recorder = NodeInvocationRecorder(func=my_func, node_type=NodeType.TASK)
+
+    with pytest.raises(ValueError) as e:
+        ctx.run(
+            recorder,
+            x=NodeOutputPartitionUsage(
+                NodeOutputUsage(
+                    invocation_id="x",
+                    serialize_annotation=Serialize(),
+                )
+            ),
+            y=NodeOutputPartitionUsage(
+                NodeOutputUsage(
+                    invocation_id="y",
+                    serialize_annotation=Serialize(),
+                )
+            ),
+        )
+
+    assert (
+        str(e.value)
+        == "The following inputs to this node are partitioned: ['x', 'y']. However, nodes may only be partitioned by one of their inputs. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+    )
+
+
+def test__task_invocation__with_a_partitioned_input():
+    def my_func(x, y):
+        return x + y
+
+    ctx = copy_context()
+    recorder = NodeInvocationRecorder(func=my_func, node_type=NodeType.TASK)
+
+    x_output = NodeOutputPartitionUsage(
+        NodeOutputUsage(
+            invocation_id="x",
+            serialize_annotation=Serialize(),
+        )
+    )
+    y_output = NodeOutputUsage(
+        invocation_id="y",
+        serialize_annotation=Serialize(),
+    )
+
+    ctx.run(recorder, x=x_output, y=y_output)
+    invocation = ctx[node_invocations][0]
+    assert invocation.partition_by_input == "x"
+    assert invocation.inputs == {
+        "x": x_output,
+        "y": y_output,
+    }

@@ -1,7 +1,6 @@
 """Run a DAG in memory."""
 import itertools
-from collections.abc import Iterable
-from typing import Any, Dict, Mapping, Optional, Union
+from typing import Any, Dict, Iterable, Mapping, Optional, Union
 
 from dagger.dag import DAG, Node, validate_parameters
 from dagger.input import FromNodeOutput, FromParam

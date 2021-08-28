@@ -3,7 +3,8 @@
 from enum import Enum
 from typing import Any, Callable, Mapping, NamedTuple, Optional, Union, get_args
 
-from dagger.dsl.node_outputs import NodeOutputReference, NodeOutputUsage
+from dagger.dsl.node_output_reference import NodeOutputReference
+from dagger.dsl.node_output_usage import NodeOutputUsage
 from dagger.dsl.parameter_usage import ParameterUsage
 
 NodeInputReference = Union[ParameterUsage, NodeOutputReference]
@@ -26,6 +27,7 @@ class NodeInvocation(NamedTuple):
     inputs: Mapping[str, NodeInputReference]
     output: NodeOutputUsage
     runtime_options: Optional[Mapping[str, Any]] = None
+    partition_by_input: Optional[str] = None
 
 
 def is_node_input_reference(obj: Any):

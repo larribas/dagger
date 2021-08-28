@@ -1,113 +1,13 @@
-"""Data structures that hold information about node outputs and their usage."""
+"""Data structure that represents the usage of a node output."""
 
-from typing import NamedTuple, Protocol, Set, runtime_checkable
+from typing import Iterator, Set
 
+from dagger.dsl.node_output_key_usage import NodeOutputKeyUsage
+from dagger.dsl.node_output_partition_usage import NodeOutputPartitionUsage
+from dagger.dsl.node_output_property_usage import NodeOutputPropertyUsage
+from dagger.dsl.node_output_reference import NodeOutputReference
 from dagger.dsl.serialize import Serialize
 from dagger.serializer import Serializer
-
-
-@runtime_checkable
-class NodeOutputReference(Protocol):
-    """
-    Protocol that references a specific output of a node.
-
-    It will be received as an argument by a task. For instance, when doing:
-
-    ```
-    @dsl.task
-    def f() -> int:
-        return 2
-
-    @dsl.task
-    def g(number: int):
-        print(number)
-
-    @dsl.DAG
-    def dag():
-        f_output = f()
-        g(f_output)
-    ```
-
-
-    The function `g` will receive a node output reference it can use to build its inputs.
-    """
-
-    @property
-    def invocation_id(self) -> str:
-        """Return the invocation id of this reference."""
-        ...
-
-    @property
-    def output_name(self) -> str:
-        """Return the outputs name of this reference."""
-        ...
-
-    @property
-    def serializer(self) -> Serializer:
-        """Return the serializer assigned to this output."""
-        ...
-
-
-class NodeOutputKeyUsage(NamedTuple):
-    """
-    Represents the usage of a specific key from a node output.
-
-    The existence of this object implies that the output of a node
-    has been used as such:
-
-    ```
-    @dsl.DAG
-    def dag():
-        f_output = f()
-        g(f_output["a"])
-    ```
-
-    And therefore, the node `f` needs to contain an output of type `output.FromKey`
-    """
-
-    invocation_id: str
-    output_name: str
-    key_name: str
-    serializer: Serializer
-
-    def __hash__(self) -> int:
-        """
-        Return a hash that will be the same for two equivalent instances of this type.
-
-        It's important to note that two tuples of this type will only be equal if all their attributes are exactly the same, but they will be equivalent if they reference the same invocation (by id) and key accessed (by name).
-        """
-        return hash((self.invocation_id, self.key_name))
-
-
-class NodeOutputPropertyUsage(NamedTuple):
-    """
-    Represents the usage of a specific key from a node output.
-
-    The existence of this object implies that the output of a node
-    has been used as such:
-
-    ```
-    @dsl.DAG
-    def dag():
-        f_output = f()
-        g(f_output.a)
-    ```
-
-    And therefore, the node `f` needs to contain an output of type `output.FromProperty`
-    """
-
-    invocation_id: str
-    output_name: str
-    property_name: str
-    serializer: Serializer
-
-    def __hash__(self) -> int:
-        """
-        Return a hash that will be the same for two equivalent instances of this type.
-
-        It's important to note that two tuples of this type will only be equal if all their attributes are exactly the same, but they will be equivalent if they reference the same invocation (by id) and property accessed (by name).
-        """
-        return hash((self.invocation_id, self.property_name))
 
 
 class NodeOutputUsage:
@@ -164,6 +64,7 @@ class NodeOutputUsage:
         self._invocation_id = invocation_id
         self._references: Set[NodeOutputReference] = set()
         self._serialize_annotation = serialize_annotation
+        self._is_partitioned = False
 
     @property
     def invocation_id(self) -> str:
@@ -185,6 +86,20 @@ class NodeOutputUsage:
     def serializer(self) -> Serializer:
         """Return the serializer assigned to this output."""
         return self._serialize_annotation.root
+
+    @property
+    def is_partitioned(self) -> bool:
+        """Return true if the output is partitioned. This happens whenever the output reference is iterated upon."""
+        return self._is_partitioned
+
+    @property
+    def references(self) -> Set[NodeOutputReference]:
+        """
+        Return all the ways this output has been referenced.
+
+        If the output has never been used as input for another node, it will be empty.
+        """
+        return self._references
 
     def consume(self):
         """
@@ -221,6 +136,11 @@ class NodeOutputUsage:
 
     def __getattr__(self, name) -> NodeOutputReference:
         """Access an attribute of the output. The output must be an object."""
+        if name.startswith("__") and name.endswith("__"):
+            raise ValueError(
+                f"You are trying to reference attribute named '{name}'. Attributes of the form __name__ are used internally by Python and they are not available within the scope of the dagger DSL."
+            )
+
         ref = NodeOutputPropertyUsage(
             invocation_id=self._invocation_id,
             output_name=f"property_{name}",
@@ -243,25 +163,21 @@ class NodeOutputUsage:
         self._references.add(ref)
         return ref
 
-    @property
-    def references(self) -> Set[NodeOutputReference]:
-        """
-        Return all the ways this output has been referenced.
-
-        If the output has never been used as input for another node, it will be empty.
-        """
-        return self._references
+    def __iter__(self) -> Iterator:
+        """Return an Iterator over the partitions of this output."""
+        self._is_partitioned = True
+        self._references.add(self)
+        return iter([NodeOutputPartitionUsage(self)])
 
     def __repr__(self) -> str:
         """Get a human-readable string representation of this output usage."""
-        return f"NodeOutputUsage(invocation_id={self._invocation_id}, references={self._references})"
+        return f"NodeOutputUsage(invocation_id={self._invocation_id})"
 
     def __eq__(self, obj) -> bool:
         """Return true if both objects are equivalent."""
         return (
             isinstance(obj, NodeOutputUsage)
             and self._invocation_id == obj._invocation_id
-            and self.references == obj.references
         )
 
     def __hash__(self) -> int:

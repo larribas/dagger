@@ -2,7 +2,7 @@ from contextvars import copy_context
 
 from dagger.dsl.context import node_invocations
 from dagger.dsl.node_invocations import NodeInvocation, NodeType
-from dagger.dsl.node_outputs import NodeOutputUsage
+from dagger.dsl.node_output_usage import NodeOutputUsage
 from dagger.dsl.serialize import Serialize
 
 

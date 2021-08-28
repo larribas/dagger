@@ -1,7 +1,6 @@
 """Run tasks in memory."""
 import warnings
-from collections.abc import Iterable
-from typing import Any, Dict, List, Mapping, Optional
+from typing import Any, Dict, Iterable, List, Mapping, Optional
 
 from dagger.runtime.local.types import NodeOutput, NodeOutputs, PartitionedOutput
 from dagger.serializer import SerializationError

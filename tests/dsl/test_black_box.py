@@ -542,3 +542,67 @@ def test__overriding_serializers():
             },
         ),
     )
+
+
+def test__map_reduce():
+    @dsl.task
+    def generate_numbers():
+        return [1, 2, 3]
+
+    @dsl.task
+    def map_number(n, exponent):
+        return n ** exponent
+
+    @dsl.task
+    def sum_numbers(numbers):
+        return sum(numbers)
+
+    @dsl.DAG
+    def dag(exponent):
+        partitions = generate_numbers()
+
+        numbers = [
+            map_number(n=partition, exponent=exponent) for partition in partitions
+        ]
+
+        return sum_numbers(numbers)
+
+    verify_dags_are_equivalent(
+        dsl.build(dag),
+        DAG(
+            inputs={
+                "exponent": FromParam("exponent"),
+            },
+            outputs={
+                "return_value": FromNodeOutput("sum-numbers", "return_value"),
+            },
+            nodes={
+                "generate-numbers": Task(
+                    generate_numbers.func,
+                    outputs={
+                        "return_value": FromReturnValue(is_partitioned=True),
+                    },
+                ),
+                "map-number": Task(
+                    map_number.func,
+                    inputs={
+                        "n": FromNodeOutput("generate-numbers", "return_value"),
+                        "exponent": FromParam("exponent"),
+                    },
+                    outputs={
+                        "return_value": FromReturnValue(),
+                    },
+                    partition_by_input="n",
+                ),
+                "sum-numbers": Task(
+                    sum_numbers.func,
+                    inputs={
+                        "numbers": FromNodeOutput("map-number", "return_value"),
+                    },
+                    outputs={
+                        "return_value": FromReturnValue(),
+                    },
+                ),
+            },
+        ),
+    )
