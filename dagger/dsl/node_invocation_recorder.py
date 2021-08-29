@@ -11,6 +11,7 @@ from dagger.dsl.node_invocations import (
     NodeType,
     is_node_input_reference,
 )
+from dagger.dsl.node_output_partition_fan_in import NodeOutputPartitionFanIn
 from dagger.dsl.node_output_partition_usage import NodeOutputPartitionUsage
 from dagger.dsl.node_output_reference import NodeOutputReference
 from dagger.dsl.node_output_usage import NodeOutputUsage
@@ -60,10 +61,13 @@ class NodeInvocationRecorder:
         """
         invocation_id = self._overridden_id or uuid.uuid4().hex
         arguments = self._bind_arguments(*args, **kwargs)
+        partition_by_input = self._partition_by_input(arguments)
         self._consume_node_output_references(list(arguments.values()))
+
         output = NodeOutputUsage(
             invocation_id=invocation_id,
             serialize_annotation=find_serialize_annotation(self._func) or Serialize(),
+            references_node_partition=bool(partition_by_input),
         )
 
         invocations = node_invocations.get([])
@@ -76,7 +80,7 @@ class NodeInvocationRecorder:
                 inputs=self._inputs(arguments),
                 output=output,
                 runtime_options=self._runtime_options,
-                partition_by_input=self._partition_by_input(arguments),
+                partition_by_input=partition_by_input,
             ),
         )
         node_invocations.set(invocations)
@@ -113,15 +117,22 @@ class NodeInvocationRecorder:
         }
 
     def _sanitize_argument(self, name: str, arg: Any) -> Any:
+        # Case 1: Fan-in of multiple outputs from a partitioned node
+        if (
+            isinstance(arg, Sequence)
+            and len(arg) == 1
+            and isinstance(arg[0], NodeOutputReference)
+            and arg[0].references_node_partition
+        ):
+            return NodeOutputPartitionFanIn(arg[0])
+
+        # Case 2: Mixed literals and references
         if isinstance(arg, Sequence) and any(
             [isinstance(item, NodeOutputReference) for item in arg]
         ):
-            if len(set(arg)) == 1:
-                return arg[0]
-            else:
-                raise ValueError(
-                    f"Argument '{name}' of type '{type(arg).__name__}' is invalid. Arguments of this type may only contain literal/hardcoded values, or references to the same output from a partitioned node."
-                )
+            raise ValueError(
+                f"Argument '{name}' of type '{type(arg).__name__}' is invalid. Arguments of this type may only contain literal/hardcoded values, or references to the same output from a partitioned node."
+            )
 
         return arg
 
@@ -133,7 +144,7 @@ class NodeInvocationRecorder:
         See the documentation of the `.consume()` function to understand why.
         """
         for arg in arguments:
-            if isinstance(arg, NodeOutputUsage):
+            if isinstance(arg, NodeOutputReference):
                 arg.consume()
 
     def _func_with_preset_params(self, arguments: Mapping[str, Any]) -> Callable:
@@ -179,6 +190,7 @@ class NodeInvocationRecorder:
             k: v
             for k, v in arguments.items()
             if isinstance(v, NodeOutputPartitionUsage)
+            or (isinstance(v, NodeOutputReference) and v.references_node_partition)
         }
 
         if len(partitioned_inputs) >= 2:

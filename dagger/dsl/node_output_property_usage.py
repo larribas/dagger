@@ -29,11 +29,13 @@ class NodeOutputPropertyUsage:
         output_name: str,
         property_name: str,
         serializer: Serializer,
+        references_node_partition: bool = False,
     ):
         self._invocation_id = invocation_id
         self._output_name = output_name
         self._property_name = property_name
         self._serializer = serializer
+        self._references_node_partition = references_node_partition
         self._is_partitioned = False
 
     @property
@@ -61,6 +63,15 @@ class NodeOutputPropertyUsage:
         """Return true if the output is partitioned. This happens whenever the output reference is iterated upon."""
         return self._is_partitioned
 
+    @property
+    def references_node_partition(self) -> bool:
+        """Return true if the output comes from a partitioned node.."""
+        return self._references_node_partition
+
+    def consume(self):
+        """Mark this output as consumed by another node."""
+        pass
+
     def __iter__(self) -> Iterator:
         """Return an Iterator over the partitions of this output."""
         self._is_partitioned = True
@@ -68,7 +79,7 @@ class NodeOutputPropertyUsage:
 
     def __repr__(self) -> str:
         """Get a human-readable string representation of this instance."""
-        return f"NodeOutputKeyUsage(invocation_id={self._invocation_id}, output_name={self._output_name}, property_name={self._property_name}, serializer={self._serializer}, is_partitioned={self._is_partitioned})"
+        return f"NodeOutputKeyUsage(invocation_id={self._invocation_id}, output_name={self._output_name}, property_name={self._property_name}, serializer={self._serializer}, is_partitioned={self._is_partitioned}, references_node_partition={self._references_node_partition})"
 
     def __eq__(self, obj) -> bool:
         """Return true if both objects are equivalent."""
@@ -79,6 +90,7 @@ class NodeOutputPropertyUsage:
             and self._property_name == obj._property_name
             and self._serializer == obj._serializer
             and self._is_partitioned == obj._is_partitioned
+            and self._references_node_partition == obj._references_node_partition
         )
 
     def __hash__(self) -> int:

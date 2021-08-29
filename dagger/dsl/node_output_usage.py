@@ -60,10 +60,12 @@ class NodeOutputUsage:
         self,
         invocation_id: str,
         serialize_annotation: Serialize,
+        references_node_partition: bool = False,
     ):
         self._invocation_id = invocation_id
         self._references: Set[NodeOutputReference] = set()
         self._serialize_annotation = serialize_annotation
+        self._references_node_partition = references_node_partition
         self._is_partitioned = False
 
     @property
@@ -91,6 +93,11 @@ class NodeOutputUsage:
     def is_partitioned(self) -> bool:
         """Return true if the output is partitioned. This happens whenever the output reference is iterated upon."""
         return self._is_partitioned
+
+    @property
+    def references_node_partition(self) -> bool:
+        """Return true if the output comes from a partitioned node.."""
+        return self._references_node_partition
 
     @property
     def references(self) -> Set[NodeOutputReference]:
@@ -147,6 +154,7 @@ class NodeOutputUsage:
             property_name=name,
             serializer=self._serialize_annotation.sub_output(name)
             or self._serialize_annotation.root,
+            references_node_partition=self._references_node_partition,
         )
         self._references.add(ref)
         return ref
@@ -159,6 +167,7 @@ class NodeOutputUsage:
             key_name=name,
             serializer=self._serialize_annotation.sub_output(name)
             or self._serialize_annotation.root,
+            references_node_partition=self._references_node_partition,
         )
         self._references.add(ref)
         return ref
@@ -178,6 +187,8 @@ class NodeOutputUsage:
         return (
             isinstance(obj, NodeOutputUsage)
             and self._invocation_id == obj._invocation_id
+            and self._is_partitioned == obj._is_partitioned
+            and self._references_node_partition == obj._references_node_partition
         )
 
     def __hash__(self) -> int:

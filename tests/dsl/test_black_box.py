@@ -9,6 +9,8 @@ knowledge about the internal data structures that build the DAG under the hood.
 import random
 from typing import Annotated, Mapping
 
+import pytest
+
 import dagger.dsl as dsl
 from dagger.dag import DAG
 from dagger.input import FromNodeOutput, FromParam
@@ -711,4 +713,53 @@ def test__nested_map_reduce():
                 ),
             },
         ),
+    )
+
+
+def test__multiple_map_operations():
+    @dsl.task
+    def generate_numbers():
+        return [1, 2, 3]
+
+    @dsl.task
+    def double(n):
+        return n * 2
+
+    @dsl.DAG
+    def dag():
+        numbers = generate_numbers()
+
+        for n in numbers:
+            n2 = double(n)
+            double(n2)
+
+    with pytest.raises(ValueError) as e:
+        dsl.build(dag)
+
+    assert (
+        str(e.value)
+        == "Error validating input 'n' of node 'double-2': This node is partitioned by an input that comes from the output of another partitioned node. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+    )
+
+
+def test__nested_for_loops():
+    @dsl.task
+    def generate_numbers(partitions):
+        return list(range(partitions))
+
+    @dsl.DAG
+    def dag(partitions):
+        partitions = generate_numbers(partitions)
+
+        for partition in partitions:
+            nested_partitions = generate_numbers(partition)
+            for nested_partition in nested_partitions:
+                generate_numbers(nested_partition)
+
+    with pytest.raises(ValueError) as e:
+        dsl.build(dag)
+
+    assert (
+        str(e.value)
+        == "Partitioned nodes may not generate partitioned outputs. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
     )

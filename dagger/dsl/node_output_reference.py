@@ -51,6 +51,15 @@ class NodeOutputReference(Protocol):
         """Return true if the output is partitioned. This happens whenever the output reference is iterated upon."""
         ...
 
+    @property
+    def references_node_partition(self) -> bool:
+        """Return true if the output comes from a partitioned node.."""
+        ...
+
     def __iter__(self) -> Iterator:
         """Return an Iterator over the partitions of this output."""
+        ...
+
+    def consume(self):
+        """Mark this output as consumed by another node."""
         ...

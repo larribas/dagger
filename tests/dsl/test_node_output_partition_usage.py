@@ -9,7 +9,7 @@ from dagger.dsl.serialize import Serialize
 from dagger.serializer import DefaultSerializer
 
 
-def test__node_output_key_usage__conforms_to_protocol():
+def test__node_output_partition_usage__conforms_to_protocol():
     assert isinstance(
         NodeOutputPartitionUsage(
             NodeOutputUsage(
@@ -29,7 +29,7 @@ def test__node_output_partition_usage__properties():
     output_partition = NodeOutputPartitionUsage(output)
     assert output_partition.invocation_id == "x"
     assert output_partition.output_name == "return_value"
-    assert output_partition.is_partitioned is False
+    assert output_partition.is_partitioned is True
     assert output_partition.serializer == DefaultSerializer
     assert output_partition.wrapped_reference == output
 
