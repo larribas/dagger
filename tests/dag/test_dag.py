@@ -121,6 +121,22 @@ def test__init__with_an_output_that_references_a_nonexistent_node_output():
     )
 
 
+def test__init__with_two_outputs_referencing_the_same_node_output():
+    with pytest.raises(ValueError) as e:
+        DAG(
+            nodes={"my-node": Task(lambda: 1, outputs=dict(x=FromReturnValue()))},
+            outputs=dict(
+                x1=FromNodeOutput("my-node", "x"),
+                x2=FromNodeOutput("my-node", "x"),
+            ),
+        )
+
+    assert (
+        str(e.value)
+        == "Multiple DAG outputs depend on the same node output. This is not a valid pattern in dagger due to the ambiguity and potential problems it may cause."
+    )
+
+
 def test__init__with_a_node_that_references_another_that_does_not_exist():
     with pytest.raises(ValueError) as e:
         DAG(
@@ -270,6 +286,82 @@ def test__init__with_nested_dags():
     # Then, no validation exceptions are raised
 
 
+def test__init__partitioned_by_nonexistent_input():
+    with pytest.raises(ValueError) as e:
+        DAG(
+            inputs={
+                "z": FromParam(),
+                "a": FromParam(),
+            },
+            nodes={
+                "x": Task(lambda: 1),
+            },
+            partition_by_input="b",
+        )
+
+    assert (
+        str(e.value)
+        == "This node is partitioned by 'b'. However, 'b' is not an input of the node. The available inputs are ['a', 'z']."
+    )
+
+
+def test__init__with_dag_output_from_a_partitioned_node():
+    with pytest.raises(ValueError) as e:
+        DAG(
+            outputs={"r": FromNodeOutput("map", "n")},
+            nodes={
+                "fan-out": Task(
+                    lambda: [1, 2, 3],
+                    outputs={"n": FromReturnValue(is_partitioned=True)},
+                ),
+                "map": Task(
+                    lambda n: n,
+                    inputs={
+                        "n": FromNodeOutput("fan-out", "n"),
+                    },
+                    outputs={
+                        "n": FromReturnValue(),
+                    },
+                    partition_by_input="n",
+                ),
+            },
+        )
+
+    assert (
+        str(e.value)
+        == "Output 'r' comes from node 'map', which is partitioned. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+    )
+
+
+def test__init__partitioned_by_output_of_partitioned_node():
+    with pytest.raises(ValueError) as e:
+        DAG(
+            {
+                "fan-out": Task(
+                    lambda: [1, 2],
+                    outputs={"numbers": FromReturnValue(is_partitioned=True)},
+                ),
+                "map-1": Task(
+                    lambda n: n,
+                    inputs={"n": FromNodeOutput("fan-out", "numbers")},
+                    outputs={"n": FromReturnValue()},
+                    partition_by_input="n",
+                ),
+                "map-2": Task(
+                    lambda n: n,
+                    inputs={"n": FromNodeOutput("map-1", "n")},
+                    outputs={"n": FromReturnValue()},
+                    partition_by_input="n",
+                ),
+            }
+        )
+
+    assert (
+        str(e.value)
+        == "Error validating input 'n' of node 'map-2': This node is partitioned by an input that comes from the output of another partitioned node. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+    )
+
+
 #
 # Node execution order
 #
@@ -370,6 +462,18 @@ def test__runtime_options__returns_specified_options():
         runtime_options=options,
     )
     assert dag.runtime_options == options
+
+
+def test__partition_by_input():
+    assert DAG({"my-node": Task(lambda: 1)}).partition_by_input is None
+    assert (
+        DAG(
+            inputs={"a": FromParam()},
+            nodes={"x": Task(lambda: 1)},
+            partition_by_input="a",
+        ).partition_by_input
+        == "a"
+    )
 
 
 def test__eq():

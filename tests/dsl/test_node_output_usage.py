@@ -1,9 +1,12 @@
-from dagger.dsl.node_outputs import (
-    NodeOutputKeyUsage,
-    NodeOutputPropertyUsage,
-    NodeOutputReference,
-    NodeOutputUsage,
-)
+from typing import Iterable
+
+import pytest
+
+from dagger.dsl.node_output_key_usage import NodeOutputKeyUsage
+from dagger.dsl.node_output_partition_usage import NodeOutputPartitionUsage
+from dagger.dsl.node_output_property_usage import NodeOutputPropertyUsage
+from dagger.dsl.node_output_reference import NodeOutputReference
+from dagger.dsl.node_output_usage import NodeOutputUsage
 from dagger.dsl.serialize import Serialize
 from dagger.serializer import AsPickle, DefaultSerializer
 
@@ -18,36 +21,16 @@ def test__node_output_usage__conforms_to_protocol():
     )
 
 
-def test__node_output_property_usage__conforms_to_protocol():
-    assert isinstance(
-        NodeOutputPropertyUsage(
-            invocation_id="x",
-            output_name="y",
-            property_name="z",
-            serializer=DefaultSerializer,
-        ),
-        NodeOutputReference,
-    )
-
-
-def test__node_output_key_usage__conforms_to_protocol():
-    assert isinstance(
-        NodeOutputKeyUsage(
-            invocation_id="x",
-            output_name="y",
-            key_name="z",
-            serializer=DefaultSerializer,
-        ),
-        NodeOutputReference,
-    )
-
-
-def test__node_output_usage__returns_an_empty_set_of_references_if_it_is_never_used():
+def test__node_output_usage__properties():
     output = NodeOutputUsage(
         invocation_id="x",
         serialize_annotation=Serialize(),
     )
-    assert len(output.references) == 0
+    assert output.invocation_id == "x"
+    assert output.output_name == "return_value"
+    assert output.serializer == DefaultSerializer
+    assert output.is_partitioned is False
+    assert output.references == set()
 
 
 def test__node_output_usage__returns_itself_if_it_is_explicitly_consumed():
@@ -121,3 +104,31 @@ def test__node_output_usage__captures_serializer_from_annotation():
         serialize_annotation=Serialize(AsPickle()),
     )
     assert output.serializer == AsPickle()
+
+
+def test__node_output_usage__accessing_meta_attribute():
+    output = NodeOutputUsage(
+        invocation_id="x",
+        serialize_annotation=Serialize(),
+    )
+    with pytest.raises(ValueError) as e:
+        output.__x__
+
+    assert (
+        str(e.value)
+        == "You are trying to reference attribute named '__x__'. Attributes of the form __name__ are used internally by Python and they are not available within the scope of the dagger DSL."
+    )
+
+
+def test__node_output_usage__is_iterable():
+    output = NodeOutputUsage(
+        invocation_id="x",
+        serialize_annotation=Serialize(),
+    )
+
+    assert isinstance(output, Iterable)
+
+    # When we iterate over it
+    assert list(output) == [NodeOutputPartitionUsage(output)]
+    assert output.is_partitioned is True
+    assert output.references == {output}

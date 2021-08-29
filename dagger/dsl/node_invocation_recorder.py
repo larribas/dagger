@@ -5,14 +5,16 @@ import uuid
 from typing import Any, Callable, Mapping, Optional, Sequence
 
 from dagger.dsl.context import node_invocations
-from dagger.dsl.errors import NodeInvokedWithMismatchedArgumentsError
 from dagger.dsl.node_invocations import (
     NodeInputReference,
     NodeInvocation,
     NodeType,
     is_node_input_reference,
 )
-from dagger.dsl.node_outputs import NodeOutputUsage
+from dagger.dsl.node_output_partition_fan_in import NodeOutputPartitionFanIn
+from dagger.dsl.node_output_partition_usage import NodeOutputPartitionUsage
+from dagger.dsl.node_output_reference import NodeOutputReference
+from dagger.dsl.node_output_usage import NodeOutputUsage
 from dagger.dsl.serialize import Serialize, find_serialize_annotation
 
 
@@ -59,10 +61,13 @@ class NodeInvocationRecorder:
         """
         invocation_id = self._overridden_id or uuid.uuid4().hex
         arguments = self._bind_arguments(*args, **kwargs)
+        partition_by_input = self._partition_by_input(arguments)
         self._consume_node_output_references(list(arguments.values()))
+
         output = NodeOutputUsage(
             invocation_id=invocation_id,
             serialize_annotation=find_serialize_annotation(self._func) or Serialize(),
+            references_node_partition=bool(partition_by_input),
         )
 
         invocations = node_invocations.get([])
@@ -75,6 +80,7 @@ class NodeInvocationRecorder:
                 inputs=self._inputs(arguments),
                 output=output,
                 runtime_options=self._runtime_options,
+                partition_by_input=partition_by_input,
             ),
         )
         node_invocations.set(invocations)
@@ -102,11 +108,33 @@ class NodeInvocationRecorder:
         try:
             bound_args = sig.bind(*args, **kwargs)
         except TypeError as e:
-            raise NodeInvokedWithMismatchedArgumentsError(
+            raise TypeError(
                 f"You have invoked the task '{self._func.__name__}' with the following arguments: args={args} kwargs={kwargs}. However, the signature of the function is '{sig}'. The following error was raised as a result of this mismatch: {e}"
+            ) from e
+
+        return {
+            k: self._sanitize_argument(k, v) for k, v in bound_args.arguments.items()
+        }
+
+    def _sanitize_argument(self, name: str, arg: Any) -> Any:
+        # Case 1: Fan-in of multiple outputs from a partitioned node
+        if (
+            isinstance(arg, Sequence)
+            and len(arg) == 1
+            and isinstance(arg[0], NodeOutputReference)
+            and arg[0].references_node_partition
+        ):
+            return NodeOutputPartitionFanIn(arg[0])
+
+        # Case 2: Mixed literals and references
+        if isinstance(arg, Sequence) and any(
+            [isinstance(item, NodeOutputReference) for item in arg]
+        ):
+            raise ValueError(
+                f"Argument '{name}' of type '{type(arg).__name__}' is invalid. Arguments of this type may only contain literal/hardcoded values, or references to the same output from a partitioned node."
             )
 
-        return bound_args.arguments
+        return arg
 
     def _consume_node_output_references(self, arguments: Sequence[Any]):
         """
@@ -116,7 +144,7 @@ class NodeInvocationRecorder:
         See the documentation of the `.consume()` function to understand why.
         """
         for arg in arguments:
-            if isinstance(arg, NodeOutputUsage):
+            if isinstance(arg, NodeOutputReference):
                 arg.consume()
 
     def _func_with_preset_params(self, arguments: Mapping[str, Any]) -> Callable:
@@ -156,6 +184,24 @@ class NodeInvocationRecorder:
             for argument_name, argument_value in arguments.items()
             if is_node_input_reference(argument_value)
         }
+
+    def _partition_by_input(self, arguments: Mapping[str, Any]) -> Optional[str]:
+        partitioned_inputs = {
+            k: v
+            for k, v in arguments.items()
+            if isinstance(v, NodeOutputPartitionUsage)
+            or (isinstance(v, NodeOutputReference) and v.references_node_partition)
+        }
+
+        if len(partitioned_inputs) >= 2:
+            raise ValueError(
+                f"The following inputs to this node are partitioned: {sorted(list(partitioned_inputs))}. However, nodes may only be partitioned by one of their inputs. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+            )
+
+        if partitioned_inputs:
+            return next(iter(partitioned_inputs.keys()))
+
+        return None
 
     def __repr__(self) -> str:
         """Get a human-readable string representation of this object."""

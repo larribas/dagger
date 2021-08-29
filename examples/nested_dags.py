@@ -34,25 +34,33 @@ from dagger.output import FromKey, FromReturnValue
 
 
 def brainstorm_themes() -> Mapping[str, str]:  # noqa
-    return {
+    themes = {
         "first": "love",
         "second": "loss",
     }
+    print(f"Themes: {themes}")
+    return themes
 
 
 def compose_song(theme: str, style: str) -> str:  # noqa
-    return f"{style} song about {theme}"
+    composition = f"{style} song about {theme}"
+    print(f"Composition: {composition}")
+    return composition
 
 
 def record_song(composition: str) -> str:  # noqa
-    return f"recording of ({composition})"
+    recording = f"recording of ({composition})"
+    print(f"Recording: {recording}")
+    return recording
 
 
 def publish_album(album_name: str, first_song: str, second_song: str) -> dict:  # noqa
-    return {
+    album = {
         "name": album_name,
         "tracks": [first_song, second_song],
     }
+    print(f"Album: {album}")
+    return album
 
 
 def compose_and_record_song(theme, style):  # noqa

@@ -8,3 +8,4 @@ It runs all tasks/DAGs using the "local" runtime.
 """
 
 from dagger.runtime.cli.cli import invoke  # noqa
+from dagger.runtime.cli.locations import PARTITION_MANIFEST_FILENAME  # noqa

@@ -3,26 +3,26 @@
 import inspect
 from contextvars import copy_context
 from itertools import groupby
-from typing import Any, Callable, List, Mapping, Union
+from typing import Any, Callable, List, Mapping, Optional, Union
 
 from dagger.dag import DAG, Node
 from dagger.dag import SupportedOutputs as SupportedDAGOutputs
 from dagger.dsl.context import node_invocations
-from dagger.dsl.errors import POTENTIAL_BUG_MESSAGE
 from dagger.dsl.node_invocation_recorder import NodeInvocationRecorder
 from dagger.dsl.node_invocations import NodeInputReference, NodeInvocation, NodeType
-from dagger.dsl.node_outputs import (
-    NodeOutputKeyUsage,
-    NodeOutputPropertyUsage,
-    NodeOutputReference,
-    NodeOutputUsage,
-)
+from dagger.dsl.node_output_key_usage import NodeOutputKeyUsage
+from dagger.dsl.node_output_partition_usage import NodeOutputPartitionUsage
+from dagger.dsl.node_output_property_usage import NodeOutputPropertyUsage
+from dagger.dsl.node_output_reference import NodeOutputReference
+from dagger.dsl.node_output_usage import NodeOutputUsage
 from dagger.dsl.parameter_usage import ParameterUsage
 from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromKey, FromProperty, FromReturnValue
 from dagger.serializer import DefaultSerializer
 from dagger.task import SupportedOutputs as SupportedTaskOutputs
 from dagger.task import Task
+
+POTENTIAL_BUG_MESSAGE = "If you are seeing this error, this is probably a bug in the library. Please check our GitHub repository to see whether the bug has already been reported/fixed. Otherwise, please create a ticket."
 
 
 def build(dag: NodeInvocationRecorder) -> DAG:
@@ -32,6 +32,7 @@ def build(dag: NodeInvocationRecorder) -> DAG:
         inputs_from_parent={},
         parent_node_names_by_id={},
         runtime_options=dag.runtime_options,
+        partition_by_input=None,
     )
 
 
@@ -40,6 +41,7 @@ def _build(
     inputs_from_parent: Mapping[str, NodeInputReference],
     parent_node_names_by_id: Mapping[str, str],
     runtime_options: Mapping[str, Any],
+    partition_by_input: Optional[str],
 ) -> DAG:
     """
     Invoke the builder function and return the DAG data structure it defines.
@@ -118,6 +120,7 @@ def _build(
         outputs=dag_outputs,
         nodes=dag_nodes,
         runtime_options=runtime_options,
+        partition_by_input=partition_by_input,
     )
 
 
@@ -260,15 +263,23 @@ def _build_task_output(
 ) -> SupportedTaskOutputs:
     if isinstance(node_output_reference, NodeOutputKeyUsage):
         return FromKey(
-            node_output_reference.key_name, serializer=node_output_reference.serializer
+            node_output_reference.key_name,
+            serializer=node_output_reference.serializer,
+            is_partitioned=node_output_reference.is_partitioned,
         )
     elif isinstance(node_output_reference, NodeOutputPropertyUsage):
         return FromProperty(
             node_output_reference.property_name,
             serializer=node_output_reference.serializer,
+            is_partitioned=node_output_reference.is_partitioned,
         )
     elif isinstance(node_output_reference, NodeOutputUsage):
-        return FromReturnValue(serializer=node_output_reference.serializer)
+        return FromReturnValue(
+            serializer=node_output_reference.serializer,
+            is_partitioned=node_output_reference.is_partitioned,
+        )
+    elif isinstance(node_output_reference, NodeOutputPartitionUsage):
+        return _build_task_output(node_output_reference.wrapped_reference)
     else:
         raise NotImplementedError(
             f"The DSL is not compatible with node outputs of type '{type(node_output_reference).__name__}'. {POTENTIAL_BUG_MESSAGE}"
@@ -294,6 +305,7 @@ def _build_node(
                 for ref in node_invocation.output.references
             },
             runtime_options=node_invocation.runtime_options,
+            partition_by_input=node_invocation.partition_by_input,
         )
     elif node_invocation.node_type == NodeType.DAG:
         return _build_from_parent(
@@ -321,4 +333,5 @@ def _build_from_parent(
         inputs_from_parent=invocation.inputs,
         parent_node_names_by_id=parent_node_names_by_id,
         runtime_options=invocation.runtime_options or {},
+        partition_by_input=invocation.partition_by_input,
     )

@@ -9,6 +9,8 @@ knowledge about the internal data structures that build the DAG under the hood.
 import random
 from typing import Annotated, Mapping
 
+import pytest
+
 import dagger.dsl as dsl
 from dagger.dag import DAG
 from dagger.input import FromNodeOutput, FromParam
@@ -541,4 +543,223 @@ def test__overriding_serializers():
                 ),
             },
         ),
+    )
+
+
+def test__map_reduce():
+    @dsl.task
+    def generate_numbers():
+        return [1, 2, 3]
+
+    @dsl.task
+    def map_number(n, exponent):
+        return n ** exponent
+
+    @dsl.task
+    def sum_numbers(numbers):
+        return sum(numbers)
+
+    @dsl.DAG
+    def dag(exponent):
+        return sum_numbers(
+            [
+                map_number(n=partition, exponent=exponent)
+                for partition in generate_numbers()
+            ]
+        )
+
+    verify_dags_are_equivalent(
+        dsl.build(dag),
+        DAG(
+            inputs={
+                "exponent": FromParam("exponent"),
+            },
+            outputs={
+                "return_value": FromNodeOutput("sum-numbers", "return_value"),
+            },
+            nodes={
+                "generate-numbers": Task(
+                    generate_numbers.func,
+                    outputs={
+                        "return_value": FromReturnValue(is_partitioned=True),
+                    },
+                ),
+                "map-number": Task(
+                    map_number.func,
+                    inputs={
+                        "n": FromNodeOutput("generate-numbers", "return_value"),
+                        "exponent": FromParam("exponent"),
+                    },
+                    outputs={
+                        "return_value": FromReturnValue(),
+                    },
+                    partition_by_input="n",
+                ),
+                "sum-numbers": Task(
+                    sum_numbers.func,
+                    inputs={
+                        "numbers": FromNodeOutput("map-number", "return_value"),
+                    },
+                    outputs={
+                        "return_value": FromReturnValue(),
+                    },
+                ),
+            },
+        ),
+    )
+
+
+def test__nested_map_reduce():
+    @dsl.task
+    def generate_numbers(partitions):
+        return list(range(partitions))
+
+    @dsl.task
+    def map_number(n, exponent):
+        return n ** exponent
+
+    @dsl.task
+    def sum_numbers(numbers):
+        return sum(numbers)
+
+    @dsl.DAG
+    def map_reduce(partitions, exponent):
+        return sum_numbers(
+            [
+                map_number(n=partition, exponent=exponent)
+                for partition in generate_numbers(partitions)
+            ]
+        )
+
+    @dsl.DAG
+    def dag(partitions, exponent):
+        return sum_numbers(
+            [
+                map_reduce(partitions=partition, exponent=exponent)
+                for partition in generate_numbers(partitions)
+            ]
+        )
+
+    verify_dags_are_equivalent(
+        dsl.build(dag),
+        DAG(
+            inputs={
+                "exponent": FromParam("exponent"),
+                "partitions": FromParam("partitions"),
+            },
+            outputs={
+                "return_value": FromNodeOutput("sum-numbers", "return_value"),
+            },
+            nodes={
+                "generate-numbers": Task(
+                    generate_numbers.func,
+                    inputs={
+                        "partitions": FromParam("partitions"),
+                    },
+                    outputs={
+                        "return_value": FromReturnValue(is_partitioned=True),
+                    },
+                ),
+                "map-reduce": DAG(
+                    inputs={
+                        "exponent": FromParam("exponent"),
+                        "partitions": FromNodeOutput(
+                            "generate-numbers", "return_value"
+                        ),
+                    },
+                    outputs={
+                        "return_value": FromNodeOutput("sum-numbers", "return_value"),
+                    },
+                    nodes={
+                        "generate-numbers": Task(
+                            generate_numbers.func,
+                            inputs={
+                                "partitions": FromParam("partitions"),
+                            },
+                            outputs={
+                                "return_value": FromReturnValue(is_partitioned=True),
+                            },
+                        ),
+                        "map-number": Task(
+                            map_number.func,
+                            inputs={
+                                "n": FromNodeOutput("generate-numbers", "return_value"),
+                                "exponent": FromParam("exponent"),
+                            },
+                            outputs={
+                                "return_value": FromReturnValue(),
+                            },
+                            partition_by_input="n",
+                        ),
+                        "sum-numbers": Task(
+                            sum_numbers.func,
+                            inputs={
+                                "numbers": FromNodeOutput("map-number", "return_value"),
+                            },
+                            outputs={
+                                "return_value": FromReturnValue(),
+                            },
+                        ),
+                    },
+                ),
+                "sum-numbers": Task(
+                    sum_numbers.func,
+                    inputs={
+                        "numbers": FromNodeOutput("map-reduce", "return_value"),
+                    },
+                    outputs={
+                        "return_value": FromReturnValue(),
+                    },
+                ),
+            },
+        ),
+    )
+
+
+def test__multiple_map_operations():
+    @dsl.task
+    def generate_numbers():
+        return [1, 2, 3]
+
+    @dsl.task
+    def double(n):
+        return n * 2
+
+    @dsl.DAG
+    def dag():
+        numbers = generate_numbers()
+
+        for n in numbers:
+            n2 = double(n)
+            double(n2)
+
+    with pytest.raises(ValueError) as e:
+        dsl.build(dag)
+
+    assert (
+        str(e.value)
+        == "Error validating input 'n' of node 'double-2': This node is partitioned by an input that comes from the output of another partitioned node. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+    )
+
+
+def test__nested_for_loops():
+    @dsl.task
+    def generate_numbers(partitions):
+        return list(range(partitions))
+
+    @dsl.DAG
+    def dag(partitions):
+        partitions = generate_numbers(partitions)
+
+        for partition in partitions:
+            nested_partitions = generate_numbers(partition)
+            for nested_partition in nested_partitions:
+                generate_numbers(nested_partition)
+
+    with pytest.raises(ValueError) as e:
+        dsl.build(dag)
+
+    assert (
+        str(e.value)
+        == "Partitioned nodes may not generate partitioned outputs. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
     )

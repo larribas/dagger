@@ -11,7 +11,13 @@ spec:
       value: "hip hop"
   entrypoint: dag
   templates:
-  - inputs:
+  - name: dag
+    inputs:
+      parameters:
+      - name: name
+        value: dag
+      - name: album_output_path
+        value: "{{workflow.uid}}/dag/album.json"
       artifacts:
       - name: album_name
         raw:
@@ -19,49 +25,92 @@ spec:
       - name: style
         raw:
           data: '"{{workflow.parameters.style}}"'
+    outputs:
+      artifacts:
+      - name: album
+        s3:
+          key: "{{inputs.parameters.album_output_path}}"
     dag:
       tasks:
       - name: brainstorm-themes
         template: dag-brainstorm-themes
-      - arguments:
-          artifacts:
-          - from: '{{tasks.brainstorm-themes.outputs.artifacts.first_theme}}'
-            name: theme
-          - from: '{{inputs.artifacts.style}}'
-            name: style
-        dependencies:
-        - brainstorm-themes
-        name: record-first-song
+        arguments:
+          parameters:
+          - name: first_theme_output_path
+            value: "{{workflow.uid}}/{{inputs.parameters.name}}/brainstorm-themes/first_theme.json"
+          - name: second_theme_output_path
+            value: "{{workflow.uid}}/{{inputs.parameters.name}}/brainstorm-themes/second_theme.json"
+      - name: record-first-song
         template: dag-record-first-song
-      - arguments:
-          artifacts:
-          - from: '{{tasks.brainstorm-themes.outputs.artifacts.second_theme}}'
-            name: theme
-          - from: '{{inputs.artifacts.style}}'
-            name: style
         dependencies:
         - brainstorm-themes
-        name: record-second-song
-        template: dag-record-second-song
-      - arguments:
+        arguments:
+          parameters:
+          - name: name
+            value: "{{inputs.parameters.name}}-record-first-song"
+          - name: song_output_path
+            value: "{{workflow.uid}}/{{inputs.parameters.name}}/record-first-song/song.json"
           artifacts:
-          - from: '{{inputs.artifacts.album_name}}'
-            name: album_name
-          - from: '{{tasks.record-first-song.outputs.artifacts.song}}'
-            name: first_song
-          - from: '{{tasks.record-second-song.outputs.artifacts.song}}'
-            name: second_song
+          - name: style
+            from: "{{inputs.artifacts.style}}"
+          - name: theme
+            s3:
+              key: "{{workflow.uid}}/{{inputs.parameters.name}}/brainstorm-themes/first_theme.json"
+      - name: record-second-song
+        template: dag-record-second-song
+        dependencies:
+        - brainstorm-themes
+        arguments:
+          parameters:
+          - name: name
+            value: "{{inputs.parameters.name}}-record-second-song"
+          - name: song_output_path
+            value: "{{workflow.uid}}/{{inputs.parameters.name}}/record-second-song/song.json"
+          artifacts:
+          - name: style
+            from: "{{inputs.artifacts.style}}"
+          - name: theme
+            s3:
+              key: "{{workflow.uid}}/{{inputs.parameters.name}}/brainstorm-themes/second_theme.json"
+      - name: publish-album
+        template: dag-publish-album
         dependencies:
         - record-first-song
         - record-second-song
-        name: publish-album
-        template: dag-publish-album
-    name: dag
+        arguments:
+          parameters:
+          - name: album_output_path
+            value: "{{inputs.parameters.album_output_path}}"
+          artifacts:
+          - name: album_name
+            from: '{{inputs.artifacts.album_name}}'
+          - name: first_song
+            s3:
+              key: "{{workflow.uid}}/{{inputs.parameters.name}}/record-first-song/song.json"
+          - name: second_song
+            s3:
+              key: "{{workflow.uid}}/{{inputs.parameters.name}}/record-second-song/song.json"
+
+  - name: dag-brainstorm-themes
+    inputs:
+      parameters:
+      - name: first_theme_output_path
+      - name: second_theme_output_path
     outputs:
       artifacts:
-      - from: '{{tasks.publish-album.outputs.artifacts.album}}'
-        name: album
-  - container:
+      - name: first_theme
+        path: /tmp/outputs/first_theme.json
+        archive:
+          none: {}
+        s3:
+          key: "{{inputs.parameters.first_theme_output_path}}"
+      - name: second_theme
+        path: /tmp/outputs/second_theme.json
+        archive:
+          none: {}
+        s3:
+          key: "{{inputs.parameters.second_theme_output_path}}"
+    container:
       args:
       - --node-name
       - brainstorm-themes
@@ -77,44 +126,67 @@ spec:
       volumeMounts:
       - mountPath: /tmp/outputs/
         name: outputs
-    name: dag-brainstorm-themes
-    outputs:
-      artifacts:
-      - name: first_theme
-        path: /tmp/outputs/first_theme.json
-      - name: second_theme
-        path: /tmp/outputs/second_theme.json
     volumes:
     - emptyDir: {}
       name: outputs
-  - dag:
-      tasks:
-      - arguments:
-          artifacts:
-          - from: '{{inputs.artifacts.theme}}'
-            name: theme
-          - from: '{{inputs.artifacts.style}}'
-            name: style
-        name: compose
-        template: dag-record-first-song-compose
-      - arguments:
-          artifacts:
-          - from: '{{tasks.compose.outputs.artifacts.composition}}'
-            name: composition
-        dependencies:
-        - compose
-        name: record
-        template: dag-record-first-song-record
+
+  - name: dag-record-first-song
     inputs:
+      parameters:
+      - name: name
+      - name: song_output_path
       artifacts:
       - name: theme
       - name: style
-    name: dag-record-first-song
     outputs:
       artifacts:
-      - from: '{{tasks.record.outputs.artifacts.recording}}'
-        name: song
-  - container:
+      - name: song
+        s3:
+          key: "{{inputs.parameters.song_output_path}}"
+    dag:
+      tasks:
+      - name: compose
+        template: dag-record-first-song-compose
+        arguments:
+          parameters:
+          - name: composition_output_path
+            value: "{{workflow.uid}}/{{inputs.parameters.name}}/compose/composition.json"
+          artifacts:
+          - name: theme
+            from: '{{inputs.artifacts.theme}}'
+          - name: style
+            from: '{{inputs.artifacts.style}}'
+      - name: record
+        template: dag-record-first-song-record
+        dependencies:
+        - compose
+        arguments:
+          parameters:
+          - name: recording_output_path
+            value: "{{inputs.parameters.song_output_path}}"
+          artifacts:
+          - name: composition
+            s3:
+              key: "{{workflow.uid}}/{{inputs.parameters.name}}/compose/composition.json"
+
+  - name: dag-record-first-song-compose
+    inputs:
+      parameters:
+      - name: composition_output_path
+      artifacts:
+      - name: theme
+        path: /tmp/inputs/theme.json
+      - name: style
+        path: /tmp/inputs/style.json
+    outputs:
+      artifacts:
+      - name: composition
+        path: /tmp/outputs/composition.json
+        archive:
+          none: {}
+        s3:
+          key: "{{inputs.parameters.composition_output_path}}"
+    container:
       args:
       - --node-name
       - record-first-song.compose
@@ -133,21 +205,26 @@ spec:
       volumeMounts:
       - mountPath: /tmp/outputs/
         name: outputs
-    inputs:
-      artifacts:
-      - name: theme
-        path: /tmp/inputs/theme.json
-      - name: style
-        path: /tmp/inputs/style.json
-    name: dag-record-first-song-compose
-    outputs:
-      artifacts:
-      - name: composition
-        path: /tmp/outputs/composition.json
     volumes:
     - emptyDir: {}
       name: outputs
-  - container:
+
+  - name: dag-record-first-song-record
+    inputs:
+      parameters:
+      - name: recording_output_path
+      artifacts:
+      - name: composition
+        path: /tmp/inputs/composition.json
+    outputs:
+      artifacts:
+      - name: recording
+        archive:
+          none: {}
+        path: /tmp/outputs/recording.json
+        s3:
+          key: "{{inputs.parameters.recording_output_path}}"
+    container:
       args:
       - --node-name
       - record-first-song.record
@@ -163,46 +240,67 @@ spec:
       volumeMounts:
       - mountPath: /tmp/outputs/
         name: outputs
-    inputs:
-      artifacts:
-      - name: composition
-        path: /tmp/inputs/composition.json
-    name: dag-record-first-song-record
-    outputs:
-      artifacts:
-      - name: recording
-        path: /tmp/outputs/recording.json
     volumes:
     - emptyDir: {}
       name: outputs
-  - dag:
-      tasks:
-      - arguments:
-          artifacts:
-          - from: '{{inputs.artifacts.theme}}'
-            name: theme
-          - from: '{{inputs.artifacts.style}}'
-            name: style
-        name: compose
-        template: dag-record-second-song-compose
-      - arguments:
-          artifacts:
-          - from: '{{tasks.compose.outputs.artifacts.composition}}'
-            name: composition
-        dependencies:
-        - compose
-        name: record
-        template: dag-record-second-song-record
+
+  - name: dag-record-second-song
     inputs:
+      parameters:
+      - name: name
+      - name: song_output_path
       artifacts:
       - name: theme
       - name: style
-    name: dag-record-second-song
     outputs:
       artifacts:
-      - from: '{{tasks.record.outputs.artifacts.recording}}'
-        name: song
-  - container:
+      - name: song
+        s3:
+          key: "{{inputs.parameters.song_output_path}}"
+    dag:
+      tasks:
+      - name: compose
+        template: dag-record-second-song-compose
+        arguments:
+          parameters:
+          - name: composition_output_path
+            value: "{{workflow.uid}}/{{inputs.parameters.name}}/compose/composition.json"
+          artifacts:
+          - name: theme
+            from: '{{inputs.artifacts.theme}}'
+          - name: style
+            from: '{{inputs.artifacts.style}}'
+      - name: record
+        template: dag-record-second-song-record
+        dependencies:
+        - compose
+        arguments:
+          parameters:
+          - name: recording_output_path
+            value: "{{inputs.parameters.song_output_path}}"
+          artifacts:
+          - name: composition
+            s3:
+              key: "{{workflow.uid}}/{{inputs.parameters.name}}/compose/composition.json"
+
+  - name: dag-record-second-song-compose
+    inputs:
+      parameters:
+      - name: composition_output_path
+      artifacts:
+      - name: theme
+        path: /tmp/inputs/theme.json
+      - name: style
+        path: /tmp/inputs/style.json
+    outputs:
+      artifacts:
+      - name: composition
+        path: /tmp/outputs/composition.json
+        archive:
+          none: {}
+        s3:
+          key: "{{inputs.parameters.composition_output_path}}"
+    container:
       args:
       - --node-name
       - record-second-song.compose
@@ -221,21 +319,26 @@ spec:
       volumeMounts:
       - mountPath: /tmp/outputs/
         name: outputs
-    inputs:
-      artifacts:
-      - name: theme
-        path: /tmp/inputs/theme.json
-      - name: style
-        path: /tmp/inputs/style.json
-    name: dag-record-second-song-compose
-    outputs:
-      artifacts:
-      - name: composition
-        path: /tmp/outputs/composition.json
     volumes:
     - emptyDir: {}
       name: outputs
-  - container:
+
+  - name: dag-record-second-song-record
+    inputs:
+      parameters:
+      - name: recording_output_path
+      artifacts:
+      - name: composition
+        path: /tmp/inputs/composition.json
+    outputs:
+      artifacts:
+      - name: recording
+        archive:
+          none: {}
+        path: /tmp/outputs/recording.json
+        s3:
+          key: "{{inputs.parameters.recording_output_path}}"
+    container:
       args:
       - --node-name
       - record-second-song.record
@@ -251,19 +354,30 @@ spec:
       volumeMounts:
       - mountPath: /tmp/outputs/
         name: outputs
-    inputs:
-      artifacts:
-      - name: composition
-        path: /tmp/inputs/composition.json
-    name: dag-record-second-song-record
-    outputs:
-      artifacts:
-      - name: recording
-        path: /tmp/outputs/recording.json
     volumes:
     - emptyDir: {}
       name: outputs
-  - container:
+
+  - name: dag-publish-album
+    inputs:
+      parameters:
+      - name: album_output_path
+      artifacts:
+      - name: album_name
+        path: /tmp/inputs/album_name.json
+      - name: first_song
+        path: /tmp/inputs/first_song.json
+      - name: second_song
+        path: /tmp/inputs/second_song.json
+    outputs:
+      artifacts:
+      - name: album
+        path: /tmp/outputs/album.json
+        archive:
+          none: {}
+        s3:
+          key: "{{inputs.parameters.album_output_path}}"
+    container:
       args:
       - --node-name
       - publish-album
@@ -285,19 +399,6 @@ spec:
       volumeMounts:
       - mountPath: /tmp/outputs/
         name: outputs
-    inputs:
-      artifacts:
-      - name: album_name
-        path: /tmp/inputs/album_name.json
-      - name: first_song
-        path: /tmp/inputs/first_song.json
-      - name: second_song
-        path: /tmp/inputs/second_song.json
-    name: dag-publish-album
-    outputs:
-      artifacts:
-      - name: album
-        path: /tmp/outputs/album.json
     volumes:
     - emptyDir: {}
       name: outputs

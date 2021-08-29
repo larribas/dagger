@@ -1,7 +1,7 @@
 """Define the data structure for a DAG and validate all its components upon initialization."""
 import re
 import warnings
-from typing import Any, List, Mapping, Set, Union
+from typing import Any, List, Mapping, Optional, Set, Union
 from typing import get_args as get_type_args
 
 from dagger.dag.topological_sort import topological_sort
@@ -47,6 +47,7 @@ class DAG:
         inputs: Mapping[str, SupportedInputs] = None,
         outputs: Mapping[str, SupportedOutputs] = None,
         runtime_options: Mapping[str, Any] = None,
+        partition_by_input: Optional[str] = None,
     ):
         """
         Validate and initialize a DAG.
@@ -70,6 +71,9 @@ class DAG:
             This allows you to take full advantage of the features of each runtime. For instance, you can use it to manipulate node affinities and tolerations in Kubernetes.
             Check the documentation of each runtime to see potential options.
 
+        partition_by_input
+            If specified, it signals the task should be run as many times as partitions in the specified input.
+            Each of the executions will only receive one of the partitions of that input.
 
         Returns
         -------
@@ -115,10 +119,16 @@ class DAG:
         _validate_node_input_dependencies(nodes, inputs)
         _validate_outputs(nodes, outputs)
 
+        if partition_by_input and partition_by_input not in inputs:
+            raise ValueError(
+                f"This node is partitioned by '{partition_by_input}'. However, '{partition_by_input}' is not an input of the node. The available inputs are {sorted(list(inputs))}."
+            )
+
         self._nodes = nodes
         self._inputs = inputs
         self._outputs = outputs
         self._runtime_options = runtime_options or {}
+        self._partition_by_input = partition_by_input
         self._node_execution_order = topological_sort(
             {
                 node_name: _node_dependencies(nodes[node_name].inputs)
@@ -147,6 +157,11 @@ class DAG:
         return self._runtime_options
 
     @property
+    def partition_by_input(self) -> Optional[str]:
+        """Return the input this task should be partitioned by, if any."""
+        return self._partition_by_input
+
+    @property
     def node_execution_order(self) -> List[Set[str]]:
         """
         Get a list of nodes to execute in order, respecting dependencies between nodes.
@@ -158,6 +173,17 @@ class DAG:
             The list represents the right order of execution for each of the sets.
         """
         return self._node_execution_order
+
+    def __repr__(self) -> str:
+        """Return a human-readable representation of the DAG."""
+        return f"""DAG(
+            inputs={self._inputs}, 
+            outputs={self._outputs}, 
+            runtime_options={self._runtime_options}, 
+            partition_by_input={self._partition_by_input},
+            nodes={self._nodes},
+        )
+        """
 
     def __eq__(self, obj) -> bool:
         """Return true if the two DAGs are equivalent to each other."""
@@ -231,19 +257,28 @@ def _node_dependencies(node_inputs: Mapping[str, SupportedTaskInputs]) -> Set[st
 
 def _validate_outputs(
     dag_nodes: Mapping[str, Node],
-    dag_outputs: Mapping[str, SupportedOutputs],
+    dag_outputs: Mapping[str, FromNodeOutput],
 ):
-    for output_name in dag_outputs:
-        output = dag_outputs[output_name]
-        if output.node not in dag_nodes:
+    for output_name, output_type in dag_outputs.items():
+        if output_type.node not in dag_nodes:
             raise ValueError(
-                f"Output '{output_name}' depends on the output of a node named '{output.node}'. However, the DAG does not contain any node with such a name. These are the nodes contained by the DAG: {list(dag_nodes)}"
+                f"Output '{output_name}' depends on the output of a node named '{output_type.node}'. However, the DAG does not contain any node with such a name. These are the nodes contained by the DAG: {list(dag_nodes)}"
             )
 
-        referenced_node_outputs = dag_nodes[output.node].outputs
-        if output.output not in referenced_node_outputs:
+        referenced_node = dag_nodes[output_type.node]
+        if output_type.output not in referenced_node.outputs:
             raise ValueError(
-                f"Output '{output_name}' depends on the output '{output.output}' of another node named '{output.node}'. However, node '{output.node}' does not declare any output with such a name. These are the outputs defined by the node: {list(referenced_node_outputs)}"
+                f"Output '{output_name}' depends on the output '{output_type.output}' of another node named '{output_type.node}'. However, node '{output_type.node}' does not declare any output with such a name. These are the outputs defined by the node: {list(referenced_node.outputs)}"
+            )
+
+        if referenced_node.partition_by_input:
+            raise ValueError(
+                f"Output '{output_name}' comes from node '{output_type.node}', which is partitioned. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+            )
+
+        if len(set(dag_outputs.values())) != len(dag_outputs):
+            raise ValueError(
+                "Multiple DAG outputs depend on the same node output. This is not a valid pattern in dagger due to the ambiguity and potential problems it may cause."
             )
 
 
@@ -258,24 +293,23 @@ def _validate_node_input_dependencies(
 ):
     for node_name in dag_nodes:
         node = dag_nodes[node_name]
-        for input_name in node.inputs:
-            node_input = node.inputs[input_name]
+        for input_name, input_type in node.inputs.items():
             try:
-                if isinstance(node_input, FromParam):
+                if isinstance(input_type, FromParam):
                     _validate_input_from_param(
                         input_name=input_name,
-                        input=node_input,
+                        input_type=input_type,
                         dag_inputs=dag_inputs,
                     )
-                elif isinstance(node_input, FromNodeOutput):
+                elif isinstance(input_type, FromNodeOutput):
                     _validate_input_from_node_output(
                         node_name=node_name,
-                        input=node_input,
+                        input_type=input_type,
                         dag_nodes=dag_nodes,
                     )
                 else:
                     raise Exception(
-                        f"Whoops. The current version of the library doesn't seem to support inputs of type '{type(node_input)}'. This is most likely unintended. Please, check the GitHub project to see if this issue has already been reported and addressed in a newer version. Otherwise, please report this as a bug in our GitHub tracker. Sorry for the inconvenience."
+                        f"Whoops. The current version of the library doesn't seem to support inputs of type '{type(input_type)}'. This is most likely unintended. Please, check the GitHub project to see if this issue has already been reported and addressed in a newer version. Otherwise, please report this as a bug in our GitHub tracker. Sorry for the inconvenience."
                     )
 
             except (TypeError, ValueError) as e:
@@ -286,42 +320,50 @@ def _validate_node_input_dependencies(
 
 def _validate_input_from_param(
     input_name: str,
-    input: FromParam,
+    input_type: FromParam,
     dag_inputs: Mapping[str, SupportedInputs],
 ):
     # If the param name has not been overridden, we assume it has the same name as the input
-    name = input.name or input_name
+    name = input_type.name or input_name
 
     if name not in dag_inputs:
         raise ValueError(
             f"This input depends on a parameter named '{name}' being injected into the DAG. However, the DAG does not have any parameter with such a name. These are the parameters the DAG receives: {sorted(list(dag_inputs))}"
         )
 
-    if input.serializer != dag_inputs[name].serializer:
+    if input_type.serializer != dag_inputs[name].serializer:
         raise ValueError(
-            f"This input is serialized {input.serializer}. However, the input it references is serialized {dag_inputs[name].serializer}."
+            f"This input is serialized {input_type.serializer}. However, the input it references is serialized {dag_inputs[name].serializer}."
         )
 
 
 def _validate_input_from_node_output(
     node_name: str,
-    input: FromNodeOutput,
+    input_type: FromNodeOutput,
     dag_nodes: Mapping[str, Node],
 ):
-    if input.node not in dag_nodes:
+    if input_type.node not in dag_nodes:
         raise ValueError(
-            f"This input depends on the output of another node named '{input.node}'. However, the DAG does not define any node with such a name. These are the nodes contained by the DAG: {list(dag_nodes)}"
+            f"This input depends on the output of another node named '{input_type.node}'. However, the DAG does not define any node with such a name. These are the nodes contained by the DAG: {list(dag_nodes)}"
         )
 
-    referenced_node_outputs = dag_nodes[input.node].outputs
-    if input.output not in referenced_node_outputs:
+    referenced_node_outputs = dag_nodes[input_type.node].outputs
+    if input_type.output not in referenced_node_outputs:
         raise ValueError(
-            f"This input depends on the output '{input.output}' of another node named '{input.node}'. However, node '{input.node}' does not declare any output with such a name. These are the outputs defined by the node: {list(referenced_node_outputs)}"
+            f"This input depends on the output '{input_type.output}' of another node named '{input_type.node}'. However, node '{input_type.node}' does not declare any output with such a name. These are the outputs defined by the node: {list(referenced_node_outputs)}"
         )
 
-    if input.serializer != referenced_node_outputs[input.output].serializer:
+    if input_type.serializer != referenced_node_outputs[input_type.output].serializer:
         raise ValueError(
-            f"This input is serialized {input.serializer}. However, the output it references is serialized {referenced_node_outputs[input.output].serializer}."
+            f"This input is serialized {input_type.serializer}. However, the output it references is serialized {referenced_node_outputs[input_type.output].serializer}."
+        )
+
+    if (
+        dag_nodes[node_name].partition_by_input
+        and dag_nodes[input_type.node].partition_by_input
+    ):
+        raise ValueError(
+            "This node is partitioned by an input that comes from the output of another partitioned node. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
         )
 
 

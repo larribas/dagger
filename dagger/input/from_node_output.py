@@ -62,3 +62,7 @@ class FromNodeOutput:
             and self._node_output_name == obj._node_output_name
             and self._serializer == obj._serializer
         )
+
+    def __hash__(self) -> int:
+        """Return a hash that will be the same for two equivalent instances of this type."""
+        return hash((self._node_name, self._node_output_name))

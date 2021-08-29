@@ -6,11 +6,9 @@ from dagger.dsl.build import (
     _translate_invocation_ids_into_readable_names,
 )
 from dagger.dsl.node_invocations import NodeInvocation, NodeType
-from dagger.dsl.node_outputs import (
-    NodeOutputKeyUsage,
-    NodeOutputPropertyUsage,
-    NodeOutputUsage,
-)
+from dagger.dsl.node_output_key_usage import NodeOutputKeyUsage
+from dagger.dsl.node_output_property_usage import NodeOutputPropertyUsage
+from dagger.dsl.node_output_usage import NodeOutputUsage
 from dagger.dsl.parameter_usage import ParameterUsage
 from dagger.dsl.serialize import Serialize
 from dagger.input import FromNodeOutput, FromParam
