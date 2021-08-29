@@ -17,6 +17,12 @@ jobs:
       - uses: Gr1N/setup-poetry@v4
         with:
           poetry-version: 1.1.5
+      - name: Install Kubectl
+        run: |
+          curl -LO https://dl.k8s.io/release/v1.22.0/bin/linux/amd64/kubectl
+          chmod +x kubectl
+          mv kubectl /usr/local/bin/
+          kubectl version
       - name: Install argo CLI
         run: |
           curl -sLO https://github.com/argoproj/argo-workflows/releases/download/v3.1.6/argo-linux-amd64.gz
