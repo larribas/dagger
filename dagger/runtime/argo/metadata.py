@@ -13,7 +13,6 @@ class Metadata:
     namespace: Optional[str] = None
     annotations: Mapping[str, str] = field(default_factory=dict)
     labels: Mapping[str, str] = field(default_factory=dict)
-    # TODO: Validate names and namespaces upon initialization
 
 
 def object_meta(metadata: Metadata) -> Mapping[str, Any]:

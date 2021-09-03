@@ -13,13 +13,19 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.8.7
+          python-version: 3.9.6
       - uses: Gr1N/setup-poetry@v4
         with:
           poetry-version: 1.1.5
+      - name: Install Kubectl
+        run: |
+          curl -LO https://dl.k8s.io/release/v1.22.0/bin/linux/amd64/kubectl
+          chmod +x kubectl
+          mv kubectl /usr/local/bin/
+          kubectl version --client=true
       - name: Install argo CLI
         run: |
-          curl -sLO https://github.com/argoproj/argo/releases/download/v3.0.4/argo-linux-amd64.gz
+          curl -sLO https://github.com/argoproj/argo-workflows/releases/download/v3.1.6/argo-linux-amd64.gz
           gunzip argo-linux-amd64.gz
           chmod +x argo-linux-amd64
           mkdir -p bin
@@ -36,6 +42,9 @@ jobs:
           make docker-push-local
       - name: Run all examples with Argo and expect them to work
         run: |
+          echo "Verifying whether Argo is running correctly"
+          kubectl get pods -n $(KUBE_NAMESPACE)
+
           EXAMPLES_DIR=tests/examples/argo/
           ls -l $EXAMPLES_DIR
           for f in $EXAMPLES_DIR/*.yaml; do

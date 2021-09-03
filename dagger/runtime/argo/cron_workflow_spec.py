@@ -1,8 +1,12 @@
 """Generate CronWorkflow specifications."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Mapping, Optional
+
+from dagger.dag import DAG
+from dagger.runtime.argo.extra_spec_options import with_extra_spec_options
+from dagger.runtime.argo.workflow_spec import Workflow, workflow_spec
 
 
 class CronConcurrencyPolicy(Enum):
@@ -26,17 +30,18 @@ class Cron:
     """
 
     schedule: str
-    suspend: bool = False
     starting_deadline_seconds: int = 0
     concurrency_policy: CronConcurrencyPolicy = CronConcurrencyPolicy.ALLOW
     timezone: Optional[str] = None
     successful_jobs_history_limit: Optional[int] = None
     failed_jobs_history_limit: Optional[int] = None
+    extra_spec_options: Mapping[str, Any] = field(default_factory=dict)
 
 
 def cron_workflow_spec(
+    dag: DAG,
+    workflow: Workflow,
     cron: Cron,
-    workflow_spec: Mapping[str, Any],
 ) -> Mapping[str, Any]:
     """
     Return a minimal representation of a CronWorkflowSpec with the supplied parameters.
@@ -45,20 +50,26 @@ def cron_workflow_spec(
 
     Parameters
     ----------
-    workflow_spec
-        A well-formed WorkflowSpec.
-        Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#workflowspec
+    dag
+        The DAG to generate the spec for
 
-    Returns
-    -------
-    A CronWorkflowSpec represented as a Python mapping
+    workflow
+        The configuration for this workflow
+
+    cron
+        The configuration for the cron workflow
+
+
+    Raises
+    ------
+    ValueError
+        If any of the cron.extra_spec_options collides with a property used by the runtime.
     """
     spec = {
         "schedule": cron.schedule,
-        "suspend": cron.suspend,
         "startingDeadlineSeconds": cron.starting_deadline_seconds,
         "concurrencyPolicy": cron.concurrency_policy.value,
-        "workflowSpec": workflow_spec,
+        "workflowSpec": workflow_spec(dag, workflow),
     }
 
     if cron.timezone:
@@ -69,5 +80,11 @@ def cron_workflow_spec(
 
     if cron.failed_jobs_history_limit:
         spec["failedJobsHistoryLimit"] = cron.failed_jobs_history_limit
+
+    spec = with_extra_spec_options(
+        original=spec,
+        extra_options=cron.extra_spec_options,
+        context="the CronWorkflow spec",
+    )
 
     return spec

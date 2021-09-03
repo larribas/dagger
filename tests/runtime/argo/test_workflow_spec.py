@@ -1,34 +1,37 @@
 import pytest
 
-import dagger.input as input
-import dagger.output as output
-from dagger.dag import DAG, DAGOutput
-from dagger.runtime.argo.errors import IncompatibilityError
-from dagger.runtime.argo.workflow_spec import (
-    _dag_task_argument_artifact_from,
-    workflow_spec,
-)
+from dagger.dag import DAG
+from dagger.input import FromNodeOutput, FromParam
+from dagger.output import FromReturnValue
+from dagger.runtime.argo.workflow_spec import Workflow, workflow_spec
 from dagger.task import Task
+
+#
+# workflow_spec
+#
 
 
 def test__workflow_spec__simplest_dag():
-    container_image = "my-image"
-    container_entrypoint = ["my", "dag", "entrypoint"]
+    workflow = Workflow(
+        container_image="my-image",
+        container_entrypoint_to_dag_cli=["my", "dag", "entrypoint"],
+    )
     dag = DAG(
         {
             "single-node": Task(lambda: 1),
         }
     )
 
-    assert workflow_spec(
-        dag,
-        container_image=container_image,
-        container_entrypoint_to_dag_cli=container_entrypoint,
-    ) == {
+    assert workflow_spec(dag, workflow) == {
         "entrypoint": "dag",
         "templates": [
             {
                 "name": "dag",
+                "inputs": {
+                    "parameters": [
+                        {"name": "name", "value": "dag"},
+                    ],
+                },
                 "dag": {
                     "tasks": [
                         {
@@ -41,8 +44,8 @@ def test__workflow_spec__simplest_dag():
             {
                 "name": "dag-single-node",
                 "container": {
-                    "image": container_image,
-                    "command": container_entrypoint,
+                    "image": workflow.container_image,
+                    "command": workflow.container_entrypoint_to_dag_cli,
                     "args": [
                         "--node-name",
                         "single-node",
@@ -54,8 +57,10 @@ def test__workflow_spec__simplest_dag():
 
 
 def test__workflow_spec__nested_dags():
-    container_image = "my-image"
-    container_entrypoint = ["my", "dag", "entrypoint"]
+    workflow = Workflow(
+        container_image="my-image",
+        container_entrypoint_to_dag_cli=["my", "dag", "entrypoint"],
+    )
 
     dag = DAG(
         {
@@ -72,15 +77,16 @@ def test__workflow_spec__nested_dags():
         },
     )
 
-    assert workflow_spec(
-        dag,
-        container_image=container_image,
-        container_entrypoint_to_dag_cli=container_entrypoint,
-    ) == {
+    assert workflow_spec(dag, workflow) == {
         "entrypoint": "dag",
         "templates": [
             {
                 "name": "dag",
+                "inputs": {
+                    "parameters": [
+                        {"name": "name", "value": "dag"},
+                    ],
+                },
                 "dag": {
                     "tasks": [
                         {
@@ -90,6 +96,14 @@ def test__workflow_spec__nested_dags():
                         {
                             "name": "deeply",
                             "template": "dag-deeply",
+                            "arguments": {
+                                "parameters": [
+                                    {
+                                        "name": "name",
+                                        "value": "{{inputs.parameters.name}}-deeply",
+                                    },
+                                ],
+                            },
                         },
                     ],
                 },
@@ -97,8 +111,8 @@ def test__workflow_spec__nested_dags():
             {
                 "name": "dag-a",
                 "container": {
-                    "image": container_image,
-                    "command": container_entrypoint,
+                    "image": workflow.container_image,
+                    "command": workflow.container_entrypoint_to_dag_cli,
                     "args": [
                         "--node-name",
                         "a",
@@ -107,17 +121,35 @@ def test__workflow_spec__nested_dags():
             },
             {
                 "name": "dag-deeply",
+                "inputs": {
+                    "parameters": [
+                        {"name": "name"},
+                    ],
+                },
                 "dag": {
                     "tasks": [
                         {
                             "name": "nested",
                             "template": "dag-deeply-nested",
+                            "arguments": {
+                                "parameters": [
+                                    {
+                                        "name": "name",
+                                        "value": "{{inputs.parameters.name}}-nested",
+                                    },
+                                ],
+                            },
                         },
                     ],
                 },
             },
             {
                 "name": "dag-deeply-nested",
+                "inputs": {
+                    "parameters": [
+                        {"name": "name"},
+                    ],
+                },
                 "dag": {
                     "tasks": [
                         {
@@ -130,8 +162,8 @@ def test__workflow_spec__nested_dags():
             {
                 "name": "dag-deeply-nested-a",
                 "container": {
-                    "image": container_image,
-                    "command": container_entrypoint,
+                    "image": workflow.container_image,
+                    "command": workflow.container_entrypoint_to_dag_cli,
                     "args": [
                         "--node-name",
                         "deeply.nested.a",
@@ -143,28 +175,27 @@ def test__workflow_spec__nested_dags():
 
 
 def test__workflow_spec__with_input_from_param_with_different_name():
-    container_image = "my-image"
-    container_entrypoint = ["my", "dag", "entrypoint"]
+    workflow = Workflow(
+        container_image="my-image",
+        container_entrypoint_to_dag_cli=["my", "dag", "entrypoint"],
+        params={"a": 2},
+    )
+
     dag = DAG(
-        inputs=dict(a=input.FromParam()),
-        outputs=dict(y=DAGOutput("times3", "x")),
+        inputs=dict(a=FromParam()),
+        outputs=dict(y=FromNodeOutput("times3", "x")),
         nodes=dict(
             times3=Task(
                 lambda b: b * 3,
-                inputs=dict(b=input.FromParam("a")),
-                outputs=dict(x=output.FromReturnValue()),
+                inputs=dict(b=FromParam("a")),
+                outputs=dict(x=FromReturnValue()),
             )
         ),
     )
 
-    spec = workflow_spec(
-        dag,
-        container_image=container_image,
-        container_entrypoint_to_dag_cli=container_entrypoint,
-        params={"a": b"2"},
-    )
+    spec = workflow_spec(dag, workflow)
 
-    assert spec["arguments"]["artifacts"] == [{"name": "a", "raw": {"data": b"2"}}]
+    assert spec["arguments"]["parameters"] == [{"name": "a", "value": 2}]
     assert spec["templates"][0]["dag"]["tasks"][0]["arguments"]["artifacts"] == [
         {
             "name": "b",
@@ -178,34 +209,20 @@ def test__workflow_spec__with_invalid_parameters():
         nodes={
             "double": Task(
                 lambda x: x * 2,
-                inputs={"x": input.FromParam()},
-                outputs={"2x": output.FromReturnValue()},
+                inputs={"x": FromParam()},
+                outputs={"2x": FromReturnValue()},
             ),
         },
-        inputs={"x": input.FromParam()},
-        outputs={"2x": DAGOutput(node="double", output="2x")},
+        inputs={"x": FromParam()},
+        outputs={"2x": FromNodeOutput(node="double", output="2x")},
     )
 
     with pytest.raises(ValueError) as e:
-        workflow_spec(dag, container_image="my-image")
+        workflow_spec(dag, Workflow(container_image="my-image"))
 
     assert (
         str(e.value)
-        == "The parameters supplied to this DAG were supposed to contain a parameter named 'x', but only the following parameters were actually supplied: []"
-    )
-
-
-def test__workflow_spec__setting_service_account():
-    service_account = "my-service-account"
-    dag = DAG({"single-node": Task(lambda: 1)})
-
-    assert (
-        workflow_spec(
-            dag,
-            container_image="my-image",
-            service_account=service_account,
-        )["serviceAccountName"]
-        == service_account
+        == "The parameters supplied to this DAG were supposed to contain the following parameters: ['x']. However, only the following parameters were actually supplied: []. We are missing: ['x']."
     )
 
 
@@ -225,7 +242,7 @@ def test__workflow_spec__with_template_overrides_that_affect_essential_attribute
     )
 
     with pytest.raises(ValueError) as e:
-        workflow_spec(dag, container_image="my-image")
+        workflow_spec(dag, Workflow(container_image="my-image"))
 
     assert (
         str(e.value)
@@ -248,7 +265,7 @@ def test__workflow_spec__with_container_overrides_that_affect_essential_attribut
     )
 
     with pytest.raises(ValueError) as e:
-        workflow_spec(dag, container_image="my-image")
+        workflow_spec(dag, Workflow(container_image="my-image"))
 
     assert (
         str(e.value)
@@ -287,11 +304,16 @@ def test__workflow_spec__with_task_overrides():
         }
     )
 
-    assert workflow_spec(dag, container_image=container_image) == {
+    assert workflow_spec(dag, Workflow(container_image=container_image)) == {
         "entrypoint": "dag",
         "templates": [
             {
                 "name": "dag",
+                "inputs": {
+                    "parameters": [
+                        {"name": "name", "value": "dag"},
+                    ],
+                },
                 "dag": {
                     "tasks": [
                         {
@@ -337,7 +359,7 @@ def test__workflow_spec__with_dag_template_overrides_that_affect_essential_attri
     )
 
     with pytest.raises(ValueError) as e:
-        workflow_spec(dag, container_image="my-image")
+        workflow_spec(dag, Workflow(container_image="my-image"))
 
     assert (
         str(e.value)
@@ -358,11 +380,16 @@ def test__workflow_spec__with_dag_template_overrides():
         runtime_options=options,
     )
 
-    assert workflow_spec(dag, container_image=container_image) == {
+    assert workflow_spec(dag, Workflow(container_image=container_image)) == {
         "entrypoint": "dag",
         "templates": [
             {
                 "name": "dag",
+                "inputs": {
+                    "parameters": [
+                        {"name": "name", "value": "dag"},
+                    ],
+                },
                 "dag": {
                     "failFast": False,
                     "extraAttribute": "extra",
@@ -385,18 +412,40 @@ def test__workflow_spec__with_dag_template_overrides():
     }
 
 
-def test__dag_task_argument_artifact_from__with_incompatible_input():
-    class IncompatibleInput:
-        pass
-
-    with pytest.raises(IncompatibilityError) as e:
-        _dag_task_argument_artifact_from(
-            node_address=["my", "nested", "node"],
-            input_name="my-input",
-            input=IncompatibleInput(),
-        )
-
-    assert (
-        str(e.value)
-        == "Whoops. Input 'my-input' of node 'my.nested.node' is of type 'IncompatibleInput'. While this input type may be supported by the DAG, the current version of the Argo runtime does not support it. Please, check the GitHub project to see if this issue has already been reported and addressed in a newer version. Otherwise, please report this as a bug in our GitHub tracker. Sorry for the inconvenience."
+def test__workflow_spec__with_workflow_spec_overrides():
+    workflow = Workflow(
+        container_image="my-image",
+        extra_spec_options={"suspend": True, "parallelism": 2},
     )
+    dag = DAG({"n": Task(lambda: 1)})
+
+    assert workflow_spec(dag, workflow) == {
+        "entrypoint": "dag",
+        "suspend": True,
+        "parallelism": 2,
+        "templates": [
+            {
+                "name": "dag",
+                "inputs": {
+                    "parameters": [
+                        {"name": "name", "value": "dag"},
+                    ],
+                },
+                "dag": {
+                    "tasks": [
+                        {
+                            "name": "n",
+                            "template": "dag-n",
+                        },
+                    ],
+                },
+            },
+            {
+                "name": "dag-n",
+                "container": {
+                    "image": workflow.container_image,
+                    "args": ["--node-name", "n"],
+                },
+            },
+        ],
+    }

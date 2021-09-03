@@ -4,25 +4,35 @@ metadata:
   generateName: passing-parameters-
 spec:
   arguments:
-    artifacts:
+    parameters:
     - name: number
-      raw:
-        data: !!binary "NQ=="
+      value: 5
   entrypoint: dag
   templates:
   - name: dag
     inputs:
+      parameters:
+      - name: name
+        value: dag
+      - name: number-doubled-and-squared_output_path
+        value: "{{workflow.uid}}/dag/number-doubled-and-squared.json"
       artifacts:
       - name: number
+        raw:
+          data: "{{workflow.parameters.number}}"
     outputs:
       artifacts:
       - name: number-doubled-and-squared
-        from: "{{tasks.square.outputs.artifacts.squared-number}}"
+        s3:
+          key: "{{inputs.parameters.number-doubled-and-squared_output_path}}"
     dag:
       tasks:
       - name: double
         template: dag-double
         arguments:
+          parameters:
+          - name: doubled-number_output_path
+            value: "{{workflow.uid}}/{{inputs.parameters.name}}/double/doubled-number.json"
           artifacts:
           - name: number
             from: "{{inputs.artifacts.number}}"
@@ -30,12 +40,18 @@ spec:
         template: dag-square
         dependencies: [double]
         arguments:
+          parameters:
+          - name: squared-number_output_path
+            value: "{{inputs.parameters.number-doubled-and-squared_output_path}}"
           artifacts:
           - name: number
-            from: "{{tasks.double.outputs.artifacts.doubled-number}}"
+            s3:
+              key: "{{workflow.uid}}/{{inputs.parameters.name}}/double/doubled-number.json"
 
   - name: dag-double
     inputs:
+      parameters:
+      - name: doubled-number_output_path
       artifacts:
       - name: number
         path: /tmp/inputs/number.json
@@ -43,6 +59,11 @@ spec:
       artifacts:
       - name: doubled-number
         path: /tmp/outputs/doubled-number.json
+        archive:
+          none: {}
+        s3:
+          key: "{{inputs.parameters.doubled-number_output_path}}"
+
     container:
       image: local.registry/dagger
       command: [passing-parameters]
@@ -60,6 +81,8 @@ spec:
 
   - name: dag-square
     inputs:
+      parameters:
+      - name: squared-number_output_path
       artifacts:
       - name: number
         path: /tmp/inputs/number.json
@@ -67,6 +90,10 @@ spec:
       artifacts:
       - name: squared-number
         path: /tmp/outputs/squared-number.json
+        archive:
+          none: {}
+        s3:
+          key: "{{inputs.parameters.squared-number_output_path}}"
     container:
       image: local.registry/dagger
       command: [passing-parameters]

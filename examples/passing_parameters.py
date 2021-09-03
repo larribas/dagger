@@ -22,9 +22,9 @@ Note how we instruct task "double" to take its input from the DAG's parameters, 
 This generates a dependency from "square" to "double". All dagger runtimes will guarantee that "double" gets executed first, and forward its output to "square".
 """
 
-import dagger.input as input
-import dagger.output as output
-from dagger import DAG, DAGOutput, Task
+from dagger import DAG, Task
+from dagger.input import FromNodeOutput, FromParam
+from dagger.output import FromReturnValue
 
 
 def double(number: int) -> int:  # noqa
@@ -44,30 +44,30 @@ dag = DAG(
         "double": Task(
             double,
             inputs={
-                "number": input.FromParam(),
+                "number": FromParam(),
             },
             outputs={
-                "doubled-number": output.FromReturnValue(),
+                "doubled-number": FromReturnValue(),
             },
         ),
         "square": Task(
             square,
             inputs={
-                "number": input.FromNodeOutput(
+                "number": FromNodeOutput(
                     node="double",
                     output="doubled-number",
                 ),
             },
             outputs={
-                "squared-number": output.FromReturnValue(),
+                "squared-number": FromReturnValue(),
             },
         ),
     },
     inputs={
-        "number": input.FromParam(),
+        "number": FromParam(),
     },
     outputs={
-        "number-doubled-and-squared": DAGOutput(
+        "number-doubled-and-squared": FromNodeOutput(
             node="square",
             output="squared-number",
         ),

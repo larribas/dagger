@@ -1,12 +1,15 @@
 """Generate Workflow specifications."""
 import itertools
 import os
-from typing import Any, Dict, List, Mapping, Optional
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Mapping, Sequence, Union
 
-from dagger.dag import DAG, Node, validate_parameters
+from dagger.dag import DAG, Node
+from dagger.dag import SupportedInputs as SupportedDAGInputs
+from dagger.dag import validate_parameters
 from dagger.input import FromNodeOutput, FromParam
-from dagger.runtime.argo.errors import IncompatibilityError
-from dagger.task import SupportedInputs as SupportedTaskInputs
+from dagger.runtime.argo.extra_spec_options import with_extra_spec_options
+from dagger.serializer import Serializer
 from dagger.task import Task
 
 BASE_DAG_NAME = "dag"
@@ -14,24 +17,13 @@ INPUT_PATH = "/tmp/inputs/"
 OUTPUT_PATH = "/tmp/outputs/"
 
 
-def workflow_spec(
-    dag: DAG,
-    container_image: str,
-    container_entrypoint_to_dag_cli: Optional[List[str]] = None,
-    params: Optional[Mapping[str, bytes]] = None,
-    service_account: Optional[str] = None,
-) -> Mapping[str, Any]:
+@dataclass(frozen=True)
+class Workflow:
     """
-    Return a minimal representation of a WorkflowSpec for the supplied DAG and metadata.
-
-    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#workflowspec
-
+    Configuration for a Workflow. This class will be supplied to the runtime to help it create a workflow that will work on your environment.
 
     Parameters
     ----------
-    dag
-        The DAG to generate the spec for
-
     container_image
         The URI to the container image Argo will use for each of the tasks
 
@@ -44,45 +36,77 @@ def workflow_spec(
         Parameters to inject to the DAG.
         They must match the inputs the DAG expects.
 
-    service_account
-        The Kubernetes service account
-    """
-    params = params or {}
-    container_entrypoint_to_dag_cli = container_entrypoint_to_dag_cli or []
+    extra_spec_options
+        WorkflowSpec properties to set (if they are not used by the runtime).
 
-    validate_parameters(inputs=dag.inputs, params=params)
+    """
+
+    container_image: str
+    container_entrypoint_to_dag_cli: List[str] = field(default_factory=list)
+    params: Mapping[str, Any] = field(default_factory=dict)
+    extra_spec_options: Mapping[str, Any] = field(default_factory=dict)
+
+
+def workflow_spec(
+    dag: DAG,
+    workflow: Workflow,
+) -> Mapping[str, Any]:
+    """
+    Return a minimal representation of a WorkflowSpec for the supplied DAG and metadata.
+
+    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#workflowspec
+
+
+    Parameters
+    ----------
+    dag
+        The DAG to generate the spec for
+
+    workflow
+        The configuration for this workflow
+
+    Raises
+    ------
+    ValueError
+        If any of the extra_spec_options collides with a property used by the runtime.
+    """
+    validate_parameters(inputs=dag.inputs, params=workflow.params)
 
     spec = {
         "entrypoint": BASE_DAG_NAME,
         "templates": _templates(
             node=dag,
-            container_image=container_image,
-            container_command=container_entrypoint_to_dag_cli,
+            container_image=workflow.container_image,
+            container_command=workflow.container_entrypoint_to_dag_cli,
+            params=workflow.params,
         ),
     }
 
-    if params:
-        spec["arguments"] = _workflow_spec_arguments(params)
+    if workflow.params:
+        spec["arguments"] = _workflow_spec_arguments(workflow.params)
 
-    if service_account:
-        spec["serviceAccountName"] = service_account
+    spec = with_extra_spec_options(
+        original=spec,
+        extra_options=workflow.extra_spec_options,
+        context="the Workflow spec",
+    )
 
     return spec
 
 
-def _workflow_spec_arguments(params: Mapping[str, bytes]) -> Mapping[str, Any]:
+def _workflow_spec_arguments(params: Mapping[str, Any]) -> Mapping[str, Any]:
     return {
-        "artifacts": [
-            {"name": param_name, "raw": {"data": params[param_name]}}
-            for param_name in params
+        "parameters": [
+            {"name": param_name, "value": params[param_name]} for param_name in params
         ],
     }
 
 
 def _templates(
-    node: Node,
+    node: Union[Task, DAG],
     container_image: str,
     container_command: List[str],
+    params: Mapping[str, Any],
     address: List[str] = None,
 ) -> List[Mapping[str, Any]]:
     """
@@ -103,6 +127,9 @@ def _templates(
 
     container_command
         The container's entrypoint.
+
+    params
+        The parameters supplied to the DAG.
 
     address
         A list of node names that point to this node.
@@ -127,13 +154,14 @@ def _templates(
                 container_command=container_command,
             )
         ]
-    elif isinstance(node, DAG):
+    else:
         dag = node
         return list(
             itertools.chain(
                 [
                     _dag_template(
                         dag=dag,
+                        params=params,
                         address=address,
                     )
                 ],
@@ -143,23 +171,17 @@ def _templates(
                         address=address + [node_name],
                         container_image=container_image,
                         container_command=container_command,
+                        params=params,
                     )
                     for node_name in dag.nodes
                 ],
             )
         )
-    else:
-        # TODO: Test this scenario
-        human_readable_node_address = (
-            f"Node {'.'.join(address)}" if address else "This node"
-        )
-        raise IncompatibilityError(
-            f"Whoops. Node '{human_readable_node_address}' is of type '{type(node).__name__}'. While this node type may be supported by the DAG, the current version of the Argo runtime does not support it. Please, check the GitHub project to see if this issue has already been reported and addressed in a newer version. Otherwise, please report this as a bug in our GitHub tracker. Sorry for the inconvenience."
-        )
 
 
 def _dag_template(
     dag: DAG,
+    params: Mapping[str, Any],
     address: List[str] = None,
 ) -> Mapping[str, Any]:
     """
@@ -171,11 +193,18 @@ def _dag_template(
 
     template: dict = {
         "name": _template_name(address),
+        "inputs": {
+            "parameters": _dag_template_parameters(
+                address=address,
+                dag_outputs=dag.outputs,
+            ),
+        },
         "dag": {
             "tasks": [
                 _dag_task(
                     node=dag.nodes[node_name],
                     node_address=address + [node_name],
+                    parent=dag,
                 )
                 for node_name in dag.nodes
             ]
@@ -183,35 +212,112 @@ def _dag_template(
     }
 
     if dag.inputs:
-        template["inputs"] = {
-            "artifacts": [{"name": input_name} for input_name in dag.inputs]
-        }
-
-    if dag.outputs:
-        template["outputs"] = {
-            "artifacts": [
-                {
-                    "name": output_name,
-                    "from": "{{"
-                    + f"tasks.{dag.outputs[output_name].node}.outputs.artifacts.{dag.outputs[output_name].output}"
-                    + "}}",
-                }
-                for output_name in dag.outputs
+        is_root_dag = len(address) == 0
+        if is_root_dag:
+            template["inputs"]["artifacts"] = _dag_root_artifacts_from_params(
+                dag.inputs, params
+            )
+        else:
+            template["inputs"]["artifacts"] = [
+                {"name": input_name} for input_name in dag.inputs
             ]
-        }
 
-    template["dag"] = _spec_override(
+    dag_outputs = _dag_template_outputs(
+        nodes=dag.nodes,
+        outputs=dag.outputs,
+    )
+    if dag_outputs:
+        template["outputs"] = dag_outputs
+
+    template["dag"] = with_extra_spec_options(
         original=template["dag"],
-        overrides=dag.runtime_options.get("argo_dag_template_overrides", {}),
-        address=address,
+        extra_options=dag.runtime_options.get("argo_dag_template_overrides", {}),
+        context=".".join(address) if address else "this DAG",
     )
 
     return template
 
 
+def _dag_template_parameters(
+    address: List[str],
+    dag_outputs: Mapping[str, FromNodeOutput],
+) -> Sequence[Mapping[str, Any]]:
+    """Return a list of parameters for a DAG template."""
+    parameters = []
+    is_root_dag = len(address) == 0
+
+    name_param = {"name": "name"}
+    if is_root_dag:
+        name_param["value"] = "dag"
+
+    parameters.append(name_param)
+
+    for output_name, output_type in dag_outputs.items():
+        output_param = {"name": f"{output_name}_output_path"}
+        if is_root_dag:
+            output_param["value"] = (
+                "{{workflow.uid}}/dag/"
+                + f"{output_name}.{output_type.serializer.extension}"
+            )
+
+        parameters.append(output_param)
+
+    return parameters
+
+
+def _dag_root_artifacts_from_params(
+    inputs: Mapping[str, SupportedDAGInputs],
+    params: Mapping[str, Any],
+) -> Sequence[Mapping[str, Any]]:
+    """
+    Return a list of artifacts for the root dag template.
+
+    The workflow accepts parameters as plain values. In order to pass these parameters
+    to the CLI runtime we need to convert them into artifacts.
+
+    This conversion should only happen in the root dag template.
+    """
+    artifacts = []
+
+    for input_name in inputs:
+        data = "{{workflow.parameters." + input_name + "}}"
+
+        # Most plain values (booleans, numbers, objects or arrays) will work with the JSON serializer
+        # Strings, however, need to be surrounded by double quotation marks.
+        if isinstance(params[input_name], str):
+            data = f'"{data}"'
+
+        artifacts.append({"name": input_name, "raw": {"data": data}})
+
+    return artifacts
+
+
+def _dag_template_outputs(
+    nodes: Mapping[str, Node],
+    outputs: Mapping[str, FromNodeOutput],
+) -> Mapping[str, Any]:
+    """Return a structure representing the outputs of a DAG template."""
+    artifacts = [
+        {
+            "name": output_name,
+            "s3": {
+                "key": "{{inputs.parameters." + output_name + "_output_path}}",
+            },
+        }
+        for output_name in outputs
+    ]
+
+    dag_outputs = {}
+    if artifacts:
+        dag_outputs["artifacts"] = artifacts
+
+    return dag_outputs
+
+
 def _dag_task(
     node: Node,
     node_address: List[str],
+    parent: DAG,
 ) -> Mapping[str, Any]:
     """
     Return a minimal representation of a DAGTask for a specific node.
@@ -227,13 +333,40 @@ def _dag_task(
     if dependencies:
         dag_task["dependencies"] = dependencies
 
-    if node.inputs:
-        dag_task["arguments"] = _dag_task_arguments(
-            node=node,
-            node_address=node_address,
+    arguments = _dag_task_arguments(
+        node=node,
+        node_address=node_address,
+        parent=parent,
+    )
+    if arguments:
+        dag_task["arguments"] = arguments
+
+    if node.partition_by_input:
+        dag_task["withParam"] = _dag_task_with_param(
+            input_name=node.partition_by_input,
+            input_type=node.inputs[node.partition_by_input],
         )
 
     return dag_task
+
+
+def _dag_task_with_param(
+    input_name: str,
+    input_type: Union[FromParam, FromNodeOutput],
+) -> str:
+    """
+    Return the value for the withParam field in a DAGTask spec.
+
+    Spec: https://argoproj.github.io/argo-workflows/fields/#dagtask
+    """
+    if isinstance(input_type, FromParam):
+        return "{{" + f"workflow.parameters.{input_type.name or input_name}" + "}}"
+    else:
+        return (
+            "{{"
+            + f"tasks.{input_type.node}.outputs.parameters.{input_type.output}_partitions"
+            + "}}"
+        )
 
 
 def _dag_task_dependencies(node: Node) -> List[str]:
@@ -250,48 +383,119 @@ def _dag_task_dependencies(node: Node) -> List[str]:
 
 
 def _dag_task_arguments(
-    node: Node,
+    node: Union[Task, DAG],
     node_address: List[str],
+    parent: DAG,
 ) -> Mapping[str, Any]:
     """
     Return a minimal representation of an Arguments object, retrieving each of the node's inputs from the right source.
 
     Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#arguments
     """
-    return {
-        "artifacts": [
+    parameters = []
+
+    if isinstance(node, DAG):
+        name_param = {
+            "name": "name",
+            "value": "{{inputs.parameters.name}}-" + node_address[-1],
+        }
+        if node.partition_by_input:
+            name_param["value"] += "-{{item}}"
+        parameters.append(name_param)
+
+    for output_name, output_type in node.outputs.items():
+        parameters.append(
             {
-                "name": input_name,
-                "from": _dag_task_argument_artifact_from(
-                    node_address=node_address,
-                    input_name=input_name,
-                    input=node.inputs[input_name],
+                "name": f"{output_name}_output_path",
+                "value": _dag_task_arguments_output_path(
+                    node_name=node_address[-1],
+                    output_name=output_name,
+                    serializer=output_type.serializer,
+                    dag_outputs=parent.outputs,
+                    is_partitioned=bool(node.partition_by_input),
                 ),
             }
-            for input_name in node.inputs
-        ]
-    }
+        )
+
+    artifacts = [
+        _dag_task_argument_artifact(
+            node_address=node_address,
+            input_name=input_name,
+            input_type=node.inputs[input_name],
+            is_partitioned=node.partition_by_input == input_name,
+            dag_outputs=parent.outputs,
+        )
+        for input_name in node.inputs
+    ]
+
+    arguments: Dict[str, Any] = {}
+    if parameters:
+        arguments["parameters"] = parameters
+
+    if artifacts:
+        arguments["artifacts"] = artifacts
+
+    return arguments
 
 
-def _dag_task_argument_artifact_from(
+def _dag_task_arguments_output_path(
+    node_name: str,
+    output_name: str,
+    serializer: Serializer,
+    dag_outputs: Mapping[str, FromNodeOutput],
+    is_partitioned: bool,
+) -> str:
+    corresponding_dag_output = [
+        dag_output_name
+        for dag_output_name, dag_output_type in dag_outputs.items()
+        if dag_output_type.node == node_name and dag_output_type.output == output_name
+    ]
+
+    if corresponding_dag_output:
+        output_path = (
+            "{{inputs.parameters." + f"{corresponding_dag_output[0]}_output_path" + "}}"
+        )
+    else:
+        output_path = (
+            "{{workflow.uid}}/{{inputs.parameters.name}}/"
+            + f"{node_name}/{output_name}.{serializer.extension}"
+        )
+
+    if is_partitioned:
+        output_path += "/{{item}}"
+
+    return output_path
+
+
+def _dag_task_argument_artifact(
     node_address: List[str],
     input_name: str,
-    input: SupportedTaskInputs,
-) -> str:
+    input_type: Union[FromParam, FromNodeOutput],
+    is_partitioned: bool,
+    dag_outputs: Mapping[str, FromNodeOutput],
+) -> Mapping[str, Any]:
     """
     Return a pointer to the source of a specific artifact, based on the type of each input, and using Argo's workflow variables.
 
     Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/variables.md
     """
-    if isinstance(input, FromParam):
-        return "{{" + f"inputs.artifacts.{input.name or input_name}" + "}}"
-    elif isinstance(input, FromNodeOutput):
-        return "{{" + f"tasks.{input.node}.outputs.artifacts.{input.output}" + "}}"
+    if isinstance(input_type, FromParam):
+        return {
+            "name": input_name,
+            "from": "{{" + f"inputs.artifacts.{input_type.name or input_name}" + "}}",
+        }
     else:
-        node_name = ".".join(node_address)
-        raise IncompatibilityError(
-            f"Whoops. Input '{input_name}' of node '{node_name}' is of type '{type(input).__name__}'. While this input type may be supported by the DAG, the current version of the Argo runtime does not support it. Please, check the GitHub project to see if this issue has already been reported and addressed in a newer version. Otherwise, please report this as a bug in our GitHub tracker. Sorry for the inconvenience."
+        key = _dag_task_arguments_output_path(
+            node_name=input_type.node,
+            output_name=input_type.output,
+            serializer=input_type.serializer,
+            dag_outputs=dag_outputs,
+            is_partitioned=is_partitioned,
         )
+        return {
+            "name": input_name,
+            "s3": {"key": key},
+        }
 
 
 def _task_template(
@@ -320,8 +524,9 @@ def _task_template(
         # of the entrypoints without affecting the rest
         template["container"]["command"] = container_command[:]
 
-    if task.inputs:
-        template["inputs"] = _task_template_inputs(task)
+    task_inputs = _task_template_inputs(task)
+    if task_inputs:
+        template["inputs"] = task_inputs
 
     if task.outputs:
         template["outputs"] = _task_template_outputs(task)
@@ -331,16 +536,16 @@ def _task_template(
         ]
 
     # Overrides
-    template["container"] = _spec_override(
+    template["container"] = with_extra_spec_options(
         original=template["container"],
-        overrides=task.runtime_options.get("argo_container_overrides", {}),
-        address=address,
+        extra_options=task.runtime_options.get("argo_container_overrides", {}),
+        context=".".join(address),
     )
 
-    return _spec_override(
+    return with_extra_spec_options(
         original=template,
-        overrides=task.runtime_options.get("argo_template_overrides", {}),
-        address=address,
+        extra_options=task.runtime_options.get("argo_template_overrides", {}),
+        context=".".join(address),
     )
 
 
@@ -350,18 +555,30 @@ def _task_template_inputs(task: Task) -> Mapping[str, Any]:
 
     Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#inputs
     """
-    return {
-        "artifacts": [
-            {
-                "name": input_name,
-                "path": os.path.join(
-                    INPUT_PATH,
-                    f"{input_name}.{task.inputs[input_name].serializer.extension}",
-                ),
-            }
-            for input_name in task.inputs
-        ]
-    }
+    parameters = [
+        {"name": f"{output_name}_output_path"} for output_name in task.outputs
+    ]
+
+    artifacts = [
+        {
+            "name": input_name,
+            "path": os.path.join(
+                INPUT_PATH,
+                f"{input_name}.{task.inputs[input_name].serializer.extension}",
+            ),
+        }
+        for input_name in task.inputs
+    ]
+
+    inputs = {}
+
+    if parameters:
+        inputs["parameters"] = parameters
+
+    if artifacts:
+        inputs["artifacts"] = artifacts
+
+    return inputs
 
 
 def _task_template_outputs(task: Task) -> Mapping[str, Any]:
@@ -370,18 +587,42 @@ def _task_template_outputs(task: Task) -> Mapping[str, Any]:
 
     Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#outputs
     """
-    return {
-        "artifacts": [
-            {
-                "name": output_name,
-                "path": os.path.join(
-                    OUTPUT_PATH,
-                    f"{output_name}.{task.outputs[output_name].serializer.extension}",
-                ),
-            }
-            for output_name in task.outputs
-        ]
-    }
+    parameters = [
+        {
+            "name": f"{output_name}_partitions",
+            "valueFrom": {
+                "path": "{{"
+                + f"outputs.artifacts.{output_name}.path"
+                + "}}/partitions.json",
+            },
+        }
+        for output_name, output_type in task.outputs.items()
+        if output_type.is_partitioned
+    ]
+
+    artifacts = [
+        {
+            "name": output_name,
+            "path": os.path.join(
+                OUTPUT_PATH,
+                f"{output_name}.{task.outputs[output_name].serializer.extension}",
+            ),
+            "archive": {"none": {}},
+            "s3": {
+                "key": "{{inputs.parameters." + output_name + "_output_path}}",
+            },
+        }
+        for output_name in task.outputs
+    ]
+
+    outputs = {}
+    if parameters:
+        outputs["parameters"] = parameters
+
+    if artifacts:
+        outputs["artifacts"] = artifacts
+
+    return outputs
 
 
 def _task_template_container_arguments(
@@ -416,32 +657,6 @@ def _task_template_container_arguments(
             ]
         )
     )
-
-
-def _spec_override(
-    original: Mapping[str, Any],
-    overrides: Mapping[str, Any],
-    address: List[str],
-) -> Mapping[str, Any]:
-    """
-    Given an original arbitrary spec and a set of overrides, verify the overrides don't intersect with the existing attributes and return both mappings merged.
-
-    Raises
-    ------
-    ValueError
-        If we attempt to override keys that are already present in the original mapping.
-    """
-    if not overrides:
-        return original
-
-    key_intersection = set(overrides).intersection(original)
-    if key_intersection:
-        node_name = ".".join(address) if address else "this DAG"
-        raise ValueError(
-            f"In {node_name}, you are trying to override the value of {sorted(list(key_intersection))}. The Argo runtime uses these attributes to guarantee the behavior of the supplied DAG is correct. Therefore, we cannot let you override them."
-        )
-
-    return {**original, **overrides}
 
 
 def _template_name(address: List[str]) -> str:

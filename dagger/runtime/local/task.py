@@ -1,52 +1,18 @@
 """Run tasks in memory."""
-from typing import Any, Mapping, Optional
+import warnings
+from typing import Any, Dict, Iterable, List, Mapping, Optional
 
+from dagger.runtime.local.types import NodeOutput, NodeOutputs, PartitionedOutput
 from dagger.serializer import SerializationError
 from dagger.task import SupportedInputs, SupportedOutputs, Task
 
 
-def invoke_task(
+def _invoke_task(
     task: Task,
-    params: Optional[Mapping[str, bytes]] = None,
-) -> Mapping[str, bytes]:
-    """
-    Invoke a task with a series of parameters.
-
-    Parameters
-    ----------
-    task
-        Task to execute
-
-    params
-        Inputs to the task.
-        Serialized into their binary format.
-        Indexed by input/parameter name.
-
-
-    Returns
-    -------
-    Mappingionary of str -> bytes
-        Serialized outputs of the task.
-        Indexed by output name.
-
-
-    Raises
-    ------
-    ValueError
-        When any required parameters are missing
-
-    TypeError
-        When any of the outputs cannot be obtained from the return value of the task's function
-
-    SerializationError
-        When some of the outputs cannot be serialized with the specified Serializer
-    """
+    params: Optional[Mapping[str, Any]] = None,
+) -> NodeOutputs:
     params = params or {}
-
-    inputs = _deserialize_inputs(
-        inputs=task.inputs,
-        params=params,
-    )
+    inputs = _validate_and_filter_inputs(inputs=task.inputs, params=params)
 
     return_value = task.func(**inputs)
 
@@ -56,39 +22,61 @@ def invoke_task(
     )
 
 
-def _deserialize_inputs(
+def _validate_and_filter_inputs(
     inputs: Mapping[str, SupportedInputs],
-    params: Mapping[str, bytes],
-):
+    params: Mapping[str, Any],
+) -> Mapping[str, Any]:
+    missing_params = inputs.keys() - params.keys()
+    if missing_params:
+        raise ValueError(
+            f"The following parameters are required by the task but were not supplied: {sorted(list(missing_params))}"
+        )
 
-    deserialized_inputs = {}
-    for input_name in inputs:
-        try:
-            deserialized_inputs[input_name] = inputs[input_name].serializer.deserialize(
-                params[input_name]
-            )
-        except KeyError:
-            raise ValueError(
-                f"The parameters supplied to this task were supposed to contain a parameter named '{input_name}', but only the following parameters were actually supplied: {list(params.keys())}"
-            )
+    superfluous_params = params.keys() - inputs.keys()
+    if superfluous_params:
+        warnings.warn(
+            f"The following parameters were supplied to the task, but are not necessary: {sorted(list(superfluous_params))}"
+        )
 
-    return deserialized_inputs
+    return {input_name: params[input_name] for input_name in inputs}
 
 
 def _serialize_outputs(
     outputs: Mapping[str, SupportedOutputs],
     return_value: Any,
-) -> Mapping[str, bytes]:
+) -> Mapping[str, NodeOutput]:
 
-    serialized_outputs = {}
+    node_outputs: Dict[str, List[bytes]] = {}
     for output_name in outputs:
         output_type = outputs[output_name]
         try:
-            output = output_type.from_function_return_value(return_value)
-            serialized_outputs[output_name] = output_type.serializer.serialize(output)
+            node_outputs[output_name] = _serialize_output(
+                output_name=output_name,
+                output_type=outputs[output_name],
+                output_value=output_type.from_function_return_value(return_value),
+            )
+
         except (TypeError, ValueError, SerializationError) as e:
             raise e.__class__(
                 f"We encountered the following error while attempting to serialize the results of this task: {str(e)}"
+            ) from e
+
+    return node_outputs
+
+
+def _serialize_output(
+    output_name: str,
+    output_type: SupportedOutputs,
+    output_value: Any,
+) -> NodeOutput:
+    if output_type.is_partitioned:
+        if not isinstance(output_value, Iterable):
+            raise TypeError(
+                f"Output '{output_name}' was declared as a partitioned output, but the return value was not an iterable (instead, it was of type '{type(output_value).__name__}'). Partitioned outputs should be iterables of values (e.g. lists or sets). Each value in the iterable must be serializable with the serializer defined in the output."
             )
 
-    return serialized_outputs
+        return PartitionedOutput(
+            map(lambda o: output_type.serializer.serialize(o), output_value)
+        )
+    else:
+        return output_type.serializer.serialize(output_value)

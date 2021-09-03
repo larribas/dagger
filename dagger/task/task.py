@@ -1,5 +1,5 @@
 """Define tasks in a workflow/pipeline."""
-from typing import Any, Callable, List, Mapping, Union
+from typing import Any, Callable, List, Mapping, Optional, Union
 from typing import get_args as get_type_args
 
 from dagger.data_structures import FrozenMapping
@@ -29,6 +29,7 @@ class Task:
         inputs: Mapping[str, SupportedInputs] = None,
         outputs: Mapping[str, SupportedOutputs] = None,
         runtime_options: Mapping[str, Any] = None,
+        partition_by_input: Optional[str] = None,
     ):
         """
         Validate and initialize a Task.
@@ -51,6 +52,10 @@ class Task:
             This allows you to take full advantage of the features of each runtime. For instance, you can use it to manipulate node affinities and tolerations in Kubernetes.
             Check the documentation of each runtime to see potential options.
 
+        partition_by_input
+            If specified, it signals the task should be run as many times as partitions in the specified input.
+            Each of the executions will only receive one of the partitions of that input.
+
 
         Returns
         -------
@@ -65,6 +70,7 @@ class Task:
 
         ValueError
             If the names of the inputs/outputs have unsupported characters.
+            If the partition_by field doesn't link to a valid input.
         """
         inputs = FrozenMapping(
             inputs or {},
@@ -85,10 +91,15 @@ class Task:
 
         _validate_callable_inputs_match_defined_inputs(func, list(inputs))
 
+        if partition_by_input:
+            _validate_partitioned_input(partition_by_input, inputs)
+            _validate_there_are_no_partitioned_outputs(outputs)
+
         self._inputs = inputs
         self._outputs = outputs
         self._func = func
         self._runtime_options = runtime_options or {}
+        self._partition_by_input = partition_by_input
 
     @property
     def func(self) -> Callable:
@@ -102,13 +113,18 @@ class Task:
 
     @property
     def outputs(self) -> Mapping[str, SupportedOutputs]:
-        """Get the outputs the Task produces."""
+        """Get the outputs the task produces."""
         return self._outputs
 
     @property
     def runtime_options(self) -> Mapping[str, Any]:
         """Get the specified runtime options."""
         return self._runtime_options
+
+    @property
+    def partition_by_input(self) -> Optional[str]:
+        """Return the input this task should be partitioned by, if any."""
+        return self._partition_by_input
 
     def __eq__(self, obj) -> bool:
         """Return true if the two tasks are equivalent to each other."""
@@ -122,18 +138,43 @@ class Task:
     def __repr__(self) -> str:
         """Return a human-readable representation of the task."""
         return f"""Task(
-            inputs={str(self._inputs)}, 
-            outputs={str(self._outputs)}, 
-            runtime_options={str(self._runtime_options)}, 
+            task={self._func},
+            inputs={self._inputs}, 
+            outputs={self._outputs}, 
+            runtime_options={self._runtime_options}, 
+            partition_by_input={self._partition_by_input},
         )
         """
 
 
-def _validate_input_is_supported(input_name, input):
-    if not _is_type_supported(input, SupportedInputs):
+def _validate_input_is_supported(input_name, input_type):
+    if not _is_type_supported(input_type, SupportedInputs):
         raise TypeError(
-            f"Input '{input_name}' is of type '{type(input).__name__}'. However, nodes only support the following types of inputs: {[t.__name__ for t in get_type_args(SupportedInputs)]}"
+            f"Input '{input_name}' is of type '{type(input_type).__name__}'. However, nodes only support the following types of inputs: {[t.__name__ for t in get_type_args(SupportedInputs)]}"
         )
+
+
+def _validate_partitioned_input(
+    partition_by_input: str,
+    inputs: Mapping[str, SupportedInputs],
+):
+    if partition_by_input not in inputs:
+        raise ValueError(
+            f"This node is partitioned by '{partition_by_input}'. However, '{partition_by_input}' is not an input of the node. The available inputs are {sorted(list(inputs))}."
+        )
+
+    if isinstance(inputs[partition_by_input], FromParam):
+        raise ValueError(
+            "Nodes may not be partitioned by an input that comes from a parameter. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+        )
+
+
+def _validate_there_are_no_partitioned_outputs(outputs: Mapping[str, SupportedOutputs]):
+    for output_name, output_type in outputs.items():
+        if output_type.is_partitioned:
+            raise ValueError(
+                "Partitioned nodes may not generate partitioned outputs. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+            )
 
 
 def _validate_output_is_supported(output_name, output):
@@ -161,5 +202,5 @@ def _validate_callable_inputs_match_defined_inputs(
         sig.bind(**{name: None for name in input_names})
     except TypeError as e:
         raise TypeError(
-            f"This node was declared with the following inputs: {input_names}. However, the node's function has the following signature: {str(sig)}. The inputs could not be bound to the parameters because: {e.args[0]}"
+            f"This node was declared with the following inputs: {input_names}. However, the node's function has the following signature: {str(sig)}. The inputs could not be bound to the parameters because: {e.args[0]}."
         )

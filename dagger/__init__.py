@@ -2,7 +2,7 @@
 import logging
 import os
 
-from dagger.dag import DAG, DAGOutput  # noqa
+from dagger.dag import DAG  # noqa
 from dagger.task import Task  # noqa
 
 __version__ = "0.1.0"

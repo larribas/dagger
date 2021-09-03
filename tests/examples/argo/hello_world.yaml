@@ -6,6 +6,10 @@ spec:
   entrypoint: dag
   templates:
   - name: dag
+    inputs:
+      parameters:
+      - name: name
+        value: dag
     dag:
       tasks:
       - name: say-hello-world
