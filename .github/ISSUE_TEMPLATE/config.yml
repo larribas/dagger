@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+- name: Documentation Portal
+  url: https://dagger.readthedocs.io/
+  about: Learn all about Dagger
+- name: Examples
+  url: https://github.com/larribas/dagger/tree/main/examples
+  about: See how to implement common use cases and patterns

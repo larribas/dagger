@@ -9,15 +9,12 @@ Define sophisticated data pipelines and run them on different distributed system
 _Dagger_ is a Python library that allows you to:
 
 * Define sophisticated DAGs (direct acyclic graphs) using very straightforward Pythonic code.
-* Run those DAGs seamlessly in different runtimes or workflow orchestrators (such as Argo Workflows, Kubeflow Pipelines or Airflow)
-
-
-_Please check the Roadmap section below to understand what is supported and what is not at the moment_
+* Run those DAGs seamlessly in different runtimes or workflow orchestrators (such as Argo Workflows, Kubeflow Pipelines, and more).
 
 
 ## _Dagger_ in Action
 
-This section shows a couple of examples of what _Dagger_ is capable of. Our [official documentation](TODO) contains a breadth of tutorials, examples, recommendations and API references. Make sure to check it out!
+This section shows a couple of examples of what _Dagger_ is capable of. Our [official documentation](https://dagger.readthedocs.io) contains a breadth of tutorials, examples, recommendations and API references. Make sure to check it out!
 
 
 ### Installing the library
@@ -115,13 +112,13 @@ For instance, when dealing with Pandas `DataFrame`s, you may want to serialize t
 ```python
 # ...
 
-from typing import Annotated
+from typing import Annotated, Dict
 from dagger.dsl import Serialize
 from my_custom_serializers import DataFrameAsParquet
 
 @task
 def split_training_test_datasets(df: pd.DataFrame) -> Annotated[
-    pd.DataFrame,
+    Dict[str, pd.DataFrame],
     Serialize(
         training=DataFrameAsParquet(),
         testing=DataFrameAsParquet(),
@@ -140,6 +137,13 @@ Your function code just works with Python data types, but under the hood, _Dagge
 
 You can check the serializers we provide out of the box in our documentation, under [Serializers](TODO). And you can bring your own serializers very easily.
 
+
+
+### Running your DAG on a distributed runtime
+
+So far, we have run our DAGs using the `runtime.local` package. Next, you can try exporting your DAG for execution in any of the following runtimes:
+
+* [Argo Workflows](TODO)
 
 
 
@@ -179,42 +183,29 @@ We believe if you are already fluent with Python, you should be able to pick up 
 
 To soften the learning curve, we've worked hard on:
 
-* A [documentation portal](TODO) with tutorials, recommendations and API references.
-* A comprehensive [set of examples](TODO), from beginner to advanced use cases.
+* A [documentation portal](https://dagger.readthedocs.io) with tutorials, recommendations and API references.
+* A comprehensive [set of examples](https://github.com/larribas/dagger/tree/main/examples), from beginner to advanced use cases.
 * Thorough error handling to catch any potential issue as early as possible. Error messages are descriptive, point you to the specific component that is causing a problem, explain the reason why it's failing and suggest alternatives.
 
 
 
 ### 3. Performant and reliable
 
-_Dagger_ is there to enable you to create 
+_Dagger_ enables you to create and iterate on complex workflows. During this effort, the library should never be a limiting factor in terms of performance or reliability. That is, we want to make sure you don't experience any bugs, memory leaks or conflicts that impair your productivity. Hence, we have put a lot of focus on:
 
-be a lightweight and robust component of your project. This means:
-
-- __>95% test coverage__.
-- __Zero dependencies__.
-- __DAGs can be executed locally__ to facilitate testing.
-
-You shouldn't have any conflicts 
-
- You shouldn't experience any bugs or unexpected limitations. The codebase has >95% test coverage,.
-
-
-
-* Lightweight and reliable
-  * zero dependencies
-  * Reliability (heavily tested codebase and testable user code through DAG inspection and execution).
-  * Declarative definition of DAGs (DAGs are immutable, composable data structures)
-  * Declarative definition of DAGs (DAGs are immutable, composable data structures)
-
-
-
-
+- __Test coverage__ for internal components. _Dagger_ will always have >95% test coverage for all success and error scenarios.
+- __Zero dependencies__. When you install _Dagger_, it doesn't bring any other dependency with it. Your requirements file will be clean and conflict-free with other versions of other libraries.
+- __Lazy loading of input files__. Where possible, _Dagger_ will minimize the memory footprint by using lazy loading of files from local or remote filesystems into memory. This is especially useful when dealing with partitioned outputs and reduce operations.
+- __Local verification__ of your DAGs. When you build a DAG, we enforce a series of rules that make your pipelines clear and predictable. You can also execute any of your DAGs locally with the local runtime.
 
 
 ## How to contribute
 
-We just released a first stable version of _Dagger_. At the moment, the idea and execution of the library comes from a TODO
+Do you have some feedback about the library? Have you implemented a Serializer or a Runtime that may be useful for the community? Do you think a tutorial or example could be improved?
+
+Every contribution to _Dagger_ is greatly appreciated.
+
+Please read our [Contribution Guidelines](CONTRIBUTING.md) for more details.
 
 
 
