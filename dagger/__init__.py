@@ -2,10 +2,11 @@
 import logging
 import os
 
+import dagger.dsl as dsl  # noqa
 from dagger.dag import DAG  # noqa
 from dagger.task import Task  # noqa
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 
 LOG_FORMAT = "%(asctime)s %(levelname)s:%(name)s:%(message)s"
