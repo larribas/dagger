@@ -9,14 +9,20 @@ on:
 jobs:
   examples:
     runs-on: ubuntu-latest
+    env:
+      PYTHON: 3.9.6
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.9.6
-      - uses: Gr1N/setup-poetry@v4
+          python-version: ${{ env.PYTHON }}
+      - uses: Gr1N/setup-poetry@v7
         with:
           poetry-version: 1.1.5
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-${{ env.PYTHON}}-poetry-${{ hashFiles('poetry.lock') }}
       - name: Install Kubectl
         run: |
           curl -LO https://dl.k8s.io/release/v1.22.0/bin/linux/amd64/kubectl
