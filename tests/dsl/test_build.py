@@ -2,6 +2,7 @@ import pytest
 
 from dagger.dsl.build import (
     _build_dag_outputs,
+    _build_from_parent,
     _build_node,
     _build_node_input,
     _build_task_output,
@@ -286,3 +287,31 @@ def test__build_dag_outputs__consumes_node_output_usages():
         node_names_by_id={"id": "name"},
     )
     assert node_output_usage.references == {node_output_usage}
+
+
+#
+# build_from_parent
+#
+
+
+def test__build_from_parent__when_node_type_is_not_dag():
+    with pytest.raises(TypeError) as e:
+        _build_from_parent(
+            invocation=NodeInvocation(
+                id="my-id",
+                name="my-name",
+                node_type=NodeType.TASK,
+                func=lambda: 1,
+                inputs={},
+                output=NodeOutputUsage(
+                    "my-id",
+                    serialize_annotation=Serialize(),
+                ),
+            ),
+            parent_node_names_by_id={},
+        )
+
+    assert (
+        str(e.value)
+        == "The DAGBuilder may only be instantiated from a NodeInvocation object with NodeType.DAG"
+    )

@@ -13,7 +13,7 @@ install:
 
 .PHONY: test
 test:
-	poetry run pytest --cov=dagger --cov-fail-under=95 --cov-report=xml
+	poetry run pytest --cov=dagger --cov-fail-under=98 --cov-report=xml
 
 .PHONY: lint
 lint:
