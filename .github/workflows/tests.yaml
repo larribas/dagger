@@ -19,7 +19,6 @@ jobs:
         - windows-latest
         python:
         - 3.9.0
-        - 3.9.6
     env:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python }}
