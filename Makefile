@@ -1,6 +1,7 @@
 DOCKER_IMAGE_NAME ?= dagger
 VERSION ?= latest
 KUBE_NAMESPACE ?= argo
+DIRS ?= dagger/ examples/ tests/
 
 K3D_CLUSTER_NAME ?= dagger
 K3D_REGISTRY_NAME ?= local.registry
@@ -13,24 +14,24 @@ install:
 
 .PHONY: test
 test:
-	poetry run pytest --cov=dagger --cov-fail-under=98 --cov-report=xml
+	poetry run pytest --cov=dagger --cov-fail-under=98 --cov-report=xml tests/
 
 .PHONY: lint
 lint:
-	poetry run flake8
+	poetry run flake8 $(DIRS)
 
 .PHONY: check-types
 check-types:
-	poetry run mypy . --ignore-missing-imports
+	poetry run mypy --ignore-missing-imports $(DIRS)
 
 .PHONY: check-docs
 check-docs:
-	poetry run pydocstyle --explain .
+	poetry run pydocstyle --explain $(DIRS)
 
 .PHONY: check-format
 check-format:
-	poetry run black . --check --diff
-	poetry run isort . --check --diff
+	poetry run black --check --diff $(DIRS)
+	poetry run isort --check --diff $(DIRS)
 
 .PHONY: ci
 ci: lint check-types check-format check-docs test
