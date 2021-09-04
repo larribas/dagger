@@ -13,3 +13,6 @@ class CustomSerializer:
 
     def deserialize(self, serialized_value: bytes) -> str:  # noqa
         return "deserialized"
+
+    def __repr__(self) -> str:  # noqa
+        return "CustomSerializerInstance"

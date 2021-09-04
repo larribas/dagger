@@ -50,4 +50,4 @@ class FromReturnValue(Generic[T]):
 
     def __repr__(self) -> str:
         """Return a human-readable representation of the output."""
-        return f"FromReturnValue(serializer={self._serializer})"
+        return f"FromReturnValue(serializer={self._serializer}, is_partitioned={self._is_partitioned})"

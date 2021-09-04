@@ -132,3 +132,11 @@ def test__node_output_usage__is_iterable():
     assert list(output) == [NodeOutputPartitionUsage(output)]
     assert output.is_partitioned is True
     assert output.references == {output}
+
+
+def test__node_output_usage__representation():
+    output = NodeOutputUsage(
+        invocation_id="x",
+        serialize_annotation=Serialize(),
+    )
+    assert repr(output) == "NodeOutputUsage(invocation_id=x)"

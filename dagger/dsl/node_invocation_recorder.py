@@ -97,11 +97,6 @@ class NodeInvocationRecorder:
         """Return the runtime options associated with this class."""
         return self._runtime_options
 
-    @property
-    def node_type(self) -> NodeType:
-        """Return the node type associated with this class."""
-        return self._node_type
-
     def _bind_arguments(self, *args, **kwargs) -> Mapping[str, Any]:
         sig = inspect.signature(self._func)
 
@@ -205,7 +200,7 @@ class NodeInvocationRecorder:
 
     def __repr__(self) -> str:
         """Get a human-readable string representation of this object."""
-        return f"NodeInvocationRecorder(func={self._func}, node_type={self._node_type}, overridden_id={self._overridden_id}, runtime_options={self._runtime_options})"
+        return f"NodeInvocationRecorder(func={self._func}, node_type={self._node_type.value}, overridden_id={self._overridden_id}, runtime_options={self._runtime_options})"
 
     def __eq__(self, obj) -> bool:
         """Return true if both objects are equivalent."""

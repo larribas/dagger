@@ -88,11 +88,7 @@ def _invoke_dag(
             ) from e
 
     dag_outputs = {
-        output_name: _dag_output(
-            output_name=output_name,
-            output_type=output_type,
-            outputs=outputs,
-        )
+        output_name: outputs[output_type.node][output_type.output]
         for output_name, output_type in dag.outputs.items()
     }
 
@@ -162,16 +158,3 @@ def _node_param_from_output(
         return PartitionedOutput(map(lambda v: serializer.deserialize(v), node_output))
     else:
         return serializer.deserialize(node_output)
-
-
-def _dag_output(
-    output_name: str,
-    output_type: FromNodeOutput,
-    outputs: Mapping[str, NodeOutputs],
-) -> NodeOutput:
-    if isinstance(outputs[output_type.node], PartitionedOutput):
-        return PartitionedOutput(
-            map(lambda p: p[output_type.output], outputs[output_type.node])
-        )
-    else:
-        return outputs[output_type.node][output_type.output]

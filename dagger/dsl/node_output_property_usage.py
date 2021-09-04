@@ -79,7 +79,7 @@ class NodeOutputPropertyUsage:
 
     def __repr__(self) -> str:
         """Get a human-readable string representation of this instance."""
-        return f"NodeOutputKeyUsage(invocation_id={self._invocation_id}, output_name={self._output_name}, property_name={self._property_name}, serializer={self._serializer}, is_partitioned={self._is_partitioned}, references_node_partition={self._references_node_partition})"
+        return f"NodeOutputPropertyUsage(invocation_id={self._invocation_id}, output_name={self._output_name}, property_name={self._property_name}, serializer={self._serializer}, is_partitioned={self._is_partitioned}, references_node_partition={self._references_node_partition})"
 
     def __eq__(self, obj) -> bool:
         """Return true if both objects are equivalent."""

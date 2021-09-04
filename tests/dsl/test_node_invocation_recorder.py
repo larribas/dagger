@@ -209,3 +209,19 @@ def test__task_invocation__with_a_partitioned_input():
         "x": x_output,
         "y": y_output,
     }
+
+
+def test__representation():
+    def my_func(x, y):
+        return x + y
+
+    recorder = NodeInvocationRecorder(
+        func=my_func,
+        node_type=NodeType.TASK,
+        override_id="my-id",
+    ).with_runtime_options({"my": "options"})
+
+    assert (
+        repr(recorder)
+        == f"NodeInvocationRecorder(func={my_func}, node_type=task, overridden_id=my-id, runtime_options={{'my': 'options'}})"
+    )

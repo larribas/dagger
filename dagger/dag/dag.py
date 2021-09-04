@@ -176,14 +176,7 @@ class DAG:
 
     def __repr__(self) -> str:
         """Return a human-readable representation of the DAG."""
-        return f"""DAG(
-            inputs={self._inputs}, 
-            outputs={self._outputs}, 
-            runtime_options={self._runtime_options}, 
-            partition_by_input={self._partition_by_input},
-            nodes={self._nodes},
-        )
-        """
+        return f"DAG(inputs={self._inputs}, outputs={self._outputs}, runtime_options={self._runtime_options}, partition_by_input={self._partition_by_input}, nodes={self._nodes})"
 
     def __eq__(self, obj) -> bool:
         """Return true if the two DAGs are equivalent to each other."""

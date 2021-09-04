@@ -4,7 +4,7 @@ from typing import Any, Protocol, runtime_checkable
 
 
 @runtime_checkable
-class Serializer(Protocol):
+class Serializer(Protocol):  # pragma: no cover
     """Protocol all serializers should conform to."""
 
     extension: str

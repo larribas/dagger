@@ -360,6 +360,7 @@ def _dag_task_with_param(
     Spec: https://argoproj.github.io/argo-workflows/fields/#dagtask
     """
     if isinstance(input_type, FromParam):
+        # As of version 1.0.0, this is not a valid map-reduce pattern and this should never happen
         return "{{" + f"workflow.parameters.{input_type.name or input_name}" + "}}"
     else:
         return (

@@ -6,7 +6,7 @@ from dagger.serializer import Serializer
 
 
 @runtime_checkable
-class Output(Protocol):
+class Output(Protocol):  # pragma: no cover
     """
     Protocol all outputs conform to.
 

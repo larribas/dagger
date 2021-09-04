@@ -38,6 +38,21 @@ def test__serialize__multiple_sub_outputs_omitting_root():
     assert serialize.sub_output("missing") is None
 
 
+def test__serialize__representation():
+    root_serializer = AsPickle()
+    a_serializer = AsJSON(indent=1)
+    b_serializer = AsJSON(indent=3)
+    serialize = Serialize(
+        root=root_serializer,
+        a=a_serializer,
+        b=b_serializer,
+    )
+    assert (
+        repr(serialize)
+        == f"Serialize(root={root_serializer}, a={a_serializer}, b={b_serializer})"
+    )
+
+
 #
 # find_serialize_annotation
 #

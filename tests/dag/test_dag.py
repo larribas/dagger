@@ -514,6 +514,27 @@ def test__eq():
     assert all(x != y for x, y in combinations(different, 2))
 
 
+def test__representation():
+    def f(a):
+        pass
+
+    input_a = FromNodeOutput("another-node", "another-output")
+    output_b = FromNodeOutput("t", "o")
+    task = Task(lambda: 1, outputs={"o": FromReturnValue()})
+    dag = DAG(
+        inputs={"a": input_a},
+        outputs={"b": output_b},
+        nodes={"t": task},
+        runtime_options={"my": "options"},
+        partition_by_input="a",
+    )
+
+    assert (
+        repr(dag)
+        == f"DAG(inputs={{'a': {input_a}}}, outputs={{'b': {output_b}}}, runtime_options={{'my': 'options'}}, partition_by_input=a, nodes={{'t': {task}}})"
+    )
+
+
 #
 # validate_parameters
 #

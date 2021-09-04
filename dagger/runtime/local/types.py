@@ -10,6 +10,7 @@ class PartitionedOutput(Generic[T]):
 
     def __init__(self, iterable: Iterable[T]):
         """Build a partitioned output from an Iterable."""
+        self._iterable = iterable
         self._iterator = iter(iterable)
 
     def __iter__(self) -> Iterator[T]:
@@ -22,7 +23,7 @@ class PartitionedOutput(Generic[T]):
 
     def __repr__(self) -> str:
         """Return a human-readable representation of the partitioned output."""
-        return repr(self._iterator)
+        return repr(self._iterable)
 
 
 #: One of the outputs of a node, which may be partitioned

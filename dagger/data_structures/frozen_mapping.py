@@ -84,5 +84,4 @@ class FrozenMapping(Generic[K, V], MappingABC):
 
     def __repr__(self) -> str:
         """Get a human-readable string representation of the data structure."""
-        items = ", ".join([f"{k}: {v}" for k, v in self._mapping.items()])
-        return "{" + items + "}"
+        return repr(self._mapping)

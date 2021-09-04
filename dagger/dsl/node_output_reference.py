@@ -6,7 +6,7 @@ from dagger.serializer import Serializer
 
 
 @runtime_checkable
-class NodeOutputReference(Protocol):
+class NodeOutputReference(Protocol):  # pragma: no cover
     """
     Protocol that references a specific output of a node.
 

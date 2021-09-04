@@ -137,14 +137,7 @@ class Task:
 
     def __repr__(self) -> str:
         """Return a human-readable representation of the task."""
-        return f"""Task(
-            task={self._func},
-            inputs={self._inputs}, 
-            outputs={self._outputs}, 
-            runtime_options={self._runtime_options}, 
-            partition_by_input={self._partition_by_input},
-        )
-        """
+        return f"Task(func={self._func}, inputs={self._inputs}, outputs={self._outputs}, runtime_options={self._runtime_options}, partition_by_input={self._partition_by_input})"
 
 
 def _validate_input_is_supported(input_name, input_type):

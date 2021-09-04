@@ -20,7 +20,7 @@ from dagger.task import Task
 from tests.dsl.verification import verify_dags_are_equivalent
 
 
-def test__hello_world():
+def test__build__hello_world():
     @dsl.task
     def say_hello_world():
         print("hello world")
@@ -39,7 +39,18 @@ def test__hello_world():
     )
 
 
-def test__multiple_calls_to_the_same_task():
+def test__build__dag_with_no_task_invocations():
+    @dsl.DAG
+    def dag():
+        pass
+
+    with pytest.raises(ValueError) as e:
+        dsl.build(dag)
+
+    assert str(e.value) == "A DAG needs to contain at least one node"
+
+
+def test__build__multiple_calls_to_the_same_task():
     @dsl.task
     def f():
         pass
@@ -62,7 +73,7 @@ def test__multiple_calls_to_the_same_task():
     )
 
 
-def test__input_from_param():
+def test__build__input_from_param():
     @dsl.task
     def say_hello(first_name):
         return f"hello {first_name}"
@@ -87,7 +98,7 @@ def test__input_from_param():
     )
 
 
-def test__input_from_literal_value():
+def test__build__input_from_literal_value():
     class ArbitraryObject:
         pass
 
@@ -116,7 +127,7 @@ def test__input_from_literal_value():
         )
 
 
-def test__input_from_param_with_different_names():
+def test__build__input_from_param_with_different_names():
     @dsl.task
     def say_hello(first_name):
         return f"hello {first_name}"
@@ -141,7 +152,7 @@ def test__input_from_param_with_different_names():
     )
 
 
-def test__input_from_node_output():
+def test__build__input_from_node_output():
     @dsl.task
     def generate_random_number():
         return random.random()
@@ -174,7 +185,7 @@ def test__input_from_node_output():
     )
 
 
-def test__using_sub_outputs():
+def test__build__using_sub_outputs():
     @dsl.task
     def generate_complex_structure() -> dict:
         return {"a": 1, "b": 2}
@@ -211,7 +222,26 @@ def test__using_sub_outputs():
     )
 
 
-def test__dag_outputs_from_return_value():
+def test__build__invalid_dag_return_value():
+    @dsl.task
+    def echo(x):
+        print(x)
+
+    @dsl.DAG
+    def dag():
+        echo(1)
+        return "invalid"
+
+    with pytest.raises(TypeError) as e:
+        dsl.build(dag)
+
+    assert (
+        str(e.value)
+        == "This DAG returned a value of type str. Functions decorated with `dsl.DAG` may only return two types of values: The output of another node or a mapping of [str, the output of another node]"
+    )
+
+
+def test__build__dag_outputs_from_return_value():
     @dsl.task
     def generate_complex_structure() -> dict:
         return {"a": 1, "b": 2}
@@ -238,7 +268,7 @@ def test__dag_outputs_from_return_value():
     )
 
 
-def test__dag_outputs_from_sub_output():
+def test__build__dag_outputs_from_sub_output():
     @dsl.task
     def generate_complex_structure() -> dict:
         return {"a": 1, "b": 2}
@@ -263,7 +293,7 @@ def test__dag_outputs_from_sub_output():
     )
 
 
-def test__multiple_dag_outputs():
+def test__build__multiple_dag_outputs():
     @dsl.task
     def generate_number() -> int:
         return 1
@@ -296,7 +326,7 @@ def test__multiple_dag_outputs():
     )
 
 
-def test__nested_dags_simple():
+def test__build__nested_dags_simple():
     @dsl.task
     def double(n: int) -> int:
         return n * 2
@@ -331,7 +361,7 @@ def test__nested_dags_simple():
     )
 
 
-def test__nested_dags_complex():
+def test__build__nested_dags_complex():
     @dsl.task
     def generate_seed() -> int:
         return 100
@@ -408,7 +438,7 @@ def test__nested_dags_complex():
     )
 
 
-def test__runtime_options():
+def test__build__runtime_options():
     task_options = {"task_options": 1}
     dag_options = {"dag_options": 2}
 
@@ -442,7 +472,7 @@ def test__runtime_options():
     )
 
 
-def test__overriding_serializers():
+def test__build__overriding_serializers():
     @dsl.task
     def generate_single_number() -> Annotated[int, dsl.Serialize(AsPickle())]:
         return random.randint(1, 100)
@@ -491,8 +521,8 @@ def test__overriding_serializers():
                 "generate-multiple-numbers": Task(
                     generate_multiple_numbers.func,
                     outputs={
-                        "key_json": FromKey(key="json", serializer=AsJSON(indent=5)),
-                        "key_pickle": FromKey(key="pickle", serializer=AsPickle()),
+                        "key_json": FromKey("json", serializer=AsJSON(indent=5)),
+                        "key_pickle": FromKey("pickle", serializer=AsPickle()),
                     },
                 ),
                 "announce-numbers": DAG(
@@ -546,7 +576,7 @@ def test__overriding_serializers():
     )
 
 
-def test__map_reduce():
+def test__build__map_reduce():
     @dsl.task
     def generate_numbers():
         return [1, 2, 3]
@@ -609,7 +639,7 @@ def test__map_reduce():
     )
 
 
-def test__nested_map_reduce():
+def test__build__nested_map_reduce():
     @dsl.task
     def generate_numbers(partitions):
         return list(range(partitions))
@@ -716,7 +746,7 @@ def test__nested_map_reduce():
     )
 
 
-def test__multiple_map_operations():
+def test__build__multiple_map_operations():
     @dsl.task
     def generate_numbers():
         return [1, 2, 3]
@@ -742,7 +772,7 @@ def test__multiple_map_operations():
     )
 
 
-def test__nested_for_loops():
+def test__build__nested_for_loops():
     @dsl.task
     def generate_numbers(partitions):
         return list(range(partitions))
