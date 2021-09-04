@@ -1,0 +1,29 @@
+name: Publish Package
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    env:
+      PYTHON: 3.9.6
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON }}
+      - uses: Gr1N/setup-poetry@v7
+        with:
+          poetry-version: 1.1.5
+      - name: Install poetry-dynamic-versioning
+        run: pip install poetry-dynamic-versioning
+      - name: Build
+        run: |
+          poetry build
+      - name: Publish
+        run: |
+          poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
+
