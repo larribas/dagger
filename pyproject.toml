@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dagger"
-version = "1.0.0"
+version = "0.0.0"
 description = "Define sophisticated data pipelines with Python and run them on different distributed systems (such as Argo Workflows)."
 authors = ["larribas <lorenzo.s.arribas@gmail.com>"]
 
@@ -20,8 +20,11 @@ pytest-cov = "^2.12.0"
 PyYAML = "^5.4.1"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry-dynamic-versioning]
+enable = true
 
 [tool.isort]
 profile = "black"
