@@ -16,7 +16,7 @@ jobs:
         os:
         - ubuntu-latest
         - macos-latest
-        - windows-latest
+        # - windows-latest  Commented out until issue #17 is addressed
         python:
         - 3.9.0
     env:
