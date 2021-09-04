@@ -13,7 +13,7 @@ class FromKey(Generic[K, V]):
 
     def __init__(
         self,
-        key: K,
+        name: K,
         serializer: Serializer = DefaultSerializer,
         is_partitioned: bool = False,
     ):
@@ -22,7 +22,7 @@ class FromKey(Generic[K, V]):
 
         Parameters
         ----------
-        key
+        name
             Name of the key that contains the output.
 
         serializer
@@ -32,7 +32,7 @@ class FromKey(Generic[K, V]):
         is_partitioned
             A flag indicating whether this output should be partitioned. Partitioned outputs are assumed to come from an Iterable object. Each item in the Iterable should be serializable with the specified serializer.
         """
-        self._key = key
+        self._name = name
         self._serializer = serializer
         self._is_partitioned = is_partitioned
 
@@ -71,24 +71,24 @@ class FromKey(Generic[K, V]):
         """
         if isinstance(return_value, Mapping):
             try:
-                return return_value[self._key]
+                return return_value[self._name]
             except KeyError:
                 raise ValueError(
-                    f"An output of type {self.__class__.__name__}('{self._key}') expects the return value of the function to be a mapping containing, at least, a key named '{self._key}'"
+                    f"An output of type {self.__class__.__name__}('{self._name}') expects the return value of the function to be a mapping containing, at least, a key named '{self._name}'"
                 )
 
         raise TypeError(
-            f"This output is of type {self.__class__.__name__}. This means we expect the return value of the function to be a mapping containing, at least, a key named '{self._key}'"
+            f"This output is of type {self.__class__.__name__}. This means we expect the return value of the function to be a mapping containing, at least, a key named '{self._name}'"
         )
 
     def __repr__(self) -> str:
         """Get a human-readable string representation of the output."""
-        return f"FromKey(key={self._key}, serializer={self._serializer})"
+        return f"FromKey(key={self._name}, serializer={self._serializer}, is_partitioned={self._is_partitioned})"
 
     def __eq__(self, obj) -> bool:
         """Return true if both outputs are equivalent."""
         return (
             isinstance(obj, FromKey)
             and self._serializer == obj._serializer
-            and self._key == obj._key
+            and self._name == obj._name
         )

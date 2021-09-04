@@ -2,7 +2,7 @@
 
 Define sophisticated data pipelines and run them on different distributed systems (such as Argo Workflows).
 
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/larribas/dagger/blob/main/LICENSE.md) ![tests](https://github.com/larribas/dagger/actions/workflows/tests.yaml/badge.svg) ![documentation](https://github.com/larribas/dagger/actions/workflows/documentation.yaml/badge.svg) ![type system](https://github.com/larribas/dagger/actions/workflows/linting.yaml/badge.svg) ![style](https://github.com/larribas/dagger/actions/workflows/formatting.yaml/badge.svg)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/larribas/dagger/blob/main/LICENSE.md) ![tests](https://github.com/larribas/dagger/actions/workflows/tests.yaml/badge.svg) [![codecov](https://codecov.io/gh/larribas/dagger/branch/main/graph/badge.svg?token=fKU68xYUm8)](https://codecov.io/gh/larribas/dagger) ![documentation](https://github.com/larribas/dagger/actions/workflows/documentation.yaml/badge.svg) ![type system](https://github.com/larribas/dagger/actions/workflows/linting.yaml/badge.svg) ![style](https://github.com/larribas/dagger/actions/workflows/formatting.yaml/badge.svg)
 
 ---
 

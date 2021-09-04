@@ -90,8 +90,9 @@ def _build(
     ctx = copy_context()
     dag_output = ctx.run(build_func, **parameters)
 
+    invocations_in_context = ctx.get(node_invocations, [])
     node_names_by_id = _translate_invocation_ids_into_readable_names(
-        ctx[node_invocations]
+        invocations_in_context
     )
 
     inputs = inputs_from_parent or parameters
@@ -112,7 +113,7 @@ def _build(
         node_names_by_id[node_invocation.id]: _build_node(
             node_invocation, node_names_by_id=node_names_by_id
         )
-        for node_invocation in ctx[node_invocations]
+        for node_invocation in invocations_in_context
     }
 
     return DAG(
@@ -231,7 +232,7 @@ def _translate_invocation_ids_into_readable_names(
 
 
 def _build_node_input(
-    input_type: NodeInputReference,
+    input_type: Union[ParameterUsage, NodeOutputReference],
     node_names_by_id: Mapping[str, str],
 ) -> Union[FromParam, FromNodeOutput]:
     """
@@ -246,15 +247,11 @@ def _build_node_input(
             name=input_type.name,
             serializer=input_type.serializer,
         )
-    elif isinstance(input_type, NodeOutputReference):
+    else:
         return FromNodeOutput(
             node=node_names_by_id[input_type.invocation_id],
             output=input_type.output_name,
             serializer=input_type.serializer,
-        )
-    else:
-        raise NotImplementedError(
-            f"The DSL is not compatible with inputs of type '{type(input_type).__name__}'. {POTENTIAL_BUG_MESSAGE}"
         )
 
 

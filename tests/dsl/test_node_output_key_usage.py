@@ -45,3 +45,35 @@ def test__node_output_key_usage__is_iterable():
     # When we iterate over it
     assert list(output) == [NodeOutputPartitionUsage(output)]
     assert output.is_partitioned is True
+
+
+def test__node_output_key_usage__representation():
+    serializer = AsPickle()
+    output = NodeOutputKeyUsage(
+        invocation_id="x",
+        output_name="y",
+        key_name="z",
+        serializer=serializer,
+        references_node_partition=True,
+    )
+    assert (
+        repr(output)
+        == f"NodeOutputKeyUsage(invocation_id=x, output_name=y, key_name=z, serializer={serializer}, is_partitioned=False, references_node_partition=True)"
+    )
+
+
+def test__node_output_key_usage__consume_does_nothing():
+    a = NodeOutputKeyUsage(
+        invocation_id="x",
+        output_name="y",
+        key_name="z",
+        serializer=DefaultSerializer,
+    )
+    b = NodeOutputKeyUsage(
+        invocation_id="x",
+        output_name="y",
+        key_name="z",
+        serializer=DefaultSerializer,
+    )
+    b.consume()
+    assert a == b

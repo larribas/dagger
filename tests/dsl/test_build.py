@@ -1,5 +1,8 @@
+import pytest
+
 from dagger.dsl.build import (
     _build_dag_outputs,
+    _build_from_parent,
     _build_node,
     _build_node_input,
     _build_task_output,
@@ -7,6 +10,8 @@ from dagger.dsl.build import (
 )
 from dagger.dsl.node_invocations import NodeInvocation, NodeType
 from dagger.dsl.node_output_key_usage import NodeOutputKeyUsage
+from dagger.dsl.node_output_partition_fan_in import NodeOutputPartitionFanIn
+from dagger.dsl.node_output_partition_usage import NodeOutputPartitionUsage
 from dagger.dsl.node_output_property_usage import NodeOutputPropertyUsage
 from dagger.dsl.node_output_usage import NodeOutputUsage
 from dagger.dsl.parameter_usage import ParameterUsage
@@ -50,6 +55,11 @@ def test__translate_invocation_ids_into_readable_names():
     }
 
 
+#
+# build_node_input
+#
+
+
 def test__build_node_input__param_usage():
     assert _build_node_input(ParameterUsage(), node_names_by_id={}) == FromParam()
     assert _build_node_input(
@@ -69,6 +79,11 @@ def test__build_node_input__node_output_reference():
         "return_value",
         serializer=AsPickle(),
     )
+
+
+#
+# build_task_output
+#
 
 
 def test__build_task_output__return_value():
@@ -108,6 +123,37 @@ def test__build_task_output__property():
         "prop",
         serializer=AsPickle(),
     )
+
+
+def test__build_task_output__partition_usage():
+    output_usage = NodeOutputUsage(
+        invocation_id="id",
+        serialize_annotation=Serialize(AsPickle()),
+    )
+    assert _build_task_output(
+        NodeOutputPartitionUsage(output_usage)
+    ) == FromReturnValue(serializer=AsPickle())
+
+
+def test__build_task_output__unsupported_reference():
+    output = NodeOutputPartitionFanIn(
+        NodeOutputUsage(
+            invocation_id="id",
+            serialize_annotation=Serialize(AsPickle()),
+        )
+    )
+    with pytest.raises(NotImplementedError) as e:
+        _build_task_output(output)
+
+    assert (
+        str(e.value)
+        == "The DSL is not compatible with node outputs of type 'NodeOutputPartitionFanIn'. If you are seeing this error, this is probably a bug in the library. Please check our GitHub repository to see whether the bug has already been reported/fixed. Otherwise, please create a ticket."
+    )
+
+
+#
+# build_node
+#
 
 
 def test__build_node__task():
@@ -164,6 +210,11 @@ def test__build_node__task():
             "property_prop": FromProperty("prop"),
         },
     )
+
+
+#
+# build_dag_outputs
+#
 
 
 def test__build_dag_outputs__when_none_are_returned():
@@ -236,3 +287,31 @@ def test__build_dag_outputs__consumes_node_output_usages():
         node_names_by_id={"id": "name"},
     )
     assert node_output_usage.references == {node_output_usage}
+
+
+#
+# build_from_parent
+#
+
+
+def test__build_from_parent__when_node_type_is_not_dag():
+    with pytest.raises(TypeError) as e:
+        _build_from_parent(
+            invocation=NodeInvocation(
+                id="my-id",
+                name="my-name",
+                node_type=NodeType.TASK,
+                func=lambda: 1,
+                inputs={},
+                output=NodeOutputUsage(
+                    "my-id",
+                    serialize_annotation=Serialize(),
+                ),
+            ),
+            parent_node_names_by_id={},
+        )
+
+    assert (
+        str(e.value)
+        == "The DAGBuilder may only be instantiated from a NodeInvocation object with NodeType.DAG"
+    )

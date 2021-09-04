@@ -176,14 +176,7 @@ class DAG:
 
     def __repr__(self) -> str:
         """Return a human-readable representation of the DAG."""
-        return f"""DAG(
-            inputs={self._inputs}, 
-            outputs={self._outputs}, 
-            runtime_options={self._runtime_options}, 
-            partition_by_input={self._partition_by_input},
-            nodes={self._nodes},
-        )
-        """
+        return f"DAG(inputs={self._inputs}, outputs={self._outputs}, runtime_options={self._runtime_options}, partition_by_input={self._partition_by_input}, nodes={self._nodes})"
 
     def __eq__(self, obj) -> bool:
         """Return true if the two DAGs are equivalent to each other."""
@@ -291,31 +284,41 @@ def _validate_node_input_dependencies(
     dag_nodes: Mapping[str, Node],
     dag_inputs: Mapping[str, SupportedInputs],
 ):
-    for node_name in dag_nodes:
-        node = dag_nodes[node_name]
+    for node_name, node in dag_nodes.items():
         for input_name, input_type in node.inputs.items():
-            try:
-                if isinstance(input_type, FromParam):
-                    _validate_input_from_param(
-                        input_name=input_name,
-                        input_type=input_type,
-                        dag_inputs=dag_inputs,
-                    )
-                elif isinstance(input_type, FromNodeOutput):
-                    _validate_input_from_node_output(
-                        node_name=node_name,
-                        input_type=input_type,
-                        dag_nodes=dag_nodes,
-                    )
-                else:
-                    raise Exception(
-                        f"Whoops. The current version of the library doesn't seem to support inputs of type '{type(input_type)}'. This is most likely unintended. Please, check the GitHub project to see if this issue has already been reported and addressed in a newer version. Otherwise, please report this as a bug in our GitHub tracker. Sorry for the inconvenience."
-                    )
+            _validate_node_input_dependency(
+                node_name=node_name,
+                dag_nodes=dag_nodes,
+                dag_inputs=dag_inputs,
+                input_name=input_name,
+                input_type=input_type,
+            )
 
-            except (TypeError, ValueError) as e:
-                raise e.__class__(
-                    f"Error validating input '{input_name}' of node '{node_name}': {str(e)}"
-                )
+
+def _validate_node_input_dependency(
+    node_name: str,
+    dag_nodes: Mapping[str, Node],
+    dag_inputs: Mapping[str, SupportedInputs],
+    input_name: str,
+    input_type: Union[FromParam, FromNodeOutput],
+):
+    try:
+        if isinstance(input_type, FromParam):
+            _validate_input_from_param(
+                input_name=input_name,
+                input_type=input_type,
+                dag_inputs=dag_inputs,
+            )
+        else:
+            _validate_input_from_node_output(
+                node_name=node_name,
+                input_type=input_type,
+                dag_nodes=dag_nodes,
+            )
+    except (TypeError, ValueError) as e:
+        raise e.__class__(
+            f"Error validating input '{input_name}' of node '{node_name}': {str(e)}"
+        )
 
 
 def _validate_input_from_param(

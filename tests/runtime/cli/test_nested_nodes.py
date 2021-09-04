@@ -129,3 +129,13 @@ def test__nodes_referenced_so_far__several_levels_of_nesting():
         )
         == ["b", "a"]
     )
+
+
+def test__node_with_parent__representation():
+    task = Task(lambda: 1)
+    dag = DAG({"a": task})
+    node_with_parent = find_nested_node(dag, ["a"])
+    assert (
+        repr(node_with_parent)
+        == f"NodeWithParent(node={repr(task)}, node_name=a, parent=NodeWithParent(node={repr(dag)}, node_name=, parent=None))"
+    )

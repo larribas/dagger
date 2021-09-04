@@ -56,3 +56,8 @@ def test__equality():
 def test__equality_towards_other_types_of_mapping():
     a = FrozenMapping({"a": 1, "b": 2}, error_message="")
     assert a == {"a": 1, "b": 2}
+
+
+def test__representation():
+    frozen_map = FrozenMapping({"a": 1, "b": 2}, error_message="my-error")
+    assert repr(frozen_map) == "{'a': 1, 'b': 2}"

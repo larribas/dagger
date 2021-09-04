@@ -220,3 +220,25 @@ def test__eq():
 
     assert all(x == y for x, y in combinations(same, 2))
     assert all(x != y for x, y in combinations(different, 2))
+
+
+def test__representation():
+    def f(a):
+        pass
+
+    input_a = FromNodeOutput("another-node", "another-output")
+    output_b = FromReturnValue()
+    task = Task(
+        f,
+        inputs={"a": input_a},
+        outputs={
+            "b": output_b,
+        },
+        runtime_options={"my": "options"},
+        partition_by_input="a",
+    )
+
+    assert (
+        repr(task)
+        == f"Task(func={f}, inputs={{'a': {input_a}}}, outputs={{'b': {output_b}}}, runtime_options={{'my': 'options'}}, partition_by_input=a)"
+    )

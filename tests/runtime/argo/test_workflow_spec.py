@@ -3,7 +3,11 @@ import pytest
 from dagger.dag import DAG
 from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromReturnValue
-from dagger.runtime.argo.workflow_spec import Workflow, workflow_spec
+from dagger.runtime.argo.workflow_spec import (
+    Workflow,
+    _dag_task_with_param,
+    workflow_spec,
+)
 from dagger.task import Task
 
 #
@@ -449,3 +453,20 @@ def test__workflow_spec__with_workflow_spec_overrides():
             },
         ],
     }
+
+
+def test__dag_task_with_param():
+    assert (
+        _dag_task_with_param("my-input", FromParam("parent-input"))
+        == "{{workflow.parameters.parent-input}}"
+    )
+    assert (
+        _dag_task_with_param("my-input", FromParam())
+        == "{{workflow.parameters.my-input}}"
+    )
+    assert (
+        _dag_task_with_param(
+            "my-input", FromNodeOutput("another-node", "another-output")
+        )
+        == "{{tasks.another-node.outputs.parameters.another-output_partitions}}"
+    )

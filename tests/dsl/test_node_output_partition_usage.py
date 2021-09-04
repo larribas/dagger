@@ -34,6 +34,18 @@ def test__node_output_partition_usage__properties():
     assert output_partition.wrapped_reference == output
 
 
+def test__node_output_partition_usage__representation():
+    output = NodeOutputUsage(
+        invocation_id="x",
+        serialize_annotation=Serialize(),
+    )
+    output_partition = NodeOutputPartitionUsage(output)
+    assert (
+        repr(output_partition)
+        == f"NodeOutputPartitionUsage(wrapped_reference={output})"
+    )
+
+
 def test__node_output_partition_usage__is_iterable_but_cannot_be_iterated_over():
     output = NodeOutputPartitionUsage(
         NodeOutputUsage(

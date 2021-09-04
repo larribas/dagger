@@ -69,7 +69,7 @@ class FromProperty:
 
     def __repr__(self) -> str:
         """Get a human-readable string representation of the output."""
-        return f"FromProperty(name={self._name}, serializer={self._serializer})"
+        return f"FromProperty(name={self._name}, serializer={self._serializer}, is_partitioned={self._is_partitioned})"
 
     def __eq__(self, obj) -> bool:
         """Return true if both outputs are equivalent."""
