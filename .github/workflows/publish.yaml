@@ -1,12 +1,8 @@
 name: Publish Package
 
 on:
-  push:
-    tags:
-      - '*'
-  pull_request:
-    branches:
-      - main
+  release:
+    types: [created]
 
 jobs:
   build-and-publish:
@@ -21,10 +17,8 @@ jobs:
       - uses: Gr1N/setup-poetry@v7
         with:
           poetry-version: 1.1.5
-      - name: Git Tags
-        run: git describe --tags --abbrev=0
-      - name: Bump version
-        run: poetry version $(git describe --tags --abbrev=0)
+      - name: Set version
+        run: make set-version-from-git
       - name: Build
         run: poetry build -vvv
       # - name: Publish
