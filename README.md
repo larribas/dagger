@@ -20,7 +20,7 @@ _Dagger_ is a Python library that allows you to:
 
 ## _Dagger_ in Action
 
-This section shows a couple of examples of what _Dagger_ is capable of. Our [official documentation](https://dagger.readthedocs.io) contains a breadth of tutorials, examples, recommendations and API references. Make sure to check it out!
+This section shows a couple of examples of what _Dagger_ is capable of. Our [official documentation](https://larribas.me/dagger) contains a breadth of tutorials, examples, recommendations and API references. Make sure to check it out!
 
 
 ### Installing the library
@@ -189,7 +189,7 @@ We believe if you are already fluent with Python, you should be able to pick up 
 
 To soften the learning curve, we've worked hard on:
 
-* A [documentation portal](https://dagger.readthedocs.io) with tutorials, recommendations and API references.
+* A [documentation portal](https://larribas.me/dagger) with tutorials, recommendations and API references.
 * A comprehensive [set of examples](https://github.com/larribas/dagger/tree/main/examples), from beginner to advanced use cases.
 * Thorough error handling to catch any potential issue as early as possible. Error messages are descriptive, point you to the specific component that is causing a problem, explain the reason why it's failing and suggest alternatives.
 
