@@ -20,6 +20,9 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ env.PYTHON }}
+      - uses: Gr1N/setup-poetry@v7
+        with:
+          poetry-version: 1.1.5
       - uses: actions/cache@v2
         with:
           path: ~/.cache/pypoetry/virtualenvs
