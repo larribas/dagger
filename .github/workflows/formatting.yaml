@@ -26,8 +26,6 @@ jobs:
           path: ~/.cache/pypoetry/virtualenvs
           key: ${{ runner.os }}-${{ env.PYTHON}}-poetry-${{ hashFiles('poetry.lock') }}
       - name: Install dependencies
-        run: |
-          make install
+        run: make install
       - name: Verify code format
-        run: |
-          make check-format
+        run: make check-format
