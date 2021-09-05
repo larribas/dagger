@@ -15,26 +15,18 @@ jobs:
       PYTHON: 3.9.6
     steps:
       - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ env.PYTHON }}
       - uses: Gr1N/setup-poetry@v7
         with:
           poetry-version: 1.1.5
-      - uses: actions/cache@v2
-        with:
-          path: ~/.cache/pypoetry/virtualenvs
-          key: ${{ runner.os }}-${{ env.PYTHON}}-poetry-${{ hashFiles('poetry.lock') }}
-      - name: Install dependencies
-        run: make install
-      - name: Install poetry-dynamic-versioning
-        run: pip install poetry-dynamic-versioning
       - name: Git Tags
-        run: git tag
-      - name: Poetry Build
+        run: git describe --tags --abbrev=0
+      - name: Bump version
+        run: poetry version $(git describe --tags --abbrev=0)
+      - name: Build
         run: poetry build -vvv
-      # - name: Poetry Publish
+      # - name: Publish
       #   run: poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
 
