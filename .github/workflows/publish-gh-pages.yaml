@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    if: github.repository == 'argoproj/argo-workflows'
+    if: github.repository == 'larribas/dagger'
     runs-on: ubuntu-latest
     env:
       PYTHON: 3.9.6
