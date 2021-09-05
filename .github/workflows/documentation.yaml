@@ -28,4 +28,6 @@ jobs:
       - name: Poetry Install
         run: make install
       - name: Verify docstring documentation is standardized
-        run: make check-docs
+        run: make check-docstrings
+      - name: Verify docstring documentation is standardized
+        run: make docs-build

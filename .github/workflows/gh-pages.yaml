@@ -1,15 +1,13 @@
-name: Formatting
+name: Publish Docs
 
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+      - mkdocs-documentation-portal-on-github-pages
 
 jobs:
-  check-format:
+  deploy:
+    if: github.repository == 'argoproj/argo-workflows'
     runs-on: ubuntu-latest
     env:
       PYTHON: 3.9.6
@@ -27,5 +25,5 @@ jobs:
           key: ${{ runner.os }}-${{ env.PYTHON}}-poetry-${{ hashFiles('poetry.lock') }}
       - name: Install dependencies
         run: make install
-      - name: Verify code format
-        run: make check-format
+      - name: Publish documentation
+        run: make docs-publish

@@ -24,8 +24,8 @@ lint:
 check-types:
 	poetry run mypy --ignore-missing-imports $(DIRS)
 
-.PHONY: check-docs
-check-docs:
+.PHONY: check-docstrings
+check-docstrings:
 	poetry run pydocstyle --explain $(DIRS)
 
 .PHONY: check-format
@@ -34,8 +34,20 @@ check-format:
 	poetry run isort --check --diff $(DIRS)
 
 .PHONY: ci
-ci: lint check-types check-format check-docs test
+ci: lint check-types check-format check-docstrings test
 	@echo "All checks have passed"
+
+.PHONY: docs-serve
+docs-serve:
+	poetry run mkdocs serve
+
+.PHONY: docs-build
+docs-build:
+	poetry run mkdocs build
+
+.PHONY: docs-publish
+docs-publish:
+	poetry run mkdocs gh-deploy
 
 .PHONY: build
 build:

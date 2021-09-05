@@ -1,0 +1,7 @@
+site_name: Dagger - Distributed Data Pipelines in Python
+repo_url: https://github.com/larribas/dagger
+theme: readthedocs
+nav:
+- Overview: README.md
+- Releases ⧉: https://github.com/larribas/dagger/releases
+- PyPI ⧉: https://pypi.org/project/py-dagger/
