@@ -22,7 +22,7 @@ This section shows a couple of examples of what _Dagger_ is capable of. Our [off
 _Dagger_ is published to the Python Package Index (PyPI). To install it, you can simply run:
 
 ```
-pip install dagger
+pip install py-dagger
 ```
 
 

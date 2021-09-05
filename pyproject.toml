@@ -1,8 +1,27 @@
 [tool.poetry]
-name = "dagger"
-version = "0.0.0"
+name = "py-dagger"
+packages = [{ include = "dagger" }]
 description = "Define sophisticated data pipelines with Python and run them on different distributed systems (such as Argo Workflows)."
 authors = ["larribas <lorenzo.s.arribas@gmail.com>"]
+version = "0.0.0"
+license = "Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/larribas/dagger"
+documentation = "https://dagger.readthedocs.io"
+keywords = [
+  "argo-workflows",
+  "data-engineering",
+  "data-pipelines",
+  "data-science"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development :: Build Tools"
+]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4.0"
