@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "dagger"
+name = "py-dagger"
 version = "0.0.0"
 description = "Define sophisticated data pipelines with Python and run them on different distributed systems (such as Argo Workflows)."
 authors = ["larribas <lorenzo.s.arribas@gmail.com>"]
