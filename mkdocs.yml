@@ -5,7 +5,11 @@ site_author: Lorenzo Arribas (@larribas)
 copyright: "2021, Lorenzo Arribas (@larribas)"
 repo_url: https://github.com/larribas/dagger
 theme: readthedocs
+plugins:
+- search
+- mkapi
 nav:
 - Overview: README.md
+- API: mkapi/api/dagger
 - Releases ⧉: https://github.com/larribas/dagger/releases
 - PyPI ⧉: https://pypi.org/project/py-dagger/

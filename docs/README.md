@@ -1,17 +1,15 @@
-# Welcome to MkDocs
+# Dagger
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+Define sophisticated data pipelines and run them on different distributed systems (such as Argo Workflows).
 
-## Commands
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/larribas/dagger/blob/main/LICENSE.md)
+![Python Versions Supported](https://img.shields.io/badge/python-3.9+-blue.svg)
+[![Latest PyPI version](https://badge.fury.io/py/py-dagger.svg)](https://badge.fury.io/py/py-dagger)
+[![Test Coverage (Codecov)](https://codecov.io/gh/larribas/dagger/branch/main/graph/badge.svg?token=fKU68xYUm8)](https://codecov.io/gh/larribas/dagger)
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
 
-## Project layout
 
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+# Test API:
+
+
+![mkapi](dagger.dag)
