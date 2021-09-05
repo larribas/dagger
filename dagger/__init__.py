@@ -6,7 +6,7 @@ import dagger.dsl as dsl  # noqa
 from dagger.dag import DAG  # noqa
 from dagger.task import Task  # noqa
 
-# We use dynamic versioning, coming from Git tags. 0.0.0 is a placeholder.
+# This will be replaced at package publication time by the latest git tag
 __version__ = "0.0.0"
 
 

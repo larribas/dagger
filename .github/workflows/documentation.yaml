@@ -26,8 +26,6 @@ jobs:
           path: ~/.cache/pypoetry/virtualenvs
           key: ${{ runner.os }}-${{ env.PYTHON}}-poetry-${{ hashFiles('poetry.lock') }}
       - name: Poetry Install
-        run: |
-          poetry install
+        run: make install
       - name: Verify docstring documentation is standardized
-        run: |
-          make check-docs
+        run: make check-docs

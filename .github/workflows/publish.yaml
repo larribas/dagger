@@ -1,9 +1,8 @@
 name: Publish Package
 
 on:
-  push:
-    tags:
-      - '*'
+  release:
+    types: [created]
 
 jobs:
   build-and-publish:
@@ -18,12 +17,10 @@ jobs:
       - uses: Gr1N/setup-poetry@v7
         with:
           poetry-version: 1.1.5
-      - name: Install poetry-dynamic-versioning
-        run: pip install poetry-dynamic-versioning
+      - name: Set version
+        run: make set-version-from-git
       - name: Build
-        run: |
-          poetry build
+        run: poetry build -vvv
       - name: Publish
-        run: |
-          poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
+        run: poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
 
