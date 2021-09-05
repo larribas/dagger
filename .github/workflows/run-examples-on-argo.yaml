@@ -1,4 +1,4 @@
-name: Argo Examples
+name: Run Examples on Argo Workflows
 
 on:
   pull_request:

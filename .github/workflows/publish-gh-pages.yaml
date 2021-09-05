@@ -1,15 +1,13 @@
-name: Documentation
+name: Publish Docs in GH Pages
 
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    - mkdocs-documentation-portal-on-github-pages
 
 jobs:
-  check-documentation:
+  deploy:
+    if: github.repository == 'argoproj/argo-workflows'
     runs-on: ubuntu-latest
     env:
       PYTHON: 3.9.6
@@ -25,9 +23,7 @@ jobs:
         with:
           path: ~/.cache/pypoetry/virtualenvs
           key: ${{ runner.os }}-${{ env.PYTHON}}-poetry-${{ hashFiles('poetry.lock') }}
-      - name: Poetry Install
+      - name: Install dependencies
         run: make install
-      - name: Verify docstring documentation is standardized
-        run: make check-docstrings
-      - name: Verify docstring documentation is standardized
-        run: make docs-build
+      - name: Publish documentation
+        run: make docs-publish

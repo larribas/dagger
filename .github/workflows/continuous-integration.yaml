@@ -1,0 +1,135 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  codeql:
+    name: Analyze with CodeQL
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python]
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v1
+      with:
+        languages: ${{ matrix.language }}
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v1
+  lint:
+    name: Lint and Check type system
+    runs-on: ubuntu-latest
+    env:
+      PYTHON: 3.9.6
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON }}
+      - uses: Gr1N/setup-poetry@v7
+        with:
+          poetry-version: 1.1.5
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-${{ env.PYTHON}}-poetry-${{ hashFiles('poetry.lock') }}
+      - name: Install dependencies
+        run: make install
+      - name: Lint
+        run: make lint
+      - name: Check types
+        run: make check-types
+  code-format:
+    name: Standard Code Formatting
+    runs-on: ubuntu-latest
+    env:
+      PYTHON: 3.9.6
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON }}
+      - uses: Gr1N/setup-poetry@v7
+        with:
+          poetry-version: 1.1.5
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-${{ env.PYTHON}}-poetry-${{ hashFiles('poetry.lock') }}
+      - name: Install dependencies
+        run: make install
+      - name: Verify code format
+        run: make check-format
+  code-documentation:
+    name: Code Documentation (docstrings)
+    runs-on: ubuntu-latest
+    env:
+      PYTHON: 3.9.6
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON }}
+      - uses: Gr1N/setup-poetry@v7
+        with:
+          poetry-version: 1.1.5
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-${{ env.PYTHON}}-poetry-${{ hashFiles('poetry.lock') }}
+      - name: Poetry Install
+        run: make install
+      - name: Verify docstring documentation is standardized
+        run: make check-docstrings
+  test:
+    name: Test Suite
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+        - ubuntu-latest
+        - macos-latest
+        # - windows-latest  Commented out until issue #17 is addressed
+        python:
+        - 3.9.0
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: Gr1N/setup-poetry@v7
+        with:
+          poetry-version: 1.1.5
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-${{ matrix.python }}-poetry-${{ hashFiles('poetry.lock') }}
+      - name: Install dependencies
+        run: |
+          make install
+      - name: Unit tests
+        run: |
+          make test
+      - uses: codecov/codecov-action@v2
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: true
+          env_vars: OS,PYTHON
+          verbose: true
+
