@@ -5,7 +5,7 @@ Define sophisticated data pipelines and run them on different distributed system
 ![Python Versions Supported](https://img.shields.io/badge/python-3.9+-blue.svg)
 [![Latest PyPI version](https://badge.fury.io/py/py-dagger.svg)](https://badge.fury.io/py/py-dagger)
 [![Test Coverage (Codecov)](https://codecov.io/gh/larribas/dagger/branch/main/graph/badge.svg?token=fKU68xYUm8)](https://codecov.io/gh/larribas/dagger)
-![QA: Tests](https://github.com/larribas/dagger/actions/workflows/tests.yaml/badge.svg)()
+![QA: Tests](https://github.com/larribas/dagger/actions/workflows/tests.yaml/badge.svg)
 ![QA: Documentation](https://github.com/larribas/dagger/actions/workflows/documentation.yaml/badge.svg)
 ![QA: Type System](https://github.com/larribas/dagger/actions/workflows/linting.yaml/badge.svg)
 ![QA: Formatting](https://github.com/larribas/dagger/actions/workflows/formatting.yaml/badge.svg)
