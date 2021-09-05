@@ -1,4 +1,9 @@
 site_name: Dagger - Distributed Data Pipelines in Python
+site_url: https://larribas.me/dagger
+site_description: Documentation portal for the Dagger (py-dagger) Python library.
+site_author: Lorenzo Arribas (@larribas)
+copyright: "2021, Lorenzo Arribas (@larribas)"
+author = "
 repo_url: https://github.com/larribas/dagger
 theme: readthedocs
 nav:

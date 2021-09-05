@@ -25,5 +25,10 @@ jobs:
           key: ${{ runner.os }}-${{ env.PYTHON}}-poetry-${{ hashFiles('poetry.lock') }}
       - name: Install dependencies
         run: make install
-      - name: Publish documentation
-        run: make docs-publish
+      - name: Build documentation
+        run: make docs-build
+      - name: deploy
+        uses: peaceiris/actions-gh-pages@v2.5.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site

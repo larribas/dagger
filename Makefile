@@ -45,10 +45,6 @@ docs-serve:
 docs-build:
 	poetry run mkdocs build
 
-.PHONY: docs-publish
-docs-publish:
-	poetry run mkdocs gh-deploy
-
 .PHONY: build
 build:
 	poetry build -f wheel
