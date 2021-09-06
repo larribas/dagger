@@ -2,7 +2,7 @@
 
 Define sophisticated data pipelines and run them on different distributed systems (such as Argo Workflows).
 
-![Python Versions Supported](https://img.shields.io/badge/python-3.9+-blue.svg)
+![Python Versions Supported](https://img.shields.io/badge/python-3.8+-blue.svg)
 [![Latest PyPI version](https://badge.fury.io/py/py-dagger.svg)](https://badge.fury.io/py/py-dagger)
 [![Test Coverage (Codecov)](https://codecov.io/gh/larribas/dagger/branch/main/graph/badge.svg?token=fKU68xYUm8)](https://codecov.io/gh/larribas/dagger)
 ![QA: Tests](https://github.com/larribas/dagger/actions/workflows/tests.yaml/badge.svg)
