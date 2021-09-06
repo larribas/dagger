@@ -6,7 +6,7 @@ from dagger.dsl.node_output_key_usage import NodeOutputKeyUsage
 from dagger.dsl.node_output_partition_usage import NodeOutputPartitionUsage
 from dagger.dsl.node_output_property_usage import NodeOutputPropertyUsage
 from dagger.dsl.node_output_reference import NodeOutputReference
-from dagger.dsl.serialize import Serialize
+from dagger.dsl.node_output_serializer import NodeOutputSerializer
 from dagger.serializer import Serializer
 
 
@@ -59,12 +59,12 @@ class NodeOutputUsage:
     def __init__(
         self,
         invocation_id: str,
-        serialize_annotation: Serialize,
+        serializer: NodeOutputSerializer = NodeOutputSerializer(),
         references_node_partition: bool = False,
     ):
         self._invocation_id = invocation_id
         self._references: Set[NodeOutputReference] = set()
-        self._serialize_annotation = serialize_annotation
+        self._serializer = serializer
         self._references_node_partition = references_node_partition
         self._is_partitioned = False
 
@@ -87,7 +87,7 @@ class NodeOutputUsage:
     @property
     def serializer(self) -> Serializer:
         """Return the serializer assigned to this output."""
-        return self._serialize_annotation.root
+        return self._serializer.root
 
     @property
     def is_partitioned(self) -> bool:
@@ -152,8 +152,7 @@ class NodeOutputUsage:
             invocation_id=self._invocation_id,
             output_name=f"property_{name}",
             property_name=name,
-            serializer=self._serialize_annotation.sub_output(name)
-            or self._serialize_annotation.root,
+            serializer=self._serializer.sub_output(name) or self._serializer.root,
             references_node_partition=self._references_node_partition,
         )
         self._references.add(ref)
@@ -165,8 +164,7 @@ class NodeOutputUsage:
             invocation_id=self._invocation_id,
             output_name=f"key_{name}",
             key_name=name,
-            serializer=self._serialize_annotation.sub_output(name)
-            or self._serialize_annotation.root,
+            serializer=self._serializer.sub_output(name) or self._serializer.root,
             references_node_partition=self._references_node_partition,
         )
         self._references.add(ref)

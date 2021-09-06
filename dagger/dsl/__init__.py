@@ -2,4 +2,4 @@
 
 from dagger.dsl.build import build  # noqa
 from dagger.dsl.dsl import DAG, task  # noqa
-from dagger.dsl.serialize import Serialize  # noqa
+from dagger.dsl.node_output_serializer import NodeOutputSerializer as Serialize  # noqa

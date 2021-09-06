@@ -14,8 +14,8 @@ from dagger.dsl.node_invocations import (
 from dagger.dsl.node_output_partition_fan_in import NodeOutputPartitionFanIn
 from dagger.dsl.node_output_partition_usage import NodeOutputPartitionUsage
 from dagger.dsl.node_output_reference import NodeOutputReference
+from dagger.dsl.node_output_serializer import NodeOutputSerializer
 from dagger.dsl.node_output_usage import NodeOutputUsage
-from dagger.dsl.serialize import Serialize, find_serialize_annotation
 
 
 class NodeInvocationRecorder:
@@ -29,19 +29,15 @@ class NodeInvocationRecorder:
         self,
         func: Callable,
         node_type: NodeType,
+        serializer: NodeOutputSerializer = NodeOutputSerializer(),
+        runtime_options: Mapping[str, Any] = None,
         override_id: Optional[str] = None,
     ):
         self._func = func
         self._node_type = node_type
+        self._serializer = serializer
+        self._runtime_options = runtime_options or {}
         self._overridden_id = override_id
-        self._runtime_options: Mapping[str, Any] = {}
-
-    def with_runtime_options(
-        self, runtime_options: Mapping[str, Any]
-    ) -> "NodeInvocationRecorder":
-        """Set arbitrary runtime options for this node."""
-        self._runtime_options = runtime_options
-        return self
 
     def __call__(self, *args, **kwargs) -> NodeOutputUsage:
         """
@@ -66,7 +62,7 @@ class NodeInvocationRecorder:
 
         output = NodeOutputUsage(
             invocation_id=invocation_id,
-            serialize_annotation=find_serialize_annotation(self._func) or Serialize(),
+            serializer=self._serializer,
             references_node_partition=bool(partition_by_input),
         )
 
@@ -161,6 +157,7 @@ class NodeInvocationRecorder:
         This function would return a function f' so that f'(a) == f(a, 2, 3).
         """
         preset_params = {}
+        # TODO: Try using functools.partial
         for argument_name, argument_value in arguments.items():
             if not is_node_input_reference(argument_value):
                 preset_params[argument_name] = argument_value
@@ -200,7 +197,7 @@ class NodeInvocationRecorder:
 
     def __repr__(self) -> str:
         """Get a human-readable string representation of this object."""
-        return f"NodeInvocationRecorder(func={self._func}, node_type={self._node_type.value}, overridden_id={self._overridden_id}, runtime_options={self._runtime_options})"
+        return f"NodeInvocationRecorder(func={self._func}, node_type={self._node_type.value}, overridden_id={self._overridden_id}, serializer={self._serializer}, runtime_options={self._runtime_options})"
 
     def __eq__(self, obj) -> bool:
         """Return true if both objects are equivalent."""
@@ -209,5 +206,6 @@ class NodeInvocationRecorder:
             and self._func == obj._func
             and self._node_type == obj._node_type
             and self._overridden_id == obj._overridden_id
+            and self._serializer == obj._serializer
             and self._runtime_options == obj._runtime_options
         )

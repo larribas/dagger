@@ -117,19 +117,13 @@ For instance, when dealing with Pandas `DataFrame`s, you may want to serialize t
 
 ```python
 # ...
+import pandas as pd
+from typing import Dict
+from dagger.dsl import task, Serialize
+from my_custom_serializers import AsParquet
 
-from typing import Annotated, Dict
-from dagger.dsl import Serialize
-from my_custom_serializers import DataFrameAsParquet
-
-@task
-def split_training_test_datasets(df: pd.DataFrame) -> Annotated[
-    Dict[str, pd.DataFrame],
-    Serialize(
-        training=DataFrameAsParquet(),
-        testing=DataFrameAsParquet(),
-    ),
-]:
+@task(serializer=Serialize(training=AsParquet(), testing=AsParquet()))
+def split_training_test_datasets(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
     # ...
     return {
       "training": training_dataset,
