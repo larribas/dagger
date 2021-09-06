@@ -2,6 +2,7 @@
 import re
 import warnings
 from typing import Any, List, Mapping, Optional, Set, Union
+from typing import get_args as get_type_args
 
 from dagger.dag.topological_sort import topological_sort
 from dagger.data_structures import FrozenMapping
@@ -369,13 +370,14 @@ def _validate_input_from_node_output(
         )
 
 
-def _validate_input_is_supported(input_name: str, input_):
-    valid_input_types = [FromParam, FromNodeOutput]
-    if not _is_type_supported(input_, valid_input_types):
+def _validate_input_is_supported(input_name: str, input):
+    if not _is_type_supported(input, SupportedInputs):
         raise TypeError(
-            f"Input '{input_name}' is of type '{type(input_).__name__}'. However, DAGs only support the following types of inputs: {[t.__name__ for t in valid_input_types]}"
+            f"Input '{input_name}' is of type '{type(input).__name__}'. However, DAGs only support the following types of inputs: {[t.__name__ for t in get_type_args(SupportedInputs)]}"
         )
 
 
-def _is_type_supported(obj, valid_types):
-    return any([isinstance(obj, supported_type) for supported_type in valid_types])
+def _is_type_supported(obj, union):
+    return any(
+        [isinstance(obj, supported_type) for supported_type in get_type_args(union)]
+    )
