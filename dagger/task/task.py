@@ -1,6 +1,5 @@
 """Define tasks in a workflow/pipeline."""
 from typing import Any, Callable, List, Mapping, Optional, Union
-from typing import get_args as get_type_args
 
 from dagger.data_structures import FrozenMapping
 from dagger.input import FromNodeOutput, FromParam
@@ -141,9 +140,10 @@ class Task:
 
 
 def _validate_input_is_supported(input_name, input_type):
-    if not _is_type_supported(input_type, SupportedInputs):
+    valid_input_types = [FromParam, FromNodeOutput]
+    if not _is_type_supported(input_type, valid_input_types):
         raise TypeError(
-            f"Input '{input_name}' is of type '{type(input_type).__name__}'. However, nodes only support the following types of inputs: {[t.__name__ for t in get_type_args(SupportedInputs)]}"
+            f"Input '{input_name}' is of type '{type(input_type).__name__}'. However, nodes only support the following types of inputs: {[t.__name__ for t in valid_input_types]}"
         )
 
 
@@ -171,16 +171,15 @@ def _validate_there_are_no_partitioned_outputs(outputs: Mapping[str, SupportedOu
 
 
 def _validate_output_is_supported(output_name, output):
-    if not _is_type_supported(output, SupportedOutputs):
+    valid_output_types = [FromReturnValue, FromKey, FromProperty]
+    if not _is_type_supported(output, valid_output_types):
         raise TypeError(
-            f"Output '{output_name}' is of type '{type(output).__name__}'. However, nodes only support the following types of outputs: {[t.__name__ for t in get_type_args(SupportedOutputs)]}"
+            f"Output '{output_name}' is of type '{type(output).__name__}'. However, nodes only support the following types of outputs: {[t.__name__ for t in valid_output_types]}"
         )
 
 
-def _is_type_supported(obj, union: Union):
-    return any(
-        [isinstance(obj, supported_type) for supported_type in get_type_args(union)]
-    )
+def _is_type_supported(obj, valid_types):
+    return any([isinstance(obj, supported_type) for supported_type in valid_types])
 
 
 def _validate_callable_inputs_match_defined_inputs(
