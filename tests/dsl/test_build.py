@@ -13,9 +13,9 @@ from dagger.dsl.node_output_key_usage import NodeOutputKeyUsage
 from dagger.dsl.node_output_partition_fan_in import NodeOutputPartitionFanIn
 from dagger.dsl.node_output_partition_usage import NodeOutputPartitionUsage
 from dagger.dsl.node_output_property_usage import NodeOutputPropertyUsage
+from dagger.dsl.node_output_serializer import NodeOutputSerializer
 from dagger.dsl.node_output_usage import NodeOutputUsage
 from dagger.dsl.parameter_usage import ParameterUsage
-from dagger.dsl.serialize import Serialize
 from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromKey, FromProperty, FromReturnValue
 from dagger.serializer import AsJSON, AsPickle
@@ -30,10 +30,7 @@ def test__translate_invocation_ids_into_readable_names():
             node_type=NodeType.TASK,
             func=lambda: 1,
             inputs={},
-            output=NodeOutputUsage(
-                id,
-                serialize_annotation=Serialize(),
-            ),
+            output=NodeOutputUsage(id),
         )
 
     node_names_by_id = _translate_invocation_ids_into_readable_names(
@@ -71,7 +68,7 @@ def test__build_node_input__node_output_reference():
     assert _build_node_input(
         NodeOutputUsage(
             invocation_id="id",
-            serialize_annotation=Serialize(AsPickle()),
+            serializer=NodeOutputSerializer(AsPickle()),
         ),
         node_names_by_id={"id": "name"},
     ) == FromNodeOutput(
@@ -90,7 +87,7 @@ def test__build_task_output__return_value():
     assert _build_task_output(
         NodeOutputUsage(
             invocation_id="id",
-            serialize_annotation=Serialize(AsPickle()),
+            serializer=NodeOutputSerializer(AsPickle()),
         )
     ) == FromReturnValue(
         serializer=AsPickle(),
@@ -128,7 +125,7 @@ def test__build_task_output__property():
 def test__build_task_output__partition_usage():
     output_usage = NodeOutputUsage(
         invocation_id="id",
-        serialize_annotation=Serialize(AsPickle()),
+        serializer=NodeOutputSerializer(AsPickle()),
     )
     assert _build_task_output(
         NodeOutputPartitionUsage(output_usage)
@@ -139,7 +136,7 @@ def test__build_task_output__unsupported_reference():
     output = NodeOutputPartitionFanIn(
         NodeOutputUsage(
             invocation_id="id",
-            serialize_annotation=Serialize(AsPickle()),
+            serializer=NodeOutputSerializer(AsPickle()),
         )
     )
     with pytest.raises(NotImplementedError) as e:
@@ -161,10 +158,7 @@ def test__build_node__task():
         pass
 
     this_task_id = "uid-2"
-    this_task_output_usage = NodeOutputUsage(
-        this_task_id,
-        serialize_annotation=Serialize(),
-    )
+    this_task_output_usage = NodeOutputUsage(this_task_id)
     this_task_output_usage.consume()
     this_task_output_usage["k"]
     this_task_output_usage.prop
@@ -172,7 +166,7 @@ def test__build_node__task():
     another_node_id = "uid-1"
     another_node_output_usage = NodeOutputUsage(
         another_node_id,
-        serialize_annotation=Serialize(AsPickle()),
+        serializer=NodeOutputSerializer(AsPickle()),
     )
     another_node_output_usage.consume()
 
@@ -256,7 +250,7 @@ def test__build_dag_outputs__when_multiple_outputs_are_returned():
             ),
             "y": NodeOutputUsage(
                 invocation_id="id-2",
-                serialize_annotation=Serialize(AsJSON(indent=1)),
+                serializer=NodeOutputSerializer(AsJSON(indent=1)),
             ),
         },
         node_names_by_id={
@@ -278,10 +272,7 @@ def test__build_dag_outputs__when_multiple_outputs_are_returned():
 
 
 def test__build_dag_outputs__consumes_node_output_usages():
-    node_output_usage = NodeOutputUsage(
-        invocation_id="id",
-        serialize_annotation=Serialize(),
-    )
+    node_output_usage = NodeOutputUsage(invocation_id="id")
     _build_dag_outputs(
         {"x": node_output_usage},
         node_names_by_id={"id": "name"},
@@ -303,10 +294,7 @@ def test__build_from_parent__when_node_type_is_not_dag():
                 node_type=NodeType.TASK,
                 func=lambda: 1,
                 inputs={},
-                output=NodeOutputUsage(
-                    "my-id",
-                    serialize_annotation=Serialize(),
-                ),
+                output=NodeOutputUsage("my-id"),
             ),
             parent_node_names_by_id={},
         )

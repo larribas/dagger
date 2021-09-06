@@ -2,7 +2,7 @@
 
 Define sophisticated data pipelines and run them on different distributed systems (such as Argo Workflows).
 
-![Python Versions Supported](https://img.shields.io/badge/python-3.9+-blue.svg)
+![Python Versions Supported](https://img.shields.io/badge/python-3.8+-blue.svg)
 [![Latest PyPI version](https://badge.fury.io/py/py-dagger.svg)](https://badge.fury.io/py/py-dagger)
 [![Test Coverage (Codecov)](https://codecov.io/gh/larribas/dagger/branch/main/graph/badge.svg?token=fKU68xYUm8)](https://codecov.io/gh/larribas/dagger)
 ![QA: Tests](https://github.com/larribas/dagger/actions/workflows/tests.yaml/badge.svg)
@@ -117,19 +117,13 @@ For instance, when dealing with Pandas `DataFrame`s, you may want to serialize t
 
 ```python
 # ...
+import pandas as pd
+from typing import Dict
+from dagger.dsl import task, Serialize
+from my_custom_serializers import AsParquet
 
-from typing import Annotated, Dict
-from dagger.dsl import Serialize
-from my_custom_serializers import DataFrameAsParquet
-
-@task
-def split_training_test_datasets(df: pd.DataFrame) -> Annotated[
-    Dict[str, pd.DataFrame],
-    Serialize(
-        training=DataFrameAsParquet(),
-        testing=DataFrameAsParquet(),
-    ),
-]:
+@task(serializer=Serialize(training=AsParquet(), testing=AsParquet()))
+def split_training_test_datasets(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
     # ...
     return {
       "training": training_dataset,

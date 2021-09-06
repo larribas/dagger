@@ -7,7 +7,6 @@ knowledge about the internal data structures that build the DAG under the hood.
 """
 
 import random
-from typing import Annotated, Mapping
 
 import pytest
 
@@ -438,21 +437,21 @@ def test__build__nested_dags_complex():
     )
 
 
-def test__build__runtime_options():
+def test__build__with_runtime_options():
     task_options = {"task_options": 1}
     dag_options = {"dag_options": 2}
 
-    @dsl.task
+    @dsl.task(runtime_options=task_options)
     def say_hello_world():
         print("hello world")
 
-    @dsl.DAG
+    @dsl.DAG(runtime_options=dag_options)
     def inner_dag():
-        say_hello_world.with_runtime_options(task_options)()
+        say_hello_world()
 
     @dsl.DAG
     def outer_dag():
-        inner_dag.with_runtime_options(dag_options)()
+        inner_dag()
 
     verify_dags_are_equivalent(
         dsl.build(outer_dag),
@@ -473,15 +472,12 @@ def test__build__runtime_options():
 
 
 def test__build__overriding_serializers():
-    @dsl.task
-    def generate_single_number() -> Annotated[int, dsl.Serialize(AsPickle())]:
+    @dsl.task(serializer=dsl.Serialize(AsPickle()))
+    def generate_single_number():
         return random.randint(1, 100)
 
-    @dsl.task
-    def generate_multiple_numbers() -> Annotated[
-        Mapping[str, int],
-        dsl.Serialize(json=AsJSON(indent=5), pickle=AsPickle()),
-    ]:
+    @dsl.task(serializer=dsl.Serialize(json=AsJSON(indent=5), pickle=AsPickle()))
+    def generate_multiple_numbers():
         return {
             "json": 2,
             "pickle": 3,

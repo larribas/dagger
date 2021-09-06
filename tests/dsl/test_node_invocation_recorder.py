@@ -1,5 +1,4 @@
 from contextvars import copy_context
-from typing import Annotated
 
 import pytest
 
@@ -7,9 +6,9 @@ from dagger.dsl.context import node_invocations
 from dagger.dsl.node_invocation_recorder import NodeInvocationRecorder
 from dagger.dsl.node_invocations import NodeInvocation, NodeType
 from dagger.dsl.node_output_partition_usage import NodeOutputPartitionUsage
+from dagger.dsl.node_output_serializer import NodeOutputSerializer
 from dagger.dsl.node_output_usage import NodeOutputUsage
 from dagger.dsl.parameter_usage import ParameterUsage
-from dagger.dsl.serialize import Serialize
 from dagger.serializer import AsPickle
 
 
@@ -46,10 +45,7 @@ def test__task_invocation__with_a_sequence_of_mixed_types():
     def f(x):
         pass
 
-    output_from_another_node = NodeOutputUsage(
-        invocation_id="x",
-        serialize_annotation=Serialize(),
-    )
+    output_from_another_node = NodeOutputUsage(invocation_id="x")
 
     recorder = NodeInvocationRecorder(f, node_type=NodeType.TASK)
     with pytest.raises(ValueError) as e:
@@ -75,10 +71,7 @@ def test__task_invocation__returns_node_output_usage():
     )
     output = ctx.run(recorder)
 
-    assert output == NodeOutputUsage(
-        invocation_id,
-        serialize_annotation=Serialize(),
-    )
+    assert output == NodeOutputUsage(invocation_id)
 
 
 def test__task_invocation__records_inputs_from_different_sources():
@@ -89,10 +82,7 @@ def test__task_invocation__records_inputs_from_different_sources():
     invocation_id = "y"
     param_usage = ParameterUsage()
     param_with_name_usage = ParameterUsage(name="overridden")
-    node_output_usage = NodeOutputUsage(
-        invocation_id="x",
-        serialize_annotation=Serialize(),
-    )
+    node_output_usage = NodeOutputUsage(invocation_id="x")
 
     recorder = NodeInvocationRecorder(
         func=my_func,
@@ -119,7 +109,7 @@ def test__task_invocation__records_inputs_from_different_sources():
                 "param_with_name": ParameterUsage(name=param_with_name_usage.name),
                 "node_output": node_output_usage,
             },
-            output=NodeOutputUsage(invocation_id, serialize_annotation=Serialize()),
+            output=NodeOutputUsage(invocation_id),
             runtime_options={},
         ),
     ]
@@ -140,12 +130,16 @@ def test__task_invocation__generates_unique_invocation_ids():
     assert len({inv.id for inv in ctx[node_invocations]}) == n_invocations
 
 
-def test__task_invocation__takes_into_account_serialize_annotations():
-    def my_func(x: int) -> Annotated[int, Serialize(AsPickle())]:
+def test__task_invocation__takes_into_account_overridden_serializer():
+    def my_func(x: int) -> int:
         return x
 
     ctx = copy_context()
-    recorder = NodeInvocationRecorder(func=my_func, node_type=NodeType.TASK)
+    recorder = NodeInvocationRecorder(
+        func=my_func,
+        node_type=NodeType.TASK,
+        serializer=NodeOutputSerializer(AsPickle()),
+    )
     ctx.run(recorder, x=33)
 
     assert len(ctx[node_invocations]) == 1
@@ -164,18 +158,8 @@ def test__task_invocation__with_several_partitioned_inputs():
     with pytest.raises(ValueError) as e:
         ctx.run(
             recorder,
-            x=NodeOutputPartitionUsage(
-                NodeOutputUsage(
-                    invocation_id="x",
-                    serialize_annotation=Serialize(),
-                )
-            ),
-            y=NodeOutputPartitionUsage(
-                NodeOutputUsage(
-                    invocation_id="y",
-                    serialize_annotation=Serialize(),
-                )
-            ),
+            x=NodeOutputPartitionUsage(NodeOutputUsage(invocation_id="x")),
+            y=NodeOutputPartitionUsage(NodeOutputUsage(invocation_id="y")),
         )
 
     assert (
@@ -191,16 +175,8 @@ def test__task_invocation__with_a_partitioned_input():
     ctx = copy_context()
     recorder = NodeInvocationRecorder(func=my_func, node_type=NodeType.TASK)
 
-    x_output = NodeOutputPartitionUsage(
-        NodeOutputUsage(
-            invocation_id="x",
-            serialize_annotation=Serialize(),
-        )
-    )
-    y_output = NodeOutputUsage(
-        invocation_id="y",
-        serialize_annotation=Serialize(),
-    )
+    x_output = NodeOutputPartitionUsage(NodeOutputUsage(invocation_id="x"))
+    y_output = NodeOutputUsage(invocation_id="y")
 
     ctx.run(recorder, x=x_output, y=y_output)
     invocation = ctx[node_invocations][0]
@@ -215,13 +191,16 @@ def test__representation():
     def my_func(x, y):
         return x + y
 
+    serialize = NodeOutputSerializer(AsPickle())
     recorder = NodeInvocationRecorder(
         func=my_func,
         node_type=NodeType.TASK,
         override_id="my-id",
-    ).with_runtime_options({"my": "options"})
+        runtime_options={"my": "options"},
+        serializer=serialize,
+    )
 
     assert (
         repr(recorder)
-        == f"NodeInvocationRecorder(func={my_func}, node_type=task, overridden_id=my-id, runtime_options={{'my': 'options'}})"
+        == f"NodeInvocationRecorder(func={my_func}, node_type=task, overridden_id=my-id, serializer={repr(serialize)}, runtime_options={{'my': 'options'}})"
     )
