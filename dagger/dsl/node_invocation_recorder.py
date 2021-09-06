@@ -157,7 +157,6 @@ class NodeInvocationRecorder:
         This function would return a function f' so that f'(a) == f(a, 2, 3).
         """
         preset_params = {}
-        # TODO: Try using functools.partial
         for argument_name, argument_value in arguments.items():
             if not is_node_input_reference(argument_value):
                 preset_params[argument_name] = argument_value
