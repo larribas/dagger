@@ -57,7 +57,6 @@ docker-build: build
 k3d-set-up:
 	k3d registry create $(K3D_REGISTRY_NAME) --port $(K3D_REGISTRY_PORT)
 	k3d cluster create $(K3D_CLUSTER_NAME) --registry-use "k3d-$(K3D_REGISTRY_NAME):$(K3D_REGISTRY_PORT)" --registry-config k3d/registries.yaml --kubeconfig-update-default --kubeconfig-switch-context
-	kubectl cluster-info
 
 .PHONY: k3d-docker-push
 k3d-docker-push: docker-build
