@@ -17,7 +17,7 @@ theme:
   - scheme: default
     media: "(prefers-color-scheme: light)"
     primary: green
-    accent: lime
+    accent: pink
     toggle:
       icon: material/weather-night
       name: Switch to dark mode
