@@ -13,19 +13,21 @@
         <meta name="author" content="Lorenzo Arribas (@larribas)">
       
       
-      <link rel="icon" href="/dagger/assets/images/logo/favicon.ico">
+        <link rel="canonical" href="https://larribas.me/dagger/user-guide/dags/inputs/">
+      
+      <link rel="icon" href="../../../assets/images/logo/favicon.ico">
       <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.2.6">
     
     
       
-        <title>Dagger - Distributed Data Pipelines in Python</title>
+        <title>Inputs - Dagger - Distributed Data Pipelines in Python</title>
       
     
     
-      <link rel="stylesheet" href="/dagger/assets/stylesheets/main.802231af.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.802231af.min.css">
       
         
-        <link rel="stylesheet" href="/dagger/assets/stylesheets/palette.3f5d1f46.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.3f5d1f46.min.css">
         
       
     
@@ -44,7 +46,7 @@
     
       <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.8.1/css/v4-shims.css">
     
-      <link rel="stylesheet" href="/dagger/css/mkapi-common.css">
+      <link rel="stylesheet" href="../../../css/mkapi-common.css">
     
     
       
@@ -65,7 +67,7 @@
     <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="green" data-md-color-accent="pink">
   
     
-    <script>function __prefix(e){return new URL("/dagger/",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    <script>function __prefix(e){return new URL("../../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
     
       <script>var palette=__get("__palette");if(null!==palette&&"object"==typeof palette.color)for(var key in palette.color)document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
     
@@ -81,9 +83,9 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="/dagger/." title="Dagger - Distributed Data Pipelines in Python" class="md-header__button md-logo" aria-label="Dagger - Distributed Data Pipelines in Python" data-md-component="logo">
+    <a href="../../.." title="Dagger - Distributed Data Pipelines in Python" class="md-header__button md-logo" aria-label="Dagger - Distributed Data Pipelines in Python" data-md-component="logo">
       
-  <img src="/dagger/assets/images/logo/favicon-32x32.png" alt="logo">
+  <img src="../../../assets/images/logo/favicon-32x32.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -99,7 +101,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              
+              Inputs
             
           </span>
         </div>
@@ -199,9 +201,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="/dagger/." title="Dagger - Distributed Data Pipelines in Python" class="md-nav__button md-logo" aria-label="Dagger - Distributed Data Pipelines in Python" data-md-component="logo">
+    <a href="../../.." title="Dagger - Distributed Data Pipelines in Python" class="md-nav__button md-logo" aria-label="Dagger - Distributed Data Pipelines in Python" data-md-component="logo">
       
-  <img src="/dagger/assets/images/logo/favicon-32x32.png" alt="logo">
+  <img src="../../../assets/images/logo/favicon-32x32.png" alt="logo">
 
     </a>
     Dagger - Distributed Data Pipelines in Python
@@ -230,7 +232,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         Overview
       </a>
     </li>
@@ -245,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/quick-start/" class="md-nav__link">
+      <a href="../../../quick-start/" class="md-nav__link">
         Quick Start
       </a>
     </li>
@@ -281,7 +283,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/tutorial/introduction/" class="md-nav__link">
+      <a href="../../../tutorial/introduction/" class="md-nav__link">
         Introduction
       </a>
     </li>
@@ -293,7 +295,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/tutorial/hello-world/" class="md-nav__link">
+      <a href="../../../tutorial/hello-world/" class="md-nav__link">
         Hello world
       </a>
     </li>
@@ -305,7 +307,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/tutorial/local-tests/" class="md-nav__link">
+      <a href="../../../tutorial/local-tests/" class="md-nav__link">
         Local tests
       </a>
     </li>
@@ -317,7 +319,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/tutorial/passing-parameters/" class="md-nav__link">
+      <a href="../../../tutorial/passing-parameters/" class="md-nav__link">
         Passing parameters
       </a>
     </li>
@@ -329,7 +331,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/tutorial/machine-learning/" class="md-nav__link">
+      <a href="../../../tutorial/machine-learning/" class="md-nav__link">
         Machine learning
       </a>
     </li>
@@ -341,7 +343,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/tutorial/map-reduce/" class="md-nav__link">
+      <a href="../../../tutorial/map-reduce/" class="md-nav__link">
         Map reduce
       </a>
     </li>
@@ -353,7 +355,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/tutorial/argo-workflows/" class="md-nav__link">
+      <a href="../../../tutorial/argo-workflows/" class="md-nav__link">
         Argo workflows
       </a>
     </li>
@@ -372,12 +374,14 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" checked>
       
       <label class="md-nav__link" for="__nav_4">
         User Guide
@@ -395,7 +399,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/introduction/" class="md-nav__link">
+      <a href="../../introduction/" class="md-nav__link">
         Introduction
       </a>
     </li>
@@ -428,7 +432,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/syntax/declarative/" class="md-nav__link">
+      <a href="../../syntax/declarative/" class="md-nav__link">
         Declarative
       </a>
     </li>
@@ -440,7 +444,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/syntax/imperative/" class="md-nav__link">
+      <a href="../../syntax/imperative/" class="md-nav__link">
         Imperative
       </a>
     </li>
@@ -456,12 +460,14 @@
             
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4_3" type="checkbox" id="__nav_4_3" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4_3" type="checkbox" id="__nav_4_3" checked>
       
       <label class="md-nav__link" for="__nav_4_3">
         DAGs
@@ -479,7 +485,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/dags/tasks/" class="md-nav__link">
+      <a href="../tasks/" class="md-nav__link">
         Tasks
       </a>
     </li>
@@ -491,7 +497,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/dags/dags/" class="md-nav__link">
+      <a href="../dags/" class="md-nav__link">
         Dags
       </a>
     </li>
@@ -503,7 +509,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/dags/dag-composition/" class="md-nav__link">
+      <a href="../dag-composition/" class="md-nav__link">
         Dag composition
       </a>
     </li>
@@ -513,11 +519,19 @@
             
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="/dagger/user-guide/dags/inputs/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Inputs
       </a>
+      
     </li>
   
 
@@ -527,7 +541,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/dags/outputs/" class="md-nav__link">
+      <a href="../outputs/" class="md-nav__link">
         Outputs
       </a>
     </li>
@@ -539,7 +553,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/dags/partitioning/" class="md-nav__link">
+      <a href="../partitioning/" class="md-nav__link">
         Partitioning
       </a>
     </li>
@@ -551,7 +565,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/dags/map-reduce/" class="md-nav__link">
+      <a href="../map-reduce/" class="md-nav__link">
         Map reduce
       </a>
     </li>
@@ -590,7 +604,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/serializers/json/" class="md-nav__link">
+      <a href="../../serializers/json/" class="md-nav__link">
         Json
       </a>
     </li>
@@ -602,7 +616,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/serializers/pickle/" class="md-nav__link">
+      <a href="../../serializers/pickle/" class="md-nav__link">
         Pickle
       </a>
     </li>
@@ -614,7 +628,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/serializers/write-your-own/" class="md-nav__link">
+      <a href="../../serializers/write-your-own/" class="md-nav__link">
         Write your own
       </a>
     </li>
@@ -653,7 +667,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/runtimes/alternatives/" class="md-nav__link">
+      <a href="../../runtimes/alternatives/" class="md-nav__link">
         Alternatives
       </a>
     </li>
@@ -665,7 +679,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/runtimes/local/" class="md-nav__link">
+      <a href="../../runtimes/local/" class="md-nav__link">
         Local
       </a>
     </li>
@@ -677,7 +691,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/runtimes/cli/" class="md-nav__link">
+      <a href="../../runtimes/cli/" class="md-nav__link">
         Cli
       </a>
     </li>
@@ -689,7 +703,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/runtimes/argo/" class="md-nav__link">
+      <a href="../../runtimes/argo/" class="md-nav__link">
         Argo
       </a>
     </li>
@@ -701,7 +715,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/runtimes/write-your-own/" class="md-nav__link">
+      <a href="../../runtimes/write-your-own/" class="md-nav__link">
         Write your own
       </a>
     </li>
@@ -749,7 +763,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/init/" class="md-nav__link">
+      <a href="../../../api/init/" class="md-nav__link">
         dagger
       </a>
     </li>
@@ -761,7 +775,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/dag/" class="md-nav__link">
+      <a href="../../../api/dag/" class="md-nav__link">
         dagger.dag
       </a>
     </li>
@@ -773,7 +787,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/task/" class="md-nav__link">
+      <a href="../../../api/task/" class="md-nav__link">
         Task
       </a>
     </li>
@@ -785,7 +799,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/input/" class="md-nav__link">
+      <a href="../../../api/input/" class="md-nav__link">
         Input
       </a>
     </li>
@@ -797,7 +811,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/output/" class="md-nav__link">
+      <a href="../../../api/output/" class="md-nav__link">
         Output
       </a>
     </li>
@@ -809,7 +823,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/serializer/" class="md-nav__link">
+      <a href="../../../api/serializer/" class="md-nav__link">
         Serializer
       </a>
     </li>
@@ -821,7 +835,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/dsl/" class="md-nav__link">
+      <a href="../../../api/dsl/" class="md-nav__link">
         Dsl
       </a>
     </li>
@@ -833,7 +847,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/runtime-local/" class="md-nav__link">
+      <a href="../../../api/runtime-local/" class="md-nav__link">
         Runtime local
       </a>
     </li>
@@ -845,7 +859,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/runtime-cli/" class="md-nav__link">
+      <a href="../../../api/runtime-cli/" class="md-nav__link">
         Runtime cli
       </a>
     </li>
@@ -857,7 +871,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/runtime-argo/" class="md-nav__link">
+      <a href="../../../api/runtime-argo/" class="md-nav__link">
         Runtime argo
       </a>
     </li>
@@ -911,7 +925,20 @@
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
               
-  <h1>404 - Not found</h1>
+                
+                  <a href="https://github.com/larribas/dagger/edit/main/docs/user-guide/dags/inputs.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                  <h1>Inputs</h1>
+                
+                
+                
+              
+              
+                
+
 
               
             </article>
@@ -927,6 +954,41 @@
       
         
 <footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../dag-composition/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Dag composition" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Dag composition
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../outputs/" class="md-footer__link md-footer__link--next" aria-label="Next: Outputs" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Outputs
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
@@ -947,12 +1009,12 @@
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "/dagger/", "features": ["navigation.instant", "navigation.top", "search.highlight"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "/dagger/assets/javascripts/workers/search.409db549.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.top", "search.highlight"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../../assets/javascripts/workers/search.409db549.min.js", "version": null}</script>
     
     
-      <script src="/dagger/assets/javascripts/bundle.756773cc.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.756773cc.min.js"></script>
       
-        <script src="/dagger/js/mkapi.js"></script>
+        <script src="../../../js/mkapi.js"></script>
       
     
   </body>

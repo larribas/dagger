@@ -13,19 +13,21 @@
         <meta name="author" content="Lorenzo Arribas (@larribas)">
       
       
-      <link rel="icon" href="/dagger/assets/images/logo/favicon.ico">
+        <link rel="canonical" href="https://larribas.me/dagger/api/dag/">
+      
+      <link rel="icon" href="../../assets/images/logo/favicon.ico">
       <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.2.6">
     
     
       
-        <title>Dagger - Distributed Data Pipelines in Python</title>
+        <title>dagger.dag - Dagger - Distributed Data Pipelines in Python</title>
       
     
     
-      <link rel="stylesheet" href="/dagger/assets/stylesheets/main.802231af.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.802231af.min.css">
       
         
-        <link rel="stylesheet" href="/dagger/assets/stylesheets/palette.3f5d1f46.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.3f5d1f46.min.css">
         
       
     
@@ -44,7 +46,7 @@
     
       <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.8.1/css/v4-shims.css">
     
-      <link rel="stylesheet" href="/dagger/css/mkapi-common.css">
+      <link rel="stylesheet" href="../../css/mkapi-common.css">
     
     
       
@@ -65,7 +67,7 @@
     <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="green" data-md-color-accent="pink">
   
     
-    <script>function __prefix(e){return new URL("/dagger/",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    <script>function __prefix(e){return new URL("../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
     
       <script>var palette=__get("__palette");if(null!==palette&&"object"==typeof palette.color)for(var key in palette.color)document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
     
@@ -74,6 +76,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#daggerdag" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -81,9 +88,9 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="/dagger/." title="Dagger - Distributed Data Pipelines in Python" class="md-header__button md-logo" aria-label="Dagger - Distributed Data Pipelines in Python" data-md-component="logo">
+    <a href="../.." title="Dagger - Distributed Data Pipelines in Python" class="md-header__button md-logo" aria-label="Dagger - Distributed Data Pipelines in Python" data-md-component="logo">
       
-  <img src="/dagger/assets/images/logo/favicon-32x32.png" alt="logo">
+  <img src="../../assets/images/logo/favicon-32x32.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -99,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              
+              dagger.dag
             
           </span>
         </div>
@@ -199,9 +206,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="/dagger/." title="Dagger - Distributed Data Pipelines in Python" class="md-nav__button md-logo" aria-label="Dagger - Distributed Data Pipelines in Python" data-md-component="logo">
+    <a href="../.." title="Dagger - Distributed Data Pipelines in Python" class="md-nav__button md-logo" aria-label="Dagger - Distributed Data Pipelines in Python" data-md-component="logo">
       
-  <img src="/dagger/assets/images/logo/favicon-32x32.png" alt="logo">
+  <img src="../../assets/images/logo/favicon-32x32.png" alt="logo">
 
     </a>
     Dagger - Distributed Data Pipelines in Python
@@ -230,7 +237,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         Overview
       </a>
     </li>
@@ -245,7 +252,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/quick-start/" class="md-nav__link">
+      <a href="../../quick-start/" class="md-nav__link">
         Quick Start
       </a>
     </li>
@@ -281,7 +288,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/tutorial/introduction/" class="md-nav__link">
+      <a href="../../tutorial/introduction/" class="md-nav__link">
         Introduction
       </a>
     </li>
@@ -293,7 +300,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/tutorial/hello-world/" class="md-nav__link">
+      <a href="../../tutorial/hello-world/" class="md-nav__link">
         Hello world
       </a>
     </li>
@@ -305,7 +312,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/tutorial/local-tests/" class="md-nav__link">
+      <a href="../../tutorial/local-tests/" class="md-nav__link">
         Local tests
       </a>
     </li>
@@ -317,7 +324,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/tutorial/passing-parameters/" class="md-nav__link">
+      <a href="../../tutorial/passing-parameters/" class="md-nav__link">
         Passing parameters
       </a>
     </li>
@@ -329,7 +336,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/tutorial/machine-learning/" class="md-nav__link">
+      <a href="../../tutorial/machine-learning/" class="md-nav__link">
         Machine learning
       </a>
     </li>
@@ -341,7 +348,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/tutorial/map-reduce/" class="md-nav__link">
+      <a href="../../tutorial/map-reduce/" class="md-nav__link">
         Map reduce
       </a>
     </li>
@@ -353,7 +360,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/tutorial/argo-workflows/" class="md-nav__link">
+      <a href="../../tutorial/argo-workflows/" class="md-nav__link">
         Argo workflows
       </a>
     </li>
@@ -395,7 +402,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/introduction/" class="md-nav__link">
+      <a href="../../user-guide/introduction/" class="md-nav__link">
         Introduction
       </a>
     </li>
@@ -428,7 +435,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/syntax/declarative/" class="md-nav__link">
+      <a href="../../user-guide/syntax/declarative/" class="md-nav__link">
         Declarative
       </a>
     </li>
@@ -440,7 +447,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/syntax/imperative/" class="md-nav__link">
+      <a href="../../user-guide/syntax/imperative/" class="md-nav__link">
         Imperative
       </a>
     </li>
@@ -479,7 +486,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/dags/tasks/" class="md-nav__link">
+      <a href="../../user-guide/dags/tasks/" class="md-nav__link">
         Tasks
       </a>
     </li>
@@ -491,7 +498,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/dags/dags/" class="md-nav__link">
+      <a href="../../user-guide/dags/dags/" class="md-nav__link">
         Dags
       </a>
     </li>
@@ -503,7 +510,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/dags/dag-composition/" class="md-nav__link">
+      <a href="../../user-guide/dags/dag-composition/" class="md-nav__link">
         Dag composition
       </a>
     </li>
@@ -515,7 +522,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/dags/inputs/" class="md-nav__link">
+      <a href="../../user-guide/dags/inputs/" class="md-nav__link">
         Inputs
       </a>
     </li>
@@ -527,7 +534,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/dags/outputs/" class="md-nav__link">
+      <a href="../../user-guide/dags/outputs/" class="md-nav__link">
         Outputs
       </a>
     </li>
@@ -539,7 +546,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/dags/partitioning/" class="md-nav__link">
+      <a href="../../user-guide/dags/partitioning/" class="md-nav__link">
         Partitioning
       </a>
     </li>
@@ -551,7 +558,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/dags/map-reduce/" class="md-nav__link">
+      <a href="../../user-guide/dags/map-reduce/" class="md-nav__link">
         Map reduce
       </a>
     </li>
@@ -590,7 +597,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/serializers/json/" class="md-nav__link">
+      <a href="../../user-guide/serializers/json/" class="md-nav__link">
         Json
       </a>
     </li>
@@ -602,7 +609,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/serializers/pickle/" class="md-nav__link">
+      <a href="../../user-guide/serializers/pickle/" class="md-nav__link">
         Pickle
       </a>
     </li>
@@ -614,7 +621,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/serializers/write-your-own/" class="md-nav__link">
+      <a href="../../user-guide/serializers/write-your-own/" class="md-nav__link">
         Write your own
       </a>
     </li>
@@ -653,7 +660,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/runtimes/alternatives/" class="md-nav__link">
+      <a href="../../user-guide/runtimes/alternatives/" class="md-nav__link">
         Alternatives
       </a>
     </li>
@@ -665,7 +672,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/runtimes/local/" class="md-nav__link">
+      <a href="../../user-guide/runtimes/local/" class="md-nav__link">
         Local
       </a>
     </li>
@@ -677,7 +684,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/runtimes/cli/" class="md-nav__link">
+      <a href="../../user-guide/runtimes/cli/" class="md-nav__link">
         Cli
       </a>
     </li>
@@ -689,7 +696,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/runtimes/argo/" class="md-nav__link">
+      <a href="../../user-guide/runtimes/argo/" class="md-nav__link">
         Argo
       </a>
     </li>
@@ -701,7 +708,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/user-guide/runtimes/write-your-own/" class="md-nav__link">
+      <a href="../../user-guide/runtimes/write-your-own/" class="md-nav__link">
         Write your own
       </a>
     </li>
@@ -726,12 +733,14 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" checked>
       
       <label class="md-nav__link" for="__nav_5">
         API Reference
@@ -749,7 +758,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/init/" class="md-nav__link">
+      <a href="../init/" class="md-nav__link">
         dagger
       </a>
     </li>
@@ -759,11 +768,21 @@
             
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="/dagger/api/dag/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         dagger.dag
       </a>
+      
     </li>
   
 
@@ -773,7 +792,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/task/" class="md-nav__link">
+      <a href="../task/" class="md-nav__link">
         Task
       </a>
     </li>
@@ -785,7 +804,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/input/" class="md-nav__link">
+      <a href="../input/" class="md-nav__link">
         Input
       </a>
     </li>
@@ -797,7 +816,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/output/" class="md-nav__link">
+      <a href="../output/" class="md-nav__link">
         Output
       </a>
     </li>
@@ -809,7 +828,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/serializer/" class="md-nav__link">
+      <a href="../serializer/" class="md-nav__link">
         Serializer
       </a>
     </li>
@@ -821,7 +840,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/dsl/" class="md-nav__link">
+      <a href="../dsl/" class="md-nav__link">
         Dsl
       </a>
     </li>
@@ -833,7 +852,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/runtime-local/" class="md-nav__link">
+      <a href="../runtime-local/" class="md-nav__link">
         Runtime local
       </a>
     </li>
@@ -845,7 +864,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/runtime-cli/" class="md-nav__link">
+      <a href="../runtime-cli/" class="md-nav__link">
         Runtime cli
       </a>
     </li>
@@ -857,7 +876,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dagger/api/runtime-argo/" class="md-nav__link">
+      <a href="../runtime-argo/" class="md-nav__link">
         Runtime argo
       </a>
     </li>
@@ -907,11 +926,167 @@
               </div>
             
             
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
               
-  <h1>404 - Not found</h1>
+                
+                  <a href="https://github.com/larribas/dagger/edit/main/docs/api/dag.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                <div class="mkapi-node" id="dagger.dag">
+<div class='mkapi-object-container'>
+  <div class="mkapi-object package plain top">
+    <div class="mkapi-object-kind package top">package</div>
+    <h1 id="daggerdag" class="mkapi-object-body package top"><span class="mkapi-object-prefix">dagger.</span><span class="mkapi-object-name"><a href="#daggerdag">dag</a></span></h1>
+  </div>
+  
+</div>
+<div class="mkapi-docstring">
+<div class="mkapi-section">
+      <div class="mkapi-section-body"><p>Define workflows/pipelines as Directed Acyclic Graphs (DAGs) of Tasks.</p></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="mkapi-node" id="dagger.dag.dag.DAG">
+<div class='mkapi-object-container'>
+  <div class="mkapi-object class code top">
+    <div class="mkapi-object-kind class top">class</div>
+    <div class="mkapi-object-body class top"><code class="mkapi-object-prefix">dagger.dag.dag.</code><code class="mkapi-object-name">DAG</code><code class="mkapi-object-parenthesis">(</code><code class="mkapi-object-signature">nodes</code>, <code class="mkapi-object-signature">inputs=None</code>, <code class="mkapi-object-signature">outputs=None</code>, <code class="mkapi-object-signature">runtime_options=None</code>, <code class="mkapi-object-signature">partition_by_input=None</code><code class="mkapi-object-parenthesis">)</code></div>
+  </div>
+  
+</div>
+<div class="mkapi-docstring">
+<div class="mkapi-section">
+      <div class="mkapi-section-body"><p>Data Structure that represents a DAG for later execution.</p>
+<p>DAGs are made up of:
+- A set of nodes, connected to each other through their inputs/outputs
+- A set of inputs to the DAG
+- A set of outputs from the DAG</p></div>
+    </div>
+  <div class="mkapi-section attributes">
+      <div class="mkapi-section-name attributes">
+          <span class="mkapi-section-name-body attributes">Attributes</span> 
+        </div>
+      <div class="mkapi-section-body attributes"><ul class="mkapi-items">
+
+
+
+
+
+
+<li class="readonly-property"><code class="mkapi-item-name">inputs</code>
+
+<span class="mkapi-item-dash">&mdash;</span> <span class="mkapi-item-description">Get the inputs the DAG expects.</span></li>
+
+<li class="readonly-property"><code class="mkapi-item-name">node_execution_order</code>
+
+<span class="mkapi-item-dash">&mdash;</span> <span class="mkapi-item-description">Get a list of nodes to execute in order, respecting dependencies between nodes.</span></li>
+
+<li class="readonly-property"><code class="mkapi-item-name">nodes</code>
+
+<span class="mkapi-item-dash">&mdash;</span> <span class="mkapi-item-description">Get the nodes that compose the DAG.</span></li>
+
+<li class="readonly-property"><code class="mkapi-item-name">outputs</code>
+
+<span class="mkapi-item-dash">&mdash;</span> <span class="mkapi-item-description">Get the outputs the DAG produces.</span></li>
+
+<li class="readonly-property"><code class="mkapi-item-name">partition_by_input</code>
+<span class="mkapi-item-type">(str, optional)</span>
+<span class="mkapi-item-dash">&mdash;</span> <span class="mkapi-item-description">Return the input this task should be partitioned by, if any.</span></li>
+
+<li class="readonly-property"><code class="mkapi-item-name">runtime_options</code>
+
+<span class="mkapi-item-dash">&mdash;</span> <span class="mkapi-item-description">Get the specified runtime options.</span></li>
+
+
+</ul></div>
+    </div>
+  <div class="mkapi-section methods">
+      <div class="mkapi-section-name methods">
+          <span class="mkapi-section-name-body methods">Methods</span> 
+        </div>
+      <div class="mkapi-section-body methods"><ul class="mkapi-items">
+<li class="method"><code class="mkapi-item-name"><a href="#dagger.dag.dag.DAG.__eq__">__eq__</a></code><code class="mkapi-object-parenthesis">(</code><code class="mkapi-object-signature">obj</code><code class="mkapi-object-parenthesis">)</code>
+<span class="mkapi-item-type">(bool)</span>
+<span class="mkapi-item-dash">&mdash;</span> <span class="mkapi-item-description">Return true if the two DAGs are equivalent to each other.</span></li>
+
+<li class="method"><code class="mkapi-item-name"><a href="#dagger.dag.dag.DAG.__repr__">__repr__</a></code><code class="mkapi-object-parenthesis">(</code><code class="mkapi-object-parenthesis">)</code>
+<span class="mkapi-item-type">(str)</span>
+<span class="mkapi-item-dash">&mdash;</span> <span class="mkapi-item-description">Return a human-readable representation of the DAG.</span></li>
+
+
+</ul></div>
+    </div>
+  </div>
+
+  <div class="mkapi-members">
+  
+    <div class="mkapi-member">
+      <div class="mkapi-node" id="dagger.dag.dag.DAG.__repr__">
+<div class='mkapi-object-container'>
+  <div class="mkapi-object method code">
+    <div class="mkapi-object-kind method">method</div>
+    <div class="mkapi-object-body method"><code class="mkapi-object-name">__repr__</code><code class="mkapi-object-parenthesis">(</code><code class="mkapi-object-parenthesis">)</code><span class="mkapi-item-type"> &#x2192; str</span></div>
+  </div>
+  
+</div>
+<div class="mkapi-docstring">
+<div class="mkapi-section">
+      <div class="mkapi-section-body"><p>Return a human-readable representation of the DAG.</p></div>
+    </div>
+  </div>
+
+</div>
+    </div>
+  
+    <div class="mkapi-member">
+      <div class="mkapi-node" id="dagger.dag.dag.DAG.__eq__">
+<div class='mkapi-object-container'>
+  <div class="mkapi-object method code">
+    <div class="mkapi-object-kind method">method</div>
+    <div class="mkapi-object-body method"><code class="mkapi-object-name">__eq__</code><code class="mkapi-object-parenthesis">(</code><code class="mkapi-object-signature">obj</code><code class="mkapi-object-parenthesis">)</code><span class="mkapi-item-type"> &#x2192; bool</span></div>
+  </div>
+  
+</div>
+<div class="mkapi-docstring">
+<div class="mkapi-section">
+      <div class="mkapi-section-body"><p>Return true if the two DAGs are equivalent to each other.</p></div>
+    </div>
+  </div>
+
+</div>
+    </div>
+  
+  </div>
+
+</div>
+                
+              
+              
+                
+
 
               
             </article>
@@ -927,6 +1102,41 @@
       
         
 <footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../init/" class="md-footer__link md-footer__link--prev" aria-label="Previous: dagger" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              dagger
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../task/" class="md-footer__link md-footer__link--next" aria-label="Next: Task" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Task
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
@@ -947,12 +1157,12 @@
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "/dagger/", "features": ["navigation.instant", "navigation.top", "search.highlight"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "/dagger/assets/javascripts/workers/search.409db549.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.top", "search.highlight"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.409db549.min.js", "version": null}</script>
     
     
-      <script src="/dagger/assets/javascripts/bundle.756773cc.min.js"></script>
+      <script src="../../assets/javascripts/bundle.756773cc.min.js"></script>
       
-        <script src="/dagger/js/mkapi.js"></script>
+        <script src="../../js/mkapi.js"></script>
       
     
   </body>
