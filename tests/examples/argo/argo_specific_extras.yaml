@@ -18,7 +18,7 @@ spec:
   - name: dag-long-task
     container:
       image: local.registry/dagger
-      command: [argo-specific-extras]
+      command: ["python", "examples/argo_specific_extras.py"]
       args: [
         --node-name, long-task
       ]

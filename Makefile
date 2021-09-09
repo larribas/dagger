@@ -45,12 +45,12 @@ build:
 set-version-from-git:
 	@echo "Version will be $$(git describe --tags --abbrev=0)"
 	poetry version $$(git describe --tags --abbrev=0)
-	sed -i 's/0.0.0/$$(git describe --tags --abbrev=0)/' dagger/__init__.py
+	sed -i "s/0.0.0/$$(git describe --tags --abbrev=0)/" dagger/__init__.py
 	cat dagger/__init__.py
 
 .PHONY: docker-build
 docker-build: build
-	docker build . -t $(DOCKER_IMAGE_NAME):$(VERSION) --build-arg "WHEEL=dagger-`poetry version -s`-py3-none-any.whl"
+	docker build . -t $(DOCKER_IMAGE_NAME):$(VERSION) --build-arg "WHEEL=py_dagger-`poetry version -s`-py3-none-any.whl"
 
 .PHONY: docker-push-local
 docker-push-local: docker-build
