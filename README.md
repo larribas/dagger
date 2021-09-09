@@ -18,191 +18,125 @@ _Dagger_ is a Python library that allows you to:
 * Run those DAGs seamlessly in different runtimes or workflow orchestrators (such as Argo Workflows, Kubeflow Pipelines, and more).
 
 
-## _Dagger_ in Action
+## Features
 
-This section shows a couple of examples of what _Dagger_ is capable of. Our [official documentation](https://larribas.me/dagger) contains a breadth of tutorials, examples, recommendations and API references. Make sure to check it out!
+- Define tasks and DAGs, and compose them together seamlessly.
+- Parameterize DAGs and pass parameters between nodes in plain Python (the runtime takes care of serializing and transmitting data on your behalf).
+- Create dynamic for loops, map-reduce operations easily.
+- Run your DAGs locally or using a distributed workflow orchestrator (such as Argo Workflows).
+- Extend your tasks to take advantage of all the features offered by your runtime (e.g. Retry strategies, Kubernetes scheduling directives, etc.)
+- ... All with a simple _Pythonic_ DSL that feels just like coding regular Python functions.
 
 
-### Installing the library
+Other nice features of _Dagger_ are: Zero dependencies, 100% test coverage, great documentation and plenty of examples to get you started.
 
-_Dagger_ is published to the Python Package Index (PyPI). To install it, you can simply run:
+
+## Installation
+
+_Dagger_ is published to the Python Package Index (PyPI) under the name `py-dagger`. To install it, you can simply run:
 
 ```
 pip install py-dagger
 ```
 
 
-### Hello World - Tasks and DAGs
+## Overview
 
-The following example shows how to run a simple hello world using the local runtime:
+_Dagger_ was created to facilitate the creation and ongoing maintenance of data and ML pipelines at big companies.
 
+This goal is reflected in _Dagger_'s architecture and main design decisions:
 
-```python
-from dagger.dsl import task, DAG, build
-from dagger.runtime.local import invoke
-
-@task
-def say_hello_world():
-    print("hello world!")
-
-@DAG
-def hello_world_pipeline():
-    say_hello_world()
-
-dag = build(hello_world_pipeline)
-invoke(dag)
-```
-
-Running this will print `"hello world!"`.
-
-While not particularly interesting, this example shows the basic building blocks of _DAGger_: __Tasks__ and __DAGs (directed acyclic graphs)__. DAGs contain a series of nodes connected together via their inputs/outputs. Nodes may be Tasks (a Python function wrapped with some extra metadata) or other DAGs.
-
-It also shows how we can define DAGs in an imperative, Pythonic style, build them (i.e. turning them into a data structure representing the DAG) and run them using one of our runtimes (in this case, the local runtime, which will just run it in memory).
-
-Hungry for more? Let's take a look at a more complex example.
+- To make __common use cases__ and patterns (such as dynamic loops or map-reduce operations) __as easy as possible__.
+- To __minimize boilerplate, plumbing or low-level code__ (such as serializing inputs/outputs and storing them in a local/remote file system).
+- To __onboard users in just a couple of hours__ through great documentation, comprehensive examples and tutorials.
+- To __never sacrifice reliability and performance__.
 
 
-### Map-Reduce Operations - Parameters and parallelization
-
-The following example generates a list of numbers. The length of the list varies randomly. Then, in parallel, we transform/map each of these numbers raising them to a power we receive as a parameter. Finally, we sum all the results and produce a single output.
-
+Take the following piece of code:
 
 ```python
 import random
+from dagger import dsl
 
-@task
+@dsl.task()
 def generate_numbers():
     length = random.randint(3, 20)
     numbers = list(range(length))
     print(f"Generating the following list of numbers: {numbers}")
     return numbers
 
-@task
+@dsl.task()
 def raise_number(n, exponent):
     print(f"Raising {n} to a power of {exponent}")
     return n ** exponent
 
-@task
+@dsl.task()
 def sum_numbers(numbers):
     print(f"Calculating the sum of {numbers}")
     return sum(numbers)
 
-@DAG
+@dsl.DAG()
 def map_reduce_pipeline(exponent):
-    return sum_numbers(
-        [
-            raise_number(n=partition, exponent=exponent)
-            for partition in generate_numbers()
-        ]
-    )
+    numbers = generate_numbers()
 
-dag = build(map_reduce_pipeline)
+    raised_numbers = []
+    for n in numbers:
+      raised_numbers.append(
+        raise_number(n, exponent)
+      )
+
+    return sum_numbers(raised_numbers)
+
+dag = dsl.build(map_reduce_pipeline)
+
+from dagger.runtime.local import invoke
 result = invoke(dag, params={"exponent": 2})
 print(f"The final result was {result}")
 ```
 
+Let's go step by step. First, we use the `dagger.dsl.task` decorator to define different tasks. Tasks in _Dagger_ are just Python functions. In this case, we have 3 tasks:
 
-This type of parallel fan-out and fan-in operations are very common when modelling data pipelines. _Dagger_ allows you to write them as you would in plain Python and run them on a number of distributed systems.
+- `generate_numbers()` returns a list of numbers. The list has a variable length, to show how we can do dynamic loops.
+- `raise_number(n, exponent)` receives a number and an exponent, and returns `n^exponent`.
+- `sum_numbers(numbers)` receives a list of numbers and returns the sum of all of them.
 
+Next, we use the `dagger.dsl.DAG` decorator on another function that invokes all the previously defined tasks and connects their inputs/outputs.
 
-### Built-in and Custom Serializers
-
-One of the things you may notice is that the result of running the DAG is not of type `int`, but of type `bytes`. This is because a node produces results in their __serialized format__. This may look like an odd choice when running things locally, but keep in mind that the final goal of the library is to be able to run each step of your DAG in different machines over the network.
-
-_Dagger_ helps you connect the outputs of some nodes to the inputs of other nodes, but to do so, these pieces of information have to travel as bytes through the network, and be serialized/deserialized when leaving/entering the Python code.
-
-__The default serialization format is JSON__, but in practice, you will find yourself using other kinds of serialization formats that fit your use case better.
-
-For instance, when dealing with Pandas `DataFrame`s, you may want to serialize those data frames as CSV or Parquet files. You can do that easily via type annotations:
+The example uses a for loop and appends elements to a list to gather all the different results. But you can try replacing it with something more _Pythonic_:
 
 ```python
-# ...
-
-from typing import Annotated, Dict
-from dagger.dsl import Serialize
-from my_custom_serializers import DataFrameAsParquet
-
-@task
-def split_training_test_datasets(df: pd.DataFrame) -> Annotated[
-    Dict[str, pd.DataFrame],
-    Serialize(
-        training=DataFrameAsParquet(),
-        testing=DataFrameAsParquet(),
-    ),
-]:
-    # ...
-    return {
-      "training": training_dataset,
-      "testing": testing_dataset,
-    }
-
-# ...
+@dsl.DAG
+def map_reduce_pipeline(exponent):
+    return sum_numbers([raise_number(n, exponent) for n in generate_numbers()])
 ```
 
-Your function code just works with Python data types, but under the hood, _Dagger_ is using the serializers you provide to pass information from one node to the other.
-
-You can check the serializers we provide out of the box in our documentation, under [Serializers](TODO). And you can bring your own serializers very easily.
+Finally, we use `dagger.dsl.build` to transform that decorated function into a `dagger.dag.DAG` data structure, and we test it locally with `dagger.runtime.local.invoke`.
 
 
+### Other Runtimes
 
-### Running your DAG on a distributed runtime
+The previous example showed how we can model a fairly complex use case (a dynamic map-reduce) and run it locally in just a few lines of code.
 
-So far, we have run our DAGs using the `runtime.local` package. Next, you can try exporting your DAG for execution in any of the following runtimes:
+The great thing about _Dagger_ is that running your pipeline in a distributed pipeline engine (such as Argo Workflows or Kubeflow Pipelines) is just as easy!
 
-* [Argo Workflows](TODO)
+At the moment, we support the following runtimes:
 
-
-
-## Design Principles and Features
-
-The main goal of _Dagger_ is to provide a __simple yet powerful framework__ to define data/ML pipelines with __minimal friction or boilerplate__ and __prepare them to run on multiple distributed runtimes__.
-
-The features the library provides are based on these 3 guiding principles:
+- `dagger.runtime.local` for local experimentation and testing.
+- `dagger.runtime.cli`, used by other runtimes.
+- `dagger.runtime.argo`, to run your pipelines on [Argo Workflows](https://argoproj.github.io/workflows/).
 
 
-### 1. High-level abstraction for the most common use cases; Extensibility for more specific use cases
-
-_Dagger_ provides out-of-the-box support for common patterns such as:
-
-- Passing arguments from one node to another.
-- Parameterizing a DAG so its behavior can change dynamically when it's executed.
-- Running multiple nodes in parallel.
-- Encapsulating common behavior and composing several DAGs together.
-- Creating map-reduce operations (also known as "scatter and gather" or "dynamic fan-out and fan-in" operations).
+You can check the [Runtimes Documentation](user-guide/runtimes/alternatives.md) to get started with any of them.
 
 
-_Dagger_ also removes the need to explicitly serialize/deserialize data, or interface with local or remote filesystems. Users write Python code and deal with Python-native data types. That's it.
+### Tutorials, Examples and User Guides
 
-We believe the majority of the use cases can be built using the existing feature set. However, we also believe users should still be able to __leverage the features that make each runtime unique__. For instance:
+Does it sound interesting? We're just scratching the surface of what's possible with _Dagger_. If you're interested, you can begin exploring:
 
-* When running on Kubernetes, users may want to fine-tune some scheduling directives.
-* When running on Argo Workflows, users may want to set a retry policy, or use memoization on their steps.
-* When developing data pipelines, users may want to use Parquet as a serialization format.
-* Users may want to create a new runtime that is not yet supported by the library.
-
-_Dagger_ is designed for extensibility. When you need to take your DAGs to the next step, you will not find yourself fighting against the framework.
-
-
-### 2. Soft learning curve
-
-We believe if you are already fluent with Python, you should be able to pick up _Dagger_ in a couple of hours.
-
-To soften the learning curve, we've worked hard on:
-
-* A [documentation portal](https://larribas.me/dagger) with tutorials, recommendations and API references.
-* A comprehensive [set of examples](https://github.com/larribas/dagger/tree/main/examples), from beginner to advanced use cases.
-* Thorough error handling to catch any potential issue as early as possible. Error messages are descriptive, point you to the specific component that is causing a problem, explain the reason why it's failing and suggest alternatives.
-
-
-
-### 3. Performant and reliable
-
-_Dagger_ enables you to create and iterate on complex workflows. During this effort, the library should never be a limiting factor in terms of performance or reliability. That is, we want to make sure you don't experience any bugs, memory leaks or conflicts that impair your productivity. Hence, we have put a lot of focus on:
-
-- __Test coverage__ for internal components. _Dagger_ will always have >95% test coverage for all success and error scenarios.
-- __Zero dependencies__. When you install _Dagger_, it doesn't bring any other dependency with it. Your requirements file will be clean and conflict-free with other versions of other libraries.
-- __Lazy loading of input files__. Where possible, _Dagger_ will minimize the memory footprint by using lazy loading of files from local or remote filesystems into memory. This is especially useful when dealing with partitioned outputs and reduce operations.
-- __Local verification__ of your DAGs. When you build a DAG, we enforce a series of rules that make your pipelines clear and predictable. You can also execute any of your DAGs locally with the local runtime.
+- The [Tutorial](tutorial/introduction.md) for a step-by-step introduction to _Dagger_.
+- The [User Guide](user-guide/introduction.md) for an in-depth explanation of all the different components available, extensibility points and design decisions.
+- The [API Reference](api/init.md).
+- The [Examples](https://github.com/larribas/dagger/tree/main/examples).
 
 
 ## How to contribute
