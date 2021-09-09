@@ -17,11 +17,11 @@ class NodeOutputUsage:
     An instance of this class is returned whenever a task is invoked. For example:
 
     ```
-    @dsl.task
+    @dsl.task()
     def f() -> dict:
         return {"a": 1, "b": 2}
 
-    @dsl.DAG
+    @dsl.DAG()
     def dag():
         f_output = f()
     ```
@@ -31,7 +31,7 @@ class NodeOutputUsage:
     Instances can be passed as inputs to other tasks:
 
     ```
-    @dsl.DAG
+    @dsl.DAG()
     def dag():
         f_output = f()
         g(f_output)
@@ -40,7 +40,7 @@ class NodeOutputUsage:
     If the output is a mapping, you can access a specific key:
 
     ```
-    @dsl.DAG
+    @dsl.DAG()
     def dag():
         f_output = f()
         g(f_output["a"])
@@ -49,7 +49,7 @@ class NodeOutputUsage:
     If the output is an object, you can access a specific property:
 
     ```
-    @dsl.DAG
+    @dsl.DAG()
     def dag():
         f_output = f()
         g(f_output.a)
@@ -117,15 +117,15 @@ class NodeOutputUsage:
         output was used or not.
 
         ```
-        @dsl.task
+        @dsl.task()
         def f() -> int:
             return 2
 
-        @dsl.task
+        @dsl.task()
         def g(number: int):
             print(number)
 
-        @dsl.DAG
+        @dsl.DAG()
         def dag():
             f_output = f()
             g(f_output)

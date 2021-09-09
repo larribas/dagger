@@ -13,15 +13,15 @@ class NodeOutputReference(Protocol):  # pragma: no cover
     It will be received as an argument by a task. For instance, when doing:
 
     ```
-    @dsl.task
+    @dsl.task()
     def f() -> int:
         return 2
 
-    @dsl.task
+    @dsl.task()
     def g(number: int):
         print(number)
 
-    @dsl.DAG
+    @dsl.DAG()
     def dag():
         f_output = f()
         g(f_output)
