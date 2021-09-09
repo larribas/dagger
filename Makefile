@@ -67,6 +67,9 @@ set-up-argo:
 	k3d cluster create $(K3D_CLUSTER_NAME) --registry-use "k3d-$(K3D_REGISTRY_NAME):$(K3D_REGISTRY_PORT)" --registry-config k3d/registries.yaml --kubeconfig-update-default --kubeconfig-switch-context
 	echo "Waiting for a while for the cluster and the namespace to stabilize"
 	sleep 10
+	kubectl cluster-info
+	kubectl config use-context k3d-dagger
+	kubectl cluster-info
 	kubectl create ns $(KUBE_NAMESPACE)
 	kubectl apply -n $(KUBE_NAMESPACE) -k tests/e2e/manifests/argo
 
