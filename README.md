@@ -41,11 +41,11 @@ The following example shows how to run a simple hello world using the local runt
 from dagger.dsl import task, DAG, build
 from dagger.runtime.local import invoke
 
-@task
+@task()
 def say_hello_world():
     print("hello world!")
 
-@DAG
+@DAG()
 def hello_world_pipeline():
     say_hello_world()
 
@@ -70,24 +70,24 @@ The following example generates a list of numbers. The length of the list varies
 ```python
 import random
 
-@task
+@task()
 def generate_numbers():
     length = random.randint(3, 20)
     numbers = list(range(length))
     print(f"Generating the following list of numbers: {numbers}")
     return numbers
 
-@task
+@task()
 def raise_number(n, exponent):
     print(f"Raising {n} to a power of {exponent}")
     return n ** exponent
 
-@task
+@task()
 def sum_numbers(numbers):
     print(f"Calculating the sum of {numbers}")
     return sum(numbers)
 
-@DAG
+@DAG()
 def map_reduce_pipeline(exponent):
     return sum_numbers(
         [

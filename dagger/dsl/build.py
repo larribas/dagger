@@ -189,15 +189,15 @@ def _translate_invocation_ids_into_readable_names(
     For example, the following DAG definition:
 
     ```
-    @dsl.task
+    @dsl.task()
     def f():
         pass
 
-    @dsl.task
+    @dsl.task()
     def g():
         pass
 
-    @dsl.DAG
+    @dsl.DAG()
     def dag():
         f()
         g()

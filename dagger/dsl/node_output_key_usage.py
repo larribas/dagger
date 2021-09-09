@@ -14,7 +14,7 @@ class NodeOutputKeyUsage:
     has been used as such:
 
     ```
-    @dsl.DAG
+    @dsl.DAG()
     def dag():
         f_output = f()
         g(f_output["a"])

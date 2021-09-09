@@ -145,11 +145,11 @@ class NodeInvocationRecorder:
         For instance, given:
 
         ```
-        @dsl.task
+        @dsl.task()
         def f(a, b, c):
             pass
 
-        @dsl.DAG
+        @dsl.DAG()
         def dsl(a):
             f(a=a, b=2, c=3)
         ```

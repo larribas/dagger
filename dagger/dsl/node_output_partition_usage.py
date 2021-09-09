@@ -14,15 +14,15 @@ class NodeOutputPartitionUsage:
     An instance of this class is returned whenever an output reference is iterated over.
 
     ```
-    @dsl.task
+    @dsl.task()
     def f() -> dict:
         return [1, 2, 3]
 
-    @dsl.task
+    @dsl.task()
     def g(n: int):
         print(n)
 
-    @dsl.DAG
+    @dsl.DAG()
     def dag():
         numbers = f()
         for n in numbers:
