@@ -17,7 +17,7 @@ spec:
   - name: dag-say-hello-world
     container:
       image: local.registry/dagger
-      command: [hello-world]
+      command: ["python", "examples/hello_world.py"]
       args: [
         --node-name, say-hello-world
       ]

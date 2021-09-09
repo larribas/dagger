@@ -90,7 +90,7 @@ spec:
           key: "{{inputs.parameters.numbers_output_path}}"
     container:
       image: local.registry/dagger
-      command: [map-reduce]
+      command: ["python", "examples/map_reduce.py"]
       args: [
         --node-name, "generate-numbers",
         --input, parallel_steps, "{{inputs.artifacts.parallel_steps.path}}",
@@ -122,7 +122,7 @@ spec:
           key: "{{inputs.parameters.number_output_path}}"
     container:
       image: local.registry/dagger
-      command: [map-reduce]
+      command: ["python", "examples/map_reduce.py"]
       args: [
         --node-name, "multiply-by",
         --input, multiplier, "{{inputs.artifacts.multiplier.path}}",
@@ -153,7 +153,7 @@ spec:
           key: "{{inputs.parameters.sum_output_path}}"
     container:
       image: local.registry/dagger
-      command: [map-reduce]
+      command: ["python", "examples/map_reduce.py"]
       args: [
         --node-name, "sum-results",
         --input, numbers, "{{inputs.artifacts.numbers.path}}",

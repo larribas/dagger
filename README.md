@@ -218,7 +218,7 @@ We use Poetry to manage the dependencies of this library. In the codebase, you w
 - `make ci` - Run all the quality checks we run for each commit/PR. This includes type hint checking, linting, formatting and documentation.
 - `make build` - Build the project's WHEEL
 - `make docker-build` - Package the project in a Docker image
-- `make docker-run-example-name` - Run any example DAG of those defined in "dagger/examples" (for instance, `make run-hello-world`)
-- `make set-up-argo` - Create a k3d cluster for the project and installs Argo 3.0 in it. It also sets up a k3d image registry so that you can run the examples remotely.
-- `make docker-push-local` - Build and push the project's Docker image to the local k3d registry.
-- `make tear-down-argo` - Destroy the k3d cluster and registry where we deployed Argo.
+- `make k3d-set-up` - Create a k3d cluster and image registry for the project.
+- `make k3d-docker-push` - Build and push the project's Docker image to the local k3d registry.
+- `make k3d-install-argo` - Install Argo on k3d, for local testing of Argo Workflows.
+- `make k3d-tear-down` - Destroy the k3d cluster and registry.

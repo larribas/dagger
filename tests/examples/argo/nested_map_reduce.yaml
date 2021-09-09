@@ -92,7 +92,7 @@ spec:
           key: "{{inputs.parameters.numbers_output_path}}"
     container:
       image: local.registry/dagger
-      command: [nested-map-reduce]
+      command: ["python", "examples/nested_map_reduce.py"]
       args: [
         --node-name, "fan-out",
         --input, parallel_steps, "{{inputs.artifacts.parallel_steps.path}}",
@@ -165,7 +165,7 @@ spec:
           key: "{{inputs.parameters.number_output_path}}"
     container:
       image: local.registry/dagger
-      command: [nested-map-reduce]
+      command: ["python", "examples/nested_map_reduce.py"]
       args: [
         --node-name, "map.map-1",
         --input, multiplier, "{{inputs.artifacts.multiplier.path}}",
@@ -197,7 +197,7 @@ spec:
           key: "{{inputs.parameters.number_output_path}}"
     container:
       image: local.registry/dagger
-      command: [nested-map-reduce]
+      command: ["python", "examples/nested_map_reduce.py"]
       args: [
         --node-name, "map.map-2",
         --input, multiplier, "{{inputs.artifacts.multiplier.path}}",
@@ -228,7 +228,7 @@ spec:
           key: "{{inputs.parameters.sum_output_path}}"
     container:
       image: local.registry/dagger
-      command: [nested-map-reduce]
+      command: ["python", "examples/nested_map_reduce.py"]
       args: [
         --node-name, reduce,
         --input, numbers, "{{inputs.artifacts.numbers.path}}",
