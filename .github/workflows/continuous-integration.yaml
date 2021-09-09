@@ -94,6 +94,27 @@ jobs:
         run: make install
       - name: Verify docstring documentation is standardized
         run: make check-docstrings
+  documentation-portal:
+    name: Documentation Portal
+    runs-on: ubuntu-latest
+    env:
+      PYTHON: 3.9.6
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON }}
+      - uses: Gr1N/setup-poetry@v7
+        with:
+          poetry-version: 1.1.5
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-${{ env.PYTHON}}-poetry-${{ hashFiles('poetry.lock') }}
+      - name: Poetry Install
+        run: make install
+      - name: Verify the documentation portal can be built successfully
+        run: make docs-build
   test:
     name: Test Suite
     runs-on: ${{ matrix.os }}
