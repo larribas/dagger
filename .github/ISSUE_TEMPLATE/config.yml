@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
 - name: Documentation Portal
-  url: https://dagger.readthedocs.io/
+  url: https://larribas.me/dagger/
   about: Learn all about Dagger
 - name: Examples
   url: https://github.com/larribas/dagger/tree/main/examples

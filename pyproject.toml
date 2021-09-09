@@ -7,7 +7,7 @@ version = "0.0.0"
 license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/larribas/dagger"
-documentation = "https://dagger.readthedocs.io"
+documentation = "https://larribas.me/dagger"
 keywords = [
   "argo-workflows",
   "data-engineering",
@@ -36,6 +36,9 @@ pydocstyle = "^6.1.1"
 mypy = "^0.812"
 pytest-cov = "^2.12.0"
 PyYAML = "^5.4.1"
+mkdocs = "^1.2.2"
+mkapi = "^1.0.14"
+mkdocs-material = "^7.2.6"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

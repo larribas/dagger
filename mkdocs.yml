@@ -1,0 +1,83 @@
+site_name: Dagger - Distributed Data Pipelines in Python
+site_url: https://larribas.me/dagger
+site_description: Documentation portal for the Dagger (py-dagger) Python library.
+site_author: Lorenzo Arribas (@larribas)
+repo_url: https://github.com/larribas/dagger
+edit_uri: edit/main/docs/
+strict: true
+theme:
+  name: material
+  logo: assets/images/logo/favicon-32x32.png
+  favicon: assets/images/logo/favicon.ico
+  features:
+  - navigation.instant
+  - navigation.top
+  - search.highlight
+  palette:
+  - scheme: default
+    media: "(prefers-color-scheme: light)"
+    primary: green
+    accent: pink
+    toggle:
+      icon: material/weather-night
+      name: Switch to dark mode
+  - scheme: slate
+    media: "(prefers-color-scheme: dark)"
+    primary: blue grey
+    accent: lime
+    toggle:
+      icon: material/weather-sunny
+      name: Switch to light mode
+markdown_extensions:
+- toc:
+    permalink: true
+plugins:
+- search
+- mkapi
+nav:
+- Overview: README.md
+- quick-start.md
+- Tutorial:
+  - tutorial/introduction.md
+  - tutorial/hello-world.md
+  - tutorial/local-tests.md
+  - tutorial/passing-parameters.md
+  - tutorial/machine-learning.md
+  - tutorial/map-reduce.md
+  - tutorial/argo-workflows.md
+- User Guide:
+  - user-guide/introduction.md
+  - Syntax:
+    - user-guide/syntax/declarative.md
+    - user-guide/syntax/imperative.md
+  - DAGs:
+    - user-guide/dags/tasks.md
+    - user-guide/dags/dags.md
+    - user-guide/dags/dag-composition.md
+    - user-guide/dags/inputs.md
+    - user-guide/dags/outputs.md
+    - user-guide/dags/partitioning.md
+    - user-guide/dags/map-reduce.md
+  - Serializers:
+    - user-guide/serializers/json.md
+    - user-guide/serializers/pickle.md
+    - user-guide/serializers/write-your-own.md
+  - Runtimes:
+    - user-guide/runtimes/alternatives.md
+    - user-guide/runtimes/local.md
+    - user-guide/runtimes/cli.md
+    - user-guide/runtimes/argo.md
+    - user-guide/runtimes/write-your-own.md
+- API Reference:
+  - api/init.md
+  - api/dag.md
+  - api/task.md
+  - api/input.md
+  - api/output.md
+  - api/serializer.md
+  - api/dsl.md
+  - api/runtime-local.md
+  - api/runtime-cli.md
+  - api/runtime-argo.md
+- Releases ⧉: https://github.com/larribas/dagger/releases
+- PyPI ⧉: https://pypi.org/project/py-dagger/
