@@ -93,7 +93,7 @@ dag = DAG(
 )
 
 
-def run_from_cli():
+if __name__ == "__main__":
     """Define a command-line interface for this DAG, using the CLI runtime. Check the documentation to understand why this is relevant or necessary."""
     from dagger.runtime.cli import invoke
 

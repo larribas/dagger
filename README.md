@@ -2,7 +2,7 @@
 
 Define sophisticated data pipelines and run them on different distributed systems (such as Argo Workflows).
 
-![Python Versions Supported](https://img.shields.io/badge/python-3.9+-blue.svg)
+![Python Versions Supported](https://img.shields.io/badge/python-3.8+-blue.svg)
 [![Latest PyPI version](https://badge.fury.io/py/py-dagger.svg)](https://badge.fury.io/py/py-dagger)
 [![Test Coverage (Codecov)](https://codecov.io/gh/larribas/dagger/branch/main/graph/badge.svg?token=fKU68xYUm8)](https://codecov.io/gh/larribas/dagger)
 ![QA: Tests](https://github.com/larribas/dagger/actions/workflows/tests.yaml/badge.svg)
@@ -112,6 +112,12 @@ def map_reduce_pipeline(exponent):
 
 Finally, we use `dagger.dsl.build` to transform that decorated function into a `dagger.dag.DAG` data structure, and we test it locally with `dagger.runtime.local.invoke`.
 
+```python
+from dagger.runtime.local import invoke
+result = invoke(dag, params={"exponent": 2})
+print(f"The final result was {result}")
+```
+
 
 ### Other Runtimes
 
@@ -158,7 +164,7 @@ We use Poetry to manage the dependencies of this library. In the codebase, you w
 - `make ci` - Run all the quality checks we run for each commit/PR. This includes type hint checking, linting, formatting and documentation.
 - `make build` - Build the project's WHEEL
 - `make docker-build` - Package the project in a Docker image
-- `make docker-run-example-name` - Run any example DAG of those defined in "dagger/examples" (for instance, `make run-hello-world`)
-- `make set-up-argo` - Create a k3d cluster for the project and installs Argo 3.0 in it. It also sets up a k3d image registry so that you can run the examples remotely.
-- `make docker-push-local` - Build and push the project's Docker image to the local k3d registry.
-- `make tear-down-argo` - Destroy the k3d cluster and registry where we deployed Argo.
+- `make k3d-set-up` - Create a k3d cluster and image registry for the project.
+- `make k3d-docker-push` - Build and push the project's Docker image to the local k3d registry.
+- `make k3d-install-argo` - Install Argo on k3d, for local testing of Argo Workflows.
+- `make k3d-tear-down` - Destroy the k3d cluster and registry.

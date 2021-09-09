@@ -6,26 +6,20 @@ from dagger.dsl.node_output_key_usage import NodeOutputKeyUsage
 from dagger.dsl.node_output_partition_usage import NodeOutputPartitionUsage
 from dagger.dsl.node_output_property_usage import NodeOutputPropertyUsage
 from dagger.dsl.node_output_reference import NodeOutputReference
+from dagger.dsl.node_output_serializer import NodeOutputSerializer
 from dagger.dsl.node_output_usage import NodeOutputUsage
-from dagger.dsl.serialize import Serialize
 from dagger.serializer import AsPickle, DefaultSerializer
 
 
 def test__node_output_usage__conforms_to_protocol():
     assert isinstance(
-        NodeOutputUsage(
-            invocation_id="x",
-            serialize_annotation=Serialize(),
-        ),
+        NodeOutputUsage(invocation_id="x"),
         NodeOutputReference,
     )
 
 
 def test__node_output_usage__properties():
-    output = NodeOutputUsage(
-        invocation_id="x",
-        serialize_annotation=Serialize(),
-    )
+    output = NodeOutputUsage(invocation_id="x")
     assert output.invocation_id == "x"
     assert output.output_name == "return_value"
     assert output.serializer == DefaultSerializer
@@ -34,10 +28,7 @@ def test__node_output_usage__properties():
 
 
 def test__node_output_usage__returns_itself_if_it_is_explicitly_consumed():
-    output = NodeOutputUsage(
-        invocation_id="x",
-        serialize_annotation=Serialize(),
-    )
+    output = NodeOutputUsage(invocation_id="x")
     output.consume()
     assert output.references == {output}
 
@@ -45,7 +36,7 @@ def test__node_output_usage__returns_itself_if_it_is_explicitly_consumed():
 def test__node_output_usage__returns_references_to_sub_keys_when_they_are_used():
     output = NodeOutputUsage(
         invocation_id="x",
-        serialize_annotation=Serialize(b=AsPickle()),
+        serializer=NodeOutputSerializer(b=AsPickle()),
     )
 
     # Use sub-keys, sometimes repeatedly
@@ -73,7 +64,7 @@ def test__node_output_usage__returns_references_to_sub_keys_when_they_are_used()
 def test__node_output_usage__returns_references_to_sub_properties_when_they_are_used():
     output = NodeOutputUsage(
         invocation_id="x",
-        serialize_annotation=Serialize(b=AsPickle()),
+        serializer=NodeOutputSerializer(b=AsPickle()),
     )
 
     # Use sub-keys, sometimes repeatedly
@@ -101,16 +92,13 @@ def test__node_output_usage__returns_references_to_sub_properties_when_they_are_
 def test__node_output_usage__captures_serializer_from_annotation():
     output = NodeOutputUsage(
         invocation_id="x",
-        serialize_annotation=Serialize(AsPickle()),
+        serializer=NodeOutputSerializer(AsPickle()),
     )
     assert output.serializer == AsPickle()
 
 
 def test__node_output_usage__accessing_meta_attribute():
-    output = NodeOutputUsage(
-        invocation_id="x",
-        serialize_annotation=Serialize(),
-    )
+    output = NodeOutputUsage(invocation_id="x")
     with pytest.raises(ValueError) as e:
         output.__x__
 
@@ -121,10 +109,7 @@ def test__node_output_usage__accessing_meta_attribute():
 
 
 def test__node_output_usage__is_iterable():
-    output = NodeOutputUsage(
-        invocation_id="x",
-        serialize_annotation=Serialize(),
-    )
+    output = NodeOutputUsage(invocation_id="x")
 
     assert isinstance(output, Iterable)
 
@@ -135,8 +120,5 @@ def test__node_output_usage__is_iterable():
 
 
 def test__node_output_usage__representation():
-    output = NodeOutputUsage(
-        invocation_id="x",
-        serialize_annotation=Serialize(),
-    )
+    output = NodeOutputUsage(invocation_id="x")
     assert repr(output) == "NodeOutputUsage(invocation_id=x)"

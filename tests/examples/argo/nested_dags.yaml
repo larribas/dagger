@@ -120,8 +120,7 @@ spec:
       - --output
       - second_theme
       - '{{outputs.artifacts.second_theme.path}}'
-      command:
-      - nested-dags
+      command: ["python", "examples/nested_dags.py"]
       image: local.registry/dagger
       volumeMounts:
       - mountPath: /tmp/outputs/
@@ -199,8 +198,7 @@ spec:
       - --output
       - composition
       - '{{outputs.artifacts.composition.path}}'
-      command:
-      - nested-dags
+      command: ["python", "examples/nested_dags.py"]
       image: local.registry/dagger
       volumeMounts:
       - mountPath: /tmp/outputs/
@@ -234,8 +232,7 @@ spec:
       - --output
       - recording
       - '{{outputs.artifacts.recording.path}}'
-      command:
-      - nested-dags
+      command: ["python", "examples/nested_dags.py"]
       image: local.registry/dagger
       volumeMounts:
       - mountPath: /tmp/outputs/
@@ -313,8 +310,7 @@ spec:
       - --output
       - composition
       - '{{outputs.artifacts.composition.path}}'
-      command:
-      - nested-dags
+      command: ["python", "examples/nested_dags.py"]
       image: local.registry/dagger
       volumeMounts:
       - mountPath: /tmp/outputs/
@@ -348,8 +344,7 @@ spec:
       - --output
       - recording
       - '{{outputs.artifacts.recording.path}}'
-      command:
-      - nested-dags
+      command: ["python", "examples/nested_dags.py"]
       image: local.registry/dagger
       volumeMounts:
       - mountPath: /tmp/outputs/
@@ -393,8 +388,7 @@ spec:
       - --output
       - album
       - '{{outputs.artifacts.album.path}}'
-      command:
-      - nested-dags
+      command: ["python", "examples/nested_dags.py"]
       image: local.registry/dagger
       volumeMounts:
       - mountPath: /tmp/outputs/

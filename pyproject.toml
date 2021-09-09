@@ -24,12 +24,11 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<4.0"
+python = ">=3.8,<4.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 black = "^20.8b1"
-pre-commit = "^2.11.1"
 isort = "^5.7.0"
 deepdiff = "^5.2.3"
 flake8 = "^3.9.2"
@@ -53,11 +52,3 @@ multi_line_output = 3
 inherit = false
 convention = "numpy"
 
-[tool.poetry.scripts]
-hello-world = "examples.hello_world:run_from_cli"
-passing-parameters = "examples.passing_parameters:run_from_cli"
-map-reduce = "examples.map_reduce:run_from_cli"
-nested-map-reduce = "examples.nested_map_reduce:run_from_cli"
-composite-map-reduce = "examples.composite_map_reduce:run_from_cli"
-nested-dags = "examples.nested_dags:run_from_cli"
-argo-specific-extras = "examples.argo_specific_extras:run_from_cli"

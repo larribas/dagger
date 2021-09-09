@@ -66,7 +66,7 @@ spec:
 
     container:
       image: local.registry/dagger
-      command: [passing-parameters]
+      command: ["python", "examples/passing_parameters.py"]
       args: [
         --node-name, double,
         --input, number, "{{inputs.artifacts.number.path}}",
@@ -96,7 +96,7 @@ spec:
           key: "{{inputs.parameters.squared-number_output_path}}"
     container:
       image: local.registry/dagger
-      command: [passing-parameters]
+      command: ["python", "examples/passing_parameters.py"]
       args: [
         --node-name, square,
         --input, number, "{{inputs.artifacts.number.path}}",
