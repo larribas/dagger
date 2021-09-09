@@ -12,17 +12,12 @@ Define sophisticated data pipelines and run them on different distributed system
 
 ---
 
-_Dagger_ is a Python library that allows you to:
-
-* Define sophisticated DAGs (direct acyclic graphs) using very straightforward Pythonic code.
-* Run those DAGs seamlessly in different runtimes or workflow orchestrators (such as Argo Workflows, Kubeflow Pipelines, and more).
-
 
 ## Features
 
 - Define tasks and DAGs, and compose them together seamlessly.
 - Parameterize DAGs and pass parameters between nodes in plain Python (the runtime takes care of serializing and transmitting data on your behalf).
-- Create dynamic for loops, map-reduce operations easily.
+- Create dynamic for loops and map-reduce operations easily.
 - Run your DAGs locally or using a distributed workflow orchestrator (such as Argo Workflows).
 - Extend your tasks to take advantage of all the features offered by your runtime (e.g. Retry strategies, Kubernetes scheduling directives, etc.)
 - ... All with a simple _Pythonic_ DSL that feels just like coding regular Python functions.
@@ -40,17 +35,7 @@ pip install py-dagger
 ```
 
 
-## Overview
-
-_Dagger_ was created to facilitate the creation and ongoing maintenance of data and ML pipelines at big companies.
-
-This goal is reflected in _Dagger_'s architecture and main design decisions:
-
-- To make __common use cases__ and patterns (such as dynamic loops or map-reduce operations) __as easy as possible__.
-- To __minimize boilerplate, plumbing or low-level code__ (such as serializing inputs/outputs and storing them in a local/remote file system).
-- To __onboard users in just a couple of hours__ through great documentation, comprehensive examples and tutorials.
-- To __never sacrifice reliability and performance__.
-
+## _Dagger_ in Action
 
 Take the following piece of code:
 
@@ -145,6 +130,20 @@ Does it sound interesting? We're just scratching the surface of what's possible 
 - The [Examples](https://github.com/larribas/dagger/tree/main/examples).
 
 
+
+## Architecture Overview
+
+_Dagger_ is built around 3 components:
+
+- A set of __core data structures__ that represent the intended behavior of a DAG.
+- A __domain-specific language (DSL)__ that uses metaprogramming to capture how a DAG should behave, and represents it using the core data structures.
+- Multiple __runtimes__ that inspect the core data structures to run the corresponding DAG, or prepare the DAG to run in a specific pipeline executor.
+
+
+[![components](docs/assets/images/diagrams/components.png)](docs/assets/images/diagrams/components.png)
+
+
+
 ## How to contribute
 
 Do you have some feedback about the library? Have you implemented a Serializer or a Runtime that may be useful for the community? Do you think a tutorial or example could be improved?
@@ -162,8 +161,10 @@ We use Poetry to manage the dependencies of this library. In the codebase, you w
 - `make install` - Install the project's dependencies
 - `make test` - Run tests and report test coverage. It will fail if coverage is too low.
 - `make ci` - Run all the quality checks we run for each commit/PR. This includes type hint checking, linting, formatting and documentation.
-- `make build` - Build the project's WHEEL
+- `make build` - Build the project.
 - `make docker-build` - Package the project in a Docker image
+- `make docs-build` - Build the documentation portal.
+- `make docs-serve` - Serve the documentation portal.
 - `make k3d-set-up` - Create a k3d cluster and image registry for the project.
 - `make k3d-docker-push` - Build and push the project's Docker image to the local k3d registry.
 - `make k3d-install-argo` - Install Argo on k3d, for local testing of Argo Workflows.
