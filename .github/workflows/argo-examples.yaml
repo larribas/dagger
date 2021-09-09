@@ -40,17 +40,30 @@ jobs:
       - name: Install k3d
         run: |
           wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v4.4.4 bash
-      - name: Install Argo on k3d
+      - name: Set up k3d cluster
         run: |
-          make set-up-argo
+          make k3d-set-up
+      - name: Install Argo Workflows
+        run: |
+          echo "Waiting 1 minute until the cluster is stable"
+          sleep 60
+          kubectl get namespaces
+          kubectl get pods --all-namespaces
+          make k3d-install-argo
       - name: Package examples in Docker container and push to local registry
         run: |
-          make docker-push-local
-      - name: Run all examples with Argo and expect them to work
+          make k3d-docker-push
+      - name: Wait for Argo to be running correctly
         run: |
           echo "Verifying whether Argo is running correctly"
           kubectl get pods -n $(KUBE_NAMESPACE)
 
+          echo "Waiting 30 seconds for it to stabilize completely"
+          sleep 30
+          kubectl get pods -n $(KUBE_NAMESPACE)
+
+      - name: Run all examples with Argo and expect them to work
+        run: |
           EXAMPLES_DIR=tests/examples/argo/
           ls -l $EXAMPLES_DIR
           for f in $EXAMPLES_DIR/*.yaml; do
