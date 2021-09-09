@@ -9,20 +9,6 @@ Define sophisticated data pipelines and run them on different distributed system
 
 ---
 
-
-## Installation
-
-_Dagger_ is published to the Python Package Index (PyPI) under the name `py-dagger`. To install it, you can simply run:
-
-```
-pip install py-dagger
-```
-
-## Tutorials, Examples and User Guides
-
-Check our [Documentation Portal](https://larribas.me/dagger)!
-
-
 ## Features
 
 - Define tasks and DAGs, and compose them together seamlessly.
@@ -33,6 +19,21 @@ Check our [Documentation Portal](https://larribas.me/dagger)!
 
 
 Other nice features of _Dagger_ are: Zero dependencies, 100% test coverage, great documentation and plenty of examples to get you started.
+
+
+## Installation
+
+_Dagger_ is published to the Python Package Index (PyPI) under the name `py-dagger`. To install it, you can simply run:
+
+```
+pip install py-dagger
+```
+
+## Looking for Tutorials and Examples?
+
+Check our [Documentation Portal](https://larribas.me/dagger)!
+
+
 
 
 ## Architecture Overview
