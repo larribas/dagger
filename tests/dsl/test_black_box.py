@@ -82,7 +82,7 @@ def test__build__multiple_calls_to_the_same_task_at_different_levels():
         return x
 
     @dsl.DAG()
-    def dag(x, y):
+    def dag(x):
         x = f(x)
         x = g(x)
         return f(x)
