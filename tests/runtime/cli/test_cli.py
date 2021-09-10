@@ -36,25 +36,29 @@ def test__invoke__whole_dag():
         outputs=dict(x_doubled_and_squared=FromNodeOutput("square", "x_squared")),
     )
 
-    with tempfile.NamedTemporaryFile() as x_input:
-        x_input.write(b"4")
-        x_input.seek(0)
+    with tempfile.TemporaryDirectory() as tmp:
+        x_input = os.path.join(tmp, "x_input")
+        x_output = os.path.join(tmp, "x_output")
 
-        with tempfile.NamedTemporaryFile() as x_doubled_and_squared_output:
-            invoke(
-                dag,
-                argv=itertools.chain(
-                    *[
-                        ["--input", "x", x_input.name],
-                        [
-                            "--output",
-                            "x_doubled_and_squared",
-                            x_doubled_and_squared_output.name,
-                        ],
-                    ]
-                ),
-            )
-            assert x_doubled_and_squared_output.read() == b"64"
+        with open(x_input, "wb") as f:
+            f.write(b"4")
+
+        invoke(
+            dag,
+            argv=itertools.chain(
+                *[
+                    ["--input", "x", x_input],
+                    [
+                        "--output",
+                        "x_doubled_and_squared",
+                        x_output,
+                    ],
+                ]
+            ),
+        )
+
+        with open(x_output, "rb") as f:
+            assert f.read() == b"64"
 
 
 def test__invoke__selecting_a_node_that_does_not_exist():
@@ -85,22 +89,26 @@ def test__invoke__selecting_a_node():
         outputs=dict(x_squared=FromNodeOutput("square", "x_squared")),
     )
 
-    with tempfile.NamedTemporaryFile() as x_input:
-        x_input.write(b"4")
-        x_input.seek(0)
+    with tempfile.TemporaryDirectory() as tmp:
+        x_input = os.path.join(tmp, "x_input")
+        x_output = os.path.join(tmp, "x_output")
 
-        with tempfile.NamedTemporaryFile() as x_squared_output:
-            invoke(
-                dag,
-                argv=itertools.chain(
-                    *[
-                        ["--node-name", "square"],
-                        ["--input", "x", x_input.name],
-                        ["--output", "x_squared", x_squared_output.name],
-                    ]
-                ),
-            )
-            assert x_squared_output.read() == b"16"
+        with open(x_input, "wb") as f:
+            f.write(b"4")
+
+        invoke(
+            dag,
+            argv=itertools.chain(
+                *[
+                    ["--node-name", "square"],
+                    ["--input", "x", x_input],
+                    ["--output", "x_squared", x_output],
+                ]
+            ),
+        )
+
+        with open(x_output, "rb") as f:
+            assert f.read() == b"16"
 
 
 def test__invoke__selecting_a_node_from_nested_dag():
@@ -126,22 +134,26 @@ def test__invoke__selecting_a_node_from_nested_dag():
         outputs=dict(x=FromNodeOutput("double", "x")),
     )
 
-    with tempfile.NamedTemporaryFile() as x_input:
-        x_input.write(b"4")
-        x_input.seek(0)
+    with tempfile.TemporaryDirectory() as tmp:
+        x_input = os.path.join(tmp, "x_input")
+        x_output = os.path.join(tmp, "x_output")
 
-        with tempfile.NamedTemporaryFile() as x_output:
-            invoke(
-                dag,
-                argv=itertools.chain(
-                    *[
-                        ["--node-name", "nested.square"],
-                        ["--input", "x", x_input.name],
-                        ["--output", "x", x_output.name],
-                    ]
-                ),
-            )
-            assert x_output.read() == b"16"
+        with open(x_input, "wb") as f:
+            f.write(b"4")
+
+        invoke(
+            dag,
+            argv=itertools.chain(
+                *[
+                    ["--node-name", "nested.square"],
+                    ["--input", "x", x_input],
+                    ["--output", "x", x_output],
+                ]
+            ),
+        )
+
+        with open(x_output, "rb") as f:
+            assert f.read() == b"16"
 
 
 def test__invoke__selecting_a_nested_node_that_does_not_exist():
@@ -177,22 +189,26 @@ def test__invoke__selecting_a_nested_dag():
         inputs=dict(x=FromParam()),
     )
 
-    with tempfile.NamedTemporaryFile() as x_input:
-        x_input.write(b"4")
-        x_input.seek(0)
+    with tempfile.TemporaryDirectory() as tmp:
+        x_input = os.path.join(tmp, "x_input")
+        x_output = os.path.join(tmp, "x_output")
 
-        with tempfile.NamedTemporaryFile() as x_output:
-            invoke(
-                dag,
-                argv=itertools.chain(
-                    *[
-                        ["--node-name", "nested"],
-                        ["--input", "x", x_input.name],
-                        ["--output", "x", x_output.name],
-                    ]
-                ),
-            )
-            assert x_output.read() == b"16"
+        with open(x_input, "wb") as f:
+            f.write(b"4")
+
+        invoke(
+            dag,
+            argv=itertools.chain(
+                *[
+                    ["--node-name", "nested"],
+                    ["--input", "x", x_input],
+                    ["--output", "x", x_output],
+                ]
+            ),
+        )
+
+        with open(x_output, "rb") as f:
+            assert f.read() == b"16"
 
 
 def test__invoke__nested_node_with_inputs_from_another_node_output():
