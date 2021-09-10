@@ -72,6 +72,33 @@ def test__build__multiple_calls_to_the_same_task():
     )
 
 
+def test__build__multiple_calls_to_the_same_task_at_different_levels():
+    @dsl.task()
+    def f(x):
+        return x
+
+    @dsl.task()
+    def g(x):
+        return x
+
+    @dsl.DAG()
+    def dag(x, y):
+        x = f(x)
+        x = g(x)
+        return f(x)
+
+    verify_dags_are_equivalent(
+        dsl.build(dag),
+        DAG(
+            nodes={
+                "f-1": Task(f.func),
+                "g-1": Task(g.func),
+                "f-2": Task(f.func),
+            }
+        ),
+    )
+
+
 def test__build__input_from_param():
     @dsl.task()
     def say_hello(first_name):
