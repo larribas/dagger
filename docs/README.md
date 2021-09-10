@@ -1,7 +1,5 @@
 # Dagger
 
-Define sophisticated data pipelines and run them on different distributed systems (such as Argo Workflows).
-
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/larribas/dagger/blob/main/LICENSE.md)
 ![Python Versions Supported](https://img.shields.io/badge/python-3.8+-blue.svg)
 [![Latest PyPI version](https://badge.fury.io/py/py-dagger.svg)](https://badge.fury.io/py/py-dagger)
@@ -18,10 +16,9 @@ _Dagger_ is a Python library that allows you to:
 ## Features
 
 - Define tasks and DAGs, and compose them together seamlessly.
-- Parameterize DAGs and pass parameters between nodes in plain Python (the runtime takes care of serializing and transmitting data on your behalf).
-- Create dynamic for loops, map-reduce operations easily.
+- Create dynamic for loops and map-reduce operations.
 - Run your DAGs locally or using a distributed workflow orchestrator (such as Argo Workflows).
-- Extend your tasks to take advantage of all the features offered by your runtime (e.g. Retry strategies, Kubernetes scheduling directives, etc.)
+- Take advantage of advanced runtime features (e.g. Retry strategies, Kubernetes scheduling directives, etc.)
 - ... All with a simple _Pythonic_ DSL that feels just like coding regular Python functions.
 
 
