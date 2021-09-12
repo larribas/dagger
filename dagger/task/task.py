@@ -1,4 +1,4 @@
-"""Define tasks in a workflow/pipeline."""
+"""Define a Task that runs a specific function inside of a DAG."""
 from typing import Any, Callable, List, Mapping, Optional, Union
 from typing import get_args as get_type_args
 
@@ -36,23 +36,23 @@ class Task:
 
         Parameters
         ----------
-        func
+        func: Callable
             The Python function for the Task to execute
 
-        inputs
+        inputs: Mapping[str, SupportedInputs], default={}
             A mapping from input names to Task inputs.
             Only certain types are allowed as inputs.
 
-        outputs
+        outputs: Mapping[str, SupportedOutputs], default={}
             A mapping from output names to Task outputs.
             Outputs must be retrievable from the function's outputs.
 
-        runtime_options
-            A list of options to supply to all runtimes.
+        runtime_options: Mapping[str, Any], default={}
+            A mapping of options to supply to all runtimes.
             This allows you to take full advantage of the features of each runtime. For instance, you can use it to manipulate node affinities and tolerations in Kubernetes.
             Check the documentation of each runtime to see potential options.
 
-        partition_by_input
+        partition_by_input: str, optional
             If specified, it signals the task should be run as many times as partitions in the specified input.
             Each of the executions will only receive one of the partitions of that input.
 

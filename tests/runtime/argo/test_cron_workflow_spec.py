@@ -1,9 +1,6 @@
 from dagger.dag import DAG
-from dagger.runtime.argo.cron_workflow_spec import (
-    Cron,
-    CronConcurrencyPolicy,
-    cron_workflow_spec,
-)
+from dagger.runtime.argo.cron import Cron, CronConcurrencyPolicy
+from dagger.runtime.argo.cron_workflow_spec import cron_workflow_spec
 from dagger.runtime.argo.workflow_spec import Workflow, workflow_spec
 from dagger.task import Task
 

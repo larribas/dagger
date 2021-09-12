@@ -54,24 +54,24 @@ class DAG:
 
         Parameters
         ----------
-        nodes
+        nodes: Mapping[str, Node]
             A mapping from node names to nodes.
             Only certain types are allowed as nodes.
 
-        inputs
+        inputs: Mapping[str, SupportedInputs], default={}
             A mapping from input names to DAG inputs.
             Only certain types are allowed as inputs.
 
-        outputs
+        outputs: Mapping[str, SupportedOutputs], default={}
             A mapping from output names to DAG outputs.
             Outputs must come from the output of a node within the DAG.
 
-        runtime_options
+        runtime_options: Mapping[str, Any], default={}
             A list of options to supply to all runtimes.
             This allows you to take full advantage of the features of each runtime. For instance, you can use it to manipulate node affinities and tolerations in Kubernetes.
             Check the documentation of each runtime to see potential options.
 
-        partition_by_input
+        partition_by_input: str, optional
             If specified, it signals the task should be run as many times as partitions in the specified input.
             Each of the executions will only receive one of the partitions of that input.
 

@@ -46,7 +46,7 @@ _Dagger_ is built around 3 components:
 - Multiple __runtimes__ that inspect the core data structures to run the corresponding DAG, or prepare the DAG to run in a specific pipeline executor.
 
 
-[![image](assets/images/diagrams/components.png)](assets/images/diagrams/components.png)
+[![components](assets/images/diagrams/components.png)](assets/images/diagrams/components.png)
 
 
 ### The Core Data Structures
@@ -63,7 +63,7 @@ _Dagger_ defines DAGs using a series of immutable data structures. These structu
 
 They are divided into different categories:
 
-[![image](assets/images/diagrams/core_data_structures.png)](assets/images/diagrams/core_data_structures.png)
+[![core data structures](assets/images/diagrams/core_data_structures.png)](assets/images/diagrams/core_data_structures.png)
 
 - __Nodes__ may be tasks (functions) or DAGs (a series of nodes connected together). DAGs can be nested into other dags and composed elegantly.
 - __Inputs__ may come from a DAG parameter or from the output of another node.

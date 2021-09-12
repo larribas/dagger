@@ -5,7 +5,8 @@ from typing import Any, Mapping
 from dagger.dag import DAG
 from dagger.runtime.argo.cron_workflow_spec import Cron, cron_workflow_spec
 from dagger.runtime.argo.metadata import Metadata, object_meta
-from dagger.runtime.argo.workflow_spec import Workflow, workflow_spec
+from dagger.runtime.argo.workflow import Workflow
+from dagger.runtime.argo.workflow_spec import workflow_spec
 
 API_VERSION = "argoproj.io/v1alpha1"
 

@@ -29,6 +29,11 @@ theme:
       icon: material/weather-sunny
       name: Switch to light mode
 markdown_extensions:
+- pymdownx.highlight: 
+    linenums: true
+- pymdownx.snippets
+- pymdownx.superfences
+- pymdownx.tabbed
 - toc:
     permalink: true
 plugins:
@@ -47,26 +52,26 @@ nav:
   - tutorial/argo-workflows.md
 - User Guide:
   - user-guide/introduction.md
-  - Syntax:
-    - user-guide/syntax/declarative.md
-    - user-guide/syntax/imperative.md
-  - DAGs:
+  - Nodes, Inputs and Outputs:
+    - user-guide/dags/introduction.md
     - user-guide/dags/tasks.md
     - user-guide/dags/dags.md
     - user-guide/dags/dag-composition.md
-    - user-guide/dags/inputs.md
-    - user-guide/dags/outputs.md
     - user-guide/dags/partitioning.md
     - user-guide/dags/map-reduce.md
   - Serializers:
+    - user-guide/serializers/alternatives.md
     - user-guide/serializers/json.md
     - user-guide/serializers/pickle.md
     - user-guide/serializers/write-your-own.md
+  - DSL:
+    - user-guide/dsl/imperative.md
   - Runtimes:
     - user-guide/runtimes/alternatives.md
     - user-guide/runtimes/local.md
     - user-guide/runtimes/cli.md
     - user-guide/runtimes/argo.md
+    - user-guide/runtimes/runtime-options.md
     - user-guide/runtimes/write-your-own.md
 - API Reference:
   - api/init.md

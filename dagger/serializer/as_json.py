@@ -21,11 +21,11 @@ class AsJSON:
 
         Parameters
         ----------
-        indent
+        indent: int, optional
             Set the indentation to format the json with.
             This may come in handy in some situations if you need to debug/troubleshoot an issue with parameters that are passed from one task to another. However, note that extra indentation makes the serialized payload heavier. Thus, we don't recommend setting this in a production environment.
 
-        allow_nan
+        allow_nan: bool
             Whether or not to allow NaN values.
             See the official json library in Python for more details about the expected behavior.
         """

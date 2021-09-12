@@ -3,11 +3,8 @@ import pytest
 from dagger.dag import DAG
 from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromReturnValue
-from dagger.runtime.argo.workflow_spec import (
-    Workflow,
-    _dag_task_with_param,
-    workflow_spec,
-)
+from dagger.runtime.argo.workflow import Workflow
+from dagger.runtime.argo.workflow_spec import _dag_task_with_param, workflow_spec
 from dagger.task import Task
 
 #

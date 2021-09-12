@@ -1,6 +1,6 @@
 """Run tasks in memory."""
 import warnings
-from typing import Any, Dict, Iterable, List, Mapping, Optional
+from typing import Any, Dict, Iterable, List, Mapping
 
 from dagger.runtime.local.types import NodeOutput, NodeOutputs, PartitionedOutput
 from dagger.serializer import SerializationError
@@ -9,7 +9,7 @@ from dagger.task import SupportedInputs, SupportedOutputs, Task
 
 def _invoke_task(
     task: Task,
-    params: Optional[Mapping[str, Any]] = None,
+    params: Mapping[str, Any] = None,
 ) -> NodeOutputs:
     params = params or {}
     inputs = _validate_and_filter_inputs(inputs=task.inputs, params=params)

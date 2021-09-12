@@ -1,6 +1,45 @@
 from dagger.runtime.argo.metadata import Metadata, object_meta
 
 
+def test__metadata__representation():
+    annotations = {"my": "annotation"}
+    labels = {"my": "label"}
+    metadata = Metadata(
+        name="my-name",
+        generate_name_from_prefix=True,
+        namespace="my-namespace",
+        annotations=annotations,
+        labels=labels,
+    )
+    assert (
+        repr(metadata)
+        == f"Metadata(name=my-name, generate_name_from_prefix=True, namespace=my-namespace, annotations={repr(annotations)}, labels={repr(labels)})"
+    )
+
+
+def test__metadata__eq():
+    name = "my-name"
+    namespace = "my-namespace"
+    annotations = {"my": "annotation"}
+    labels = {"my": "label"}
+    metadata = Metadata(
+        name=name,
+        generate_name_from_prefix=True,
+        namespace=namespace,
+        annotations=annotations,
+        labels=labels,
+    )
+
+    assert metadata != Metadata(name=name)
+    assert metadata == Metadata(
+        name=name,
+        generate_name_from_prefix=True,
+        namespace=namespace,
+        annotations=annotations,
+        labels=labels,
+    )
+
+
 def test__object_meta__only_with_name():
     metadata = Metadata(name="my-name")
     assert object_meta(metadata) == {"name": metadata.name}

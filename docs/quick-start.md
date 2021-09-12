@@ -12,9 +12,9 @@ pip install py-dagger
 ```
 
 
-## Creating a DAG
+## _Dagger_ in Action
 
-Take the following piece of code:
+The following piece of code demonstrates how to build a DAG that performs a map-reduce operation on a series of numbers:
 
 ```python
 import random
@@ -56,7 +56,7 @@ result = invoke(dag, params={"exponent": 2})
 print(f"The final result was {result}")
 ```
 
-Let's go step by step. First, we use the `dagger.dsl.task` decorator to define different tasks. Tasks in _Dagger_ are just Python functions. In this case, we have 3 tasks:
+Let's take it step by step. First, we use the `dagger.dsl.task` decorator to define different tasks. Tasks in _Dagger_ are just Python functions. In this case, we have 3 tasks:
 
 - `generate_numbers()` returns a list of numbers. The list has a variable length, to show how we can do dynamic loops.
 - `raise_number(n, exponent)` receives a number and an exponent, and returns `n^exponent`.
@@ -66,7 +66,7 @@ Next, we use the `dagger.dsl.DAG` decorator on another function that invokes all
 
 The example uses a for loop and appends elements to a list to gather all the different results. But you can try replacing it with something more _Pythonic_:
 
-```python
+```python linenums="21"
 @dsl.DAG()
 def map_reduce_pipeline(exponent):
     return sum_numbers([raise_number(n, exponent) for n in generate_numbers()])

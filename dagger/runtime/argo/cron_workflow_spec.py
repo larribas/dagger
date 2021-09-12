@@ -1,41 +1,12 @@
 """Generate CronWorkflow specifications."""
 
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping
 
 from dagger.dag import DAG
+from dagger.runtime.argo.cron import Cron
 from dagger.runtime.argo.extra_spec_options import with_extra_spec_options
-from dagger.runtime.argo.workflow_spec import Workflow, workflow_spec
-
-
-class CronConcurrencyPolicy(Enum):
-    """
-    Concurrency policies allowed by Argo/Kubernetes.
-
-    Docs: https://v1-20.docs.kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/#concurrency-policy
-    """
-
-    ALLOW = "Allow"
-    FORBID = "Forbid"
-    REPLACE = "Replace"
-
-
-@dataclass(frozen=True)
-class Cron:
-    """
-    Scheduling options for the cron job.
-
-    Spec: https://github.com/argoproj/argo-workflows/blob/v3.0.4/docs/fields.md#cronworkflowspec
-    """
-
-    schedule: str
-    starting_deadline_seconds: int = 0
-    concurrency_policy: CronConcurrencyPolicy = CronConcurrencyPolicy.ALLOW
-    timezone: Optional[str] = None
-    successful_jobs_history_limit: Optional[int] = None
-    failed_jobs_history_limit: Optional[int] = None
-    extra_spec_options: Mapping[str, Any] = field(default_factory=dict)
+from dagger.runtime.argo.workflow import Workflow
+from dagger.runtime.argo.workflow_spec import workflow_spec
 
 
 def cron_workflow_spec(

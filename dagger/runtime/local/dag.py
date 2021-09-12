@@ -1,6 +1,6 @@
 """Run a DAG in memory."""
 import itertools
-from typing import Any, Dict, Iterable, Mapping, Optional, Union
+from typing import Any, Dict, Iterable, Mapping, Union
 
 from dagger.dag import DAG, Node, validate_parameters
 from dagger.input import FromNodeOutput, FromParam
@@ -18,7 +18,7 @@ from dagger.task import Task
 
 def invoke(
     node: Union[DAG, Task],
-    params: Optional[Mapping[str, Any]] = None,
+    params: Mapping[str, Any] = None,
 ) -> Mapping[str, NodeOutput]:
     """
     Invoke a node with a series of parameters.
@@ -56,7 +56,7 @@ def invoke(
 
 def _invoke_dag(
     dag: DAG,
-    params: Optional[Mapping[str, Any]] = None,
+    params: Mapping[str, Any] = None,
 ) -> NodeOutputs:
     params = params or {}
     validate_parameters(dag.inputs, params)
