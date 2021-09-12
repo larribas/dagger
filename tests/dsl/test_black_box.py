@@ -90,11 +90,25 @@ def test__build__multiple_calls_to_the_same_task_at_different_levels():
     verify_dags_are_equivalent(
         dsl.build(dag),
         DAG(
+            inputs={"x": FromParam("x")},
+            outputs={"return_value": FromNodeOutput("f-2", "return_value")},
             nodes={
-                "f-1": Task(f.func),
-                "g-1": Task(g.func),
-                "f-2": Task(f.func),
-            }
+                "f-1": Task(
+                    f.func,
+                    inputs={"x": FromParam("x")},
+                    outputs={"return_value": FromReturnValue()},
+                ),
+                "g": Task(
+                    g.func,
+                    inputs={"x": FromNodeOutput("f-1", "return_value")},
+                    outputs={"return_value": FromReturnValue()},
+                ),
+                "f-2": Task(
+                    f.func,
+                    inputs={"x": FromNodeOutput("g", "return_value")},
+                    outputs={"return_value": FromReturnValue()},
+                ),
+            },
         ),
     )
 
