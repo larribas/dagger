@@ -123,7 +123,7 @@ spec:
       command: ["python", "examples/nested_dags.py"]
       image: local.registry/dagger
       volumeMounts:
-      - mountPath: /tmp/outputs/
+      - mountPath: /tmp/outputs
         name: outputs
     volumes:
     - emptyDir: {}
@@ -201,7 +201,7 @@ spec:
       command: ["python", "examples/nested_dags.py"]
       image: local.registry/dagger
       volumeMounts:
-      - mountPath: /tmp/outputs/
+      - mountPath: /tmp/outputs
         name: outputs
     volumes:
     - emptyDir: {}
@@ -235,7 +235,7 @@ spec:
       command: ["python", "examples/nested_dags.py"]
       image: local.registry/dagger
       volumeMounts:
-      - mountPath: /tmp/outputs/
+      - mountPath: /tmp/outputs
         name: outputs
     volumes:
     - emptyDir: {}
@@ -313,7 +313,7 @@ spec:
       command: ["python", "examples/nested_dags.py"]
       image: local.registry/dagger
       volumeMounts:
-      - mountPath: /tmp/outputs/
+      - mountPath: /tmp/outputs
         name: outputs
     volumes:
     - emptyDir: {}
@@ -347,7 +347,7 @@ spec:
       command: ["python", "examples/nested_dags.py"]
       image: local.registry/dagger
       volumeMounts:
-      - mountPath: /tmp/outputs/
+      - mountPath: /tmp/outputs
         name: outputs
     volumes:
     - emptyDir: {}
@@ -391,7 +391,7 @@ spec:
       command: ["python", "examples/nested_dags.py"]
       image: local.registry/dagger
       volumeMounts:
-      - mountPath: /tmp/outputs/
+      - mountPath: /tmp/outputs
         name: outputs
     volumes:
     - emptyDir: {}

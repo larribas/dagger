@@ -1,6 +1,5 @@
 """Generate Workflow specifications."""
 import itertools
-import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Mapping, Sequence, Union
 
@@ -13,8 +12,8 @@ from dagger.serializer import Serializer
 from dagger.task import Task
 
 BASE_DAG_NAME = "dag"
-INPUT_PATH = "/tmp/inputs/"
-OUTPUT_PATH = "/tmp/outputs/"
+INPUT_PATH = "/tmp/inputs"
+OUTPUT_PATH = "/tmp/outputs"
 
 
 @dataclass(frozen=True)
@@ -563,9 +562,11 @@ def _task_template_inputs(task: Task) -> Mapping[str, Any]:
     artifacts = [
         {
             "name": input_name,
-            "path": os.path.join(
-                INPUT_PATH,
-                f"{input_name}.{task.inputs[input_name].serializer.extension}",
+            "path": "/".join(
+                [
+                    INPUT_PATH,
+                    f"{input_name}.{task.inputs[input_name].serializer.extension}",
+                ],
             ),
         }
         for input_name in task.inputs
@@ -604,9 +605,11 @@ def _task_template_outputs(task: Task) -> Mapping[str, Any]:
     artifacts = [
         {
             "name": output_name,
-            "path": os.path.join(
-                OUTPUT_PATH,
-                f"{output_name}.{task.outputs[output_name].serializer.extension}",
+            "path": "/".join(
+                [
+                    OUTPUT_PATH,
+                    f"{output_name}.{task.outputs[output_name].serializer.extension}",
+                ]
             ),
             "archive": {"none": {}},
             "s3": {
