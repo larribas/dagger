@@ -49,14 +49,6 @@ def with_extra_spec_options(
     for key_to_override, overridden_value in extra_options.items():
         this_context = ".".join([context, key_to_override])
 
-        is_valid_type = any(
-            [isinstance(overridden_value, t) for t in [int, str, float, dict, list]]
-        )
-        if overridden_value is not None and not is_valid_type:
-            raise ValueError(
-                f"You are trying to set '{this_context}' to a value of type '{type(overridden_value).__name__}'. However, only values with a primitive type (None, int, float, str, dict or list) are accepted."
-            )
-
         if key_to_override not in spec:
             spec[key_to_override] = overridden_value
         elif isinstance(spec[key_to_override], list) and isinstance(
