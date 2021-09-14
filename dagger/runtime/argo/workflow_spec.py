@@ -14,7 +14,7 @@ from dagger.task import Task
 
 BASE_DAG_NAME = "dag"
 INPUT_PATH = "/tmp/inputs/"
-OUTPUT_PATH = "/tmp/outputs/"
+OUTPUT_PATH = "/tmp/outputs"
 
 
 @dataclass(frozen=True)
