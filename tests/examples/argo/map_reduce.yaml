@@ -98,7 +98,7 @@ spec:
       ]
       volumeMounts:
       - name: outputs
-        mountPath: /tmp/outputs/
+        mountPath: /tmp/outputs
     volumes:
     - name: outputs
       emptyDir: {}
@@ -131,7 +131,7 @@ spec:
       ]
       volumeMounts:
       - name: outputs
-        mountPath: /tmp/outputs/
+        mountPath: /tmp/outputs
     volumes:
     - name: outputs
       emptyDir: {}
@@ -161,7 +161,7 @@ spec:
       ]
       volumeMounts:
       - name: outputs
-        mountPath: /tmp/outputs/
+        mountPath: /tmp/outputs
     volumes:
     - name: outputs
       emptyDir: {}
