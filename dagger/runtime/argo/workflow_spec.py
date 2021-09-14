@@ -232,7 +232,7 @@ def _dag_template(
     template["dag"] = with_extra_spec_options(
         original=template["dag"],
         extra_options=dag.runtime_options.get("argo_dag_template_overrides", {}),
-        context=".".join(address) if address else "this DAG",
+        context=".".join(address) if address else "DAG",
     )
 
     return template

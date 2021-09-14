@@ -44,13 +44,28 @@ def with_extra_spec_options(
     ValueError
         If we attempt to override keys that are already present in the original mapping.
     """
-    if not extra_options:
-        return original
+    spec = {**original}
 
-    key_intersection = set(extra_options).intersection(original)
-    if key_intersection:
-        raise ValueError(
-            f"In {context}, you are trying to override the value of {sorted(list(key_intersection))}. The Argo runtime uses these attributes to guarantee the behavior of the supplied DAG is correct. Therefore, we cannot let you override them."
-        )
+    for key_to_override, overridden_value in extra_options.items():
+        this_context = ".".join([context, key_to_override])
 
-    return {**original, **extra_options}
+        if key_to_override not in spec:
+            spec[key_to_override] = overridden_value
+        elif isinstance(spec[key_to_override], list) and isinstance(
+            overridden_value, list
+        ):
+            spec[key_to_override] += overridden_value
+        elif isinstance(spec[key_to_override], dict) and isinstance(
+            overridden_value, dict
+        ):
+            spec[key_to_override] = with_extra_spec_options(
+                original=spec[key_to_override],
+                extra_options=overridden_value,
+                context=this_context,
+            )
+        else:
+            raise ValueError(
+                f"You are trying to override the value of '{this_context}'. The Argo runtime already sets a value for this key, and it uses it to guarantee the correctness of the behavior. Therefore, we cannot let you override them."
+            )
+
+    return spec

@@ -1,7 +1,7 @@
 ---
 name: Feature Request
 about: Do you want to propose a new feature?
-labels: feature
+labels: enhancement
 ---
 
 #### What are you trying to do:
