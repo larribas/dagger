@@ -39,20 +39,19 @@ def retrieve_input_from_location(input_location: str) -> NodeOutput:
         If the current execution context doesn't have enough permissions to read the file.
     """
     if os.path.isdir(input_location):
-        partition_filenames = sorted(
-            [
-                fname
-                for fname in os.listdir(input_location)
-                if os.path.isfile(os.path.join(input_location, fname))
-                and fname != PARTITION_MANIFEST_FILENAME
-            ]
-        )
+        partition_filenames = [
+            fname
+            for fname in os.listdir(input_location)
+            if os.path.isfile(os.path.join(input_location, fname))
+            and fname != PARTITION_MANIFEST_FILENAME
+        ]
+        sorted_partition_filenames = sorted(partition_filenames, key=int)
 
         def load_lazily(partition_filename: str):
             with open(os.path.join(input_location, partition_filename), "rb") as f:
                 return f.read()
 
-        return PartitionedOutput(map(load_lazily, partition_filenames))
+        return PartitionedOutput(map(load_lazily, sorted_partition_filenames))
 
     else:
         with open(input_location, "rb") as f:
