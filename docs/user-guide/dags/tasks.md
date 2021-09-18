@@ -13,34 +13,18 @@ They also define:
 
 ## Example
 
-=== "Declarative Data Structures"
-
-    ```python
-    from dagger import Task, FromParam, FromReturnValue
-
-    def hello(name):
-      return f"Hello {name}!"
-
-    task = Task(
-      hello,
-      inputs={
-        "name": FromParam(),
-      },
-      outputs={
-        "hello_message": FromReturnValue(),
-      },
-    )
-    ```
-
 === "Imperative DSL"
 
     ```python
-    from dagger import dsl
-
-    @dsl.task()
-    def hello(name):
-        return f"Hello {name}!"
+    --8<-- "docs/code_snippets/task/imperative.py"
     ```
+
+=== "Declarative Data Structures"
+
+    ```python
+    --8<-- "docs/code_snippets/task/declarative.py"
+    ```
+
 
 
 ## Inputs

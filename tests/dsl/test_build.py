@@ -58,7 +58,6 @@ def test__translate_invocation_ids_into_readable_names():
 
 
 def test__build_node_input__param_usage():
-    assert _build_node_input(ParameterUsage(), node_names_by_id={}) == FromParam()
     assert _build_node_input(
         ParameterUsage(name="x"), node_names_by_id={}
     ) == FromParam("x")
@@ -177,7 +176,7 @@ def test__build_node__task():
             node_type=NodeType.TASK,
             func=f,
             inputs={
-                "param": ParameterUsage(),
+                "param": ParameterUsage(name="param-name"),
                 "node_output": another_node_output_usage,
             },
             output=this_task_output_usage,
@@ -191,7 +190,7 @@ def test__build_node__task():
     assert built_task == Task(
         f,
         inputs={
-            "param": FromParam(),
+            "param": FromParam("param-name"),
             "node_output": FromNodeOutput(
                 "another-node",
                 "return_value",

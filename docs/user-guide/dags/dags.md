@@ -1,119 +1,40 @@
 # DAGs
 
-Tasks are the basic building blocks of _Dagger_.
+Directed Acyclic Graphs (DAGs) contain multiple nodes and describe how their nodes are connected to each other.
 
-They wrap a Python function that will be executed as a step of a DAG.
+Nodes in a DAG may be either Tasks or other DAGs, allowing you to [compose DAGs](dag-composition.md).
 
-They also define:
+Nodes are connected to each other through their inputs and outputs. If a node `x` has an input that depends on the output of another node `y`, _Dagger_ will register a dependency of `y -> x`, and runtimes will execute `x` before `y` according to their [topological ordering](https://en.wikipedia.org/wiki/Topological_sorting#:~:text=In%20computer%20science%2C%20a%20topological,before%20v%20in%20the%20ordering.&text=Topological%20sorting%20has%20many%20applications,such%20as%20feedback%20arc%20set.).
 
-- Where the inputs of the function are coming from (e.g. from a DAG parameter, from the output of another node...).
-- What outputs does the task produce.
-- How to retrieve the task's outputs from the return value of the function.
+All dependencies in _Dagger_ are defined implicitly by the relationship between the nodes' inputs and outputs. It is not possible to declare a dependency explicitly. If two nodes do not depend on each other's outputs, _Dagger_ will assume they can be executed independently, potentially in parallel.
+
+DAGs can themselves have inputs and outputs:
+
+* The inputs of a DAG may come from a parameter, or from the output of a sibiling node (if the DAG is nested inside of another DAG).
+* The outputs of a DAG must come from the output of one of its nodes.
+
 
 
 ## Example
 
-=== "Declarative Data Structures"
+The following code snippet describes a simple DAG that mocks a simplified training pipeline for a Machine Learning model.
 
-    ```python
-    from dagger import DAG, FromKey, FromNodeOutput, FromParam, FromReturnValue, Task, dsl
+The DAG has 3 tasks:
 
-
-    def prepare_datasets(sample_size):
-        # ...
-        return {
-            "training": ["..."],
-            "test": ["..."],
-        }
-
-
-    def train_model(training_dataset):
-        # ...
-        return "model"
-
-
-    def measure_model_performance(model, test_dataset):
-        # ...
-        return "report"
-
-
-    dag = DAG(
-        inputs={
-            "sample_size": FromParam(),
-        },
-        outputs={
-            "performance_report": FromNodeOutput(
-                "measure-model-performance", "performance_report"
-            ),
-        },
-        nodes={
-            "prepare-datasets": Task(
-                prepare_datasets,
-                inputs={
-                    "sample_size": FromParam("sample_size"),
-                },
-                outputs={
-                    "training_dataset": FromKey("training"),
-                    "test_dataset": FromKey("test"),
-                },
-            ),
-            "train-model": Task(
-                train_model,
-                inputs={
-                    "training_dataset": FromNodeOutput(
-                        "prepare-datasets", "training_dataset"
-                    ),
-                },
-                outputs={
-                    "model": FromReturnValue(),
-                },
-            ),
-            "measure-model-performance": Task(
-                measure_model_performance,
-                inputs={
-                    "model": FromNodeOutput("train-model", "model"),
-                    "test_dataset": FromNodeOutput("prepare-datasets", "test_dataset"),
-                },
-                outputs={
-                    "performance_report": FromReturnValue(),
-                },
-            ),
-        },
-    )
-    ```
+* A first task prepares the training and test datasets for the model (note how the task has 2 outputs).
+* A second task trains the model based on the training dataset.
+* A third task measures the performance of the trained model against the test dataset.
 
 === "Imperative DSL"
 
     ```python
-    from dagger import dsl
+    --8<-- "docs/code_snippets/dag/imperative.py"
+    ```
 
+=== "Declarative Data Structures"
 
-    @dsl.task()
-    def prepare_datasets(sample_size):
-        # ...
-        return {
-            "training": ["..."],
-            "test": ["..."],
-        }
-
-
-    @dsl.task()
-    def train_model(training_dataset):
-        # ...
-        return "model"
-
-
-    @dsl.task()
-    def measure_model_performance(model, test_dataset):
-        # ...
-        return "report"
-
-
-    @dsl.DAG()
-    def dag(sample_size):
-        datasets = prepare_datasets(sample_size)
-        model = train_model(datasets["training"])
-        return measure_model_performance(model, datasets["test"])
+    ```python
+    --8<-- "docs/code_snippets/dag/declarative.py"
     ```
 
 
@@ -143,7 +64,6 @@ DAGs are validated against the following rules:
 - Input and output names have the same constraints as node names, but they can also contain underscores.
 - If a node input comes `FromParam(name: str)`, then the DAG must have an input named `name`.
 - If a node input comes `FromNodeOutput(node: str, output: str)`, then the DAG must contain a node named `node` which exposes an output named `output`.
-- If a node input comes `FromNodeOutput(node: str, output: str)`, then the DAG must contain a node named `node` which exposes an output named `output`.
 - DAGs may not contain cyclic dependencies. A cyclic dependency occurs whenever there is a chain of nodes `{n(1), n(2), ..., n(last)}` so that `n(i+1)` has an input that depends on an output of `n(i)`, but `n(1)` also contains an input that depends on the output of `n(last)`.
 
 
@@ -156,5 +76,5 @@ Check the [API Reference](../../api/dag.md) for more details about the specific 
 ## Learn more about...
 
 - How to [compose DAGs](dag-composition.md) (that is, nest DAGs inside of other DAGs).
-- How to use [different serializers](../serializers/alternatives.md) for your inputs and outputs.
 - How to work with [partitioned outputs and nodes](partitioning.md).
+- How to run your DAGs with the different [runtimes](../runtimes/alternatives.md).
