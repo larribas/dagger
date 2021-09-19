@@ -70,11 +70,11 @@ DAGs are validated against the following rules:
 
 ## API Reference
 
-Check the [API Reference](../../api/dag.md) for more details about the specific options supported by the DAG class.
+Check the [API Reference](../api/dag.md) for more details about the specific options supported by the DAG class.
 
 
 ## Learn more about...
 
 - How to [compose DAGs](dag-composition.md) (that is, nest DAGs inside of other DAGs).
 - How to work with [partitioned outputs and nodes](partitioning.md).
-- How to run your DAGs with the different [runtimes](../runtimes/alternatives.md).
+- How to run your DAGs with the different [runtimes](runtimes/alternatives.md).

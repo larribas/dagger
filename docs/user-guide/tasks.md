@@ -66,12 +66,12 @@ Tasks are validated against the following rules:
 
 ## API Reference
 
-Check the [API Reference](../../api/task.md) for more details about the specific options supported by a Task.
+Check the [API Reference](../api/task.md) for more details about the specific options supported by a Task.
 
 
 ## Learn more about...
 
 - How to connect multiple tasks together in a [Directed Acyclic Graph (DAG)](dags.md).
-- How to use [different serializers](../serializers/alternatives.md) for your inputs and outputs.
+- How to use [different serializers](serializers/alternatives.md) for your inputs and outputs.
 
 

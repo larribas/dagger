@@ -64,4 +64,4 @@ Whenever you try to use a partitioning pattern that is not allowed, _Dagger_ wil
 ## Learn more about...
 
 - How to implement [map-reduce](map-reduce.md) patterns (also known as fan-out-fan-in, or scatter-gather patterns).
-- How to run your DAGs with the different [runtimes](../runtimes/alternatives.md).
+- How to run your DAGs with the different [runtimes](runtimes/alternatives.md).

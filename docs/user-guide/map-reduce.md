@@ -10,7 +10,7 @@ Also known as a fan-out-fan-in or scatter-and-gather operation, a map-reduce has
 
 The following picture shows how _Argo Workflows_ represents the execution of a very basic map-reduce DAG:
 
-[![map-reduce](../../assets/images/argo/map_reduce.png)](../../assets/images/argo/map_reduce.png)
+[![map-reduce](../assets/images/argo/map_reduce.png)](../assets/images/argo/map_reduce.png)
 
 
 ## Common Use Cases
@@ -140,5 +140,5 @@ If you want to return the full dataset as the DAG's output you will need to conc
 
 ## Learn more about...
 
-- How the [imperative DSL](../dsl/imperative.md) works.
-- How to run your DAGs with the different [runtimes](../runtimes/alternatives.md).
+- How the [imperative DSL](dsl.md) works.
+- How to run your DAGs with the different [runtimes](runtimes/alternatives.md).

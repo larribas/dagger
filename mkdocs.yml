@@ -42,37 +42,25 @@ plugins:
 nav:
 - Overview: README.md
 - quick-start.md
-- Tutorial:
-  - tutorial/introduction.md
-  - tutorial/hello-world.md
-  - tutorial/local-tests.md
-  - tutorial/passing-parameters.md
-  - tutorial/machine-learning.md
-  - tutorial/map-reduce.md
-  - tutorial/argo-workflows.md
-- User Guide:
-  - user-guide/introduction.md
-  - Nodes, Inputs and Outputs:
-    - user-guide/dags/introduction.md
-    - user-guide/dags/tasks.md
-    - user-guide/dags/dags.md
-    - user-guide/dags/dag-composition.md
-    - user-guide/dags/partitioning.md
-    - user-guide/dags/map-reduce.md
-  - Serializers:
-    - user-guide/serializers/alternatives.md
-    - user-guide/serializers/json.md
-    - user-guide/serializers/pickle.md
-    - user-guide/serializers/write-your-own.md
-  - DSL:
-    - user-guide/dsl/imperative.md
-  - Runtimes:
-    - user-guide/runtimes/alternatives.md
-    - user-guide/runtimes/local.md
-    - user-guide/runtimes/cli.md
-    - user-guide/runtimes/argo.md
-    - user-guide/runtimes/runtime-options.md
-    - user-guide/runtimes/write-your-own.md
+- user-guide/introduction.md
+- user-guide/tasks.md
+- user-guide/dags.md
+- user-guide/dag-composition.md
+- user-guide/partitioning.md
+- user-guide/map-reduce.md
+- user-guide/dsl.md
+- Serializers:
+  - user-guide/serializers/alternatives.md
+  - user-guide/serializers/json.md
+  - user-guide/serializers/pickle.md
+  - user-guide/serializers/write-your-own.md
+- Runtimes:
+  - user-guide/runtimes/alternatives.md
+  - user-guide/runtimes/local.md
+  - user-guide/runtimes/cli.md
+  - user-guide/runtimes/argo.md
+  - user-guide/runtimes/runtime-options.md
+  - user-guide/runtimes/write-your-own.md
 - API Reference:
   - api/init.md
   - api/dag.md
