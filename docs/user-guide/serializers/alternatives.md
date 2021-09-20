@@ -2,7 +2,7 @@
 
 When you run your DAGs with a runtime, the outputs produced by every task are serialized from a native Python type (such as a `str`, a `dict`, a `pd.DataFrame` or even a custom `class`) into a string of `bytes`.
 
-Serializing outputs is necessary because two tasks may run on completely different phisical machines, and _Dagger_ needs a consistent format to store them and transmit them over the network.
+Serializing outputs is necessary because two tasks may run on completely different physical machines, and _Dagger_ needs a consistent format to store them and transmit them over the network.
 
 ## Built-in Serializers
 

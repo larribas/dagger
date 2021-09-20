@@ -9,7 +9,7 @@ _Argo Workflows_ is a pipeline orchestrator that runs on top of Kubernetes.
 
 It creates a handful of [Custom Kubernetes Resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/): `Workflow`, `CronWorkflow` and `WorkflowTemplate`, among others.
 
-Argo expects workflows to be expressed declaratively (usually using YAML), folliwing the [specification](https://argoproj.github.io/argo-workflows/fields/) of those resources.
+Argo expects workflows to be expressed declaratively (usually using YAML), following the [specification](https://argoproj.github.io/argo-workflows/fields/) of those resources.
 
 Here are [some examples](https://github.com/argoproj/argo-workflows/tree/7684ef4a0c5f57e8723dc8e4d3a17246f7edc2e6/examples) that show how `Workflow` manifests look like.
 
@@ -138,7 +138,7 @@ The Argo runtime allows you to specify arbitrary options for many of the element
 
 Nevertheless, when implementing _Dagger_ inside of a large corporation, platform teams may want to enforce certain conventions and standards to comply with the company's governance, cost, observability or compliance policies.
 
-The following example shows how easy it is to extend the existing decorators to provide a more opiniontated API and ease the day-to-day of both platform teams and _Dagger_ users in the organization.
+The following example shows how easy it is to extend the existing decorators to provide a more opinionated API and ease the day-to-day of both platform teams and _Dagger_ users in the organization.
 
 ```python
 --8<-- "docs/code_snippets/argo_runtime/syntax_sugar.py"

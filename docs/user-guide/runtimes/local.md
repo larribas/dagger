@@ -20,7 +20,7 @@ When you are developing your DAGs, you will want to test their behavior as frequ
 
 The local runtime is great for local development and testing. On top of the validations that the data structures already perform, the local runtime serializes every output and connects all the nodes together, so it is a great way to verify that all your nodes can communicate effectively.
 
-For data pipelines that deal with large amounts of data or take a long time to execute, we recommend you inject an `is_running_locally: bool` parameter or environment variable to your DAGs. Then, you can shortcircuit some of the tasks based on the value of this parameter. For instance, a task that ingests several terabytes of data from a database may react to this parameter by ingesting less data, or even returning a fixture. This pattern will allow you to perform integration tests on your DAGs and still validate that they behave as expected.
+For data pipelines that deal with large amounts of data or take a long time to execute, we recommend you inject an `is_running_locally: bool` parameter or environment variable to your DAGs. Then, you can short-circuit some of the tasks based on the value of this parameter. For instance, a task that ingests several terabytes of data from a database may react to this parameter by ingesting less data, or even returning a fixture. This pattern will allow you to perform integration tests on your DAGs and still validate that they behave as expected.
 
 
 ## Limitations

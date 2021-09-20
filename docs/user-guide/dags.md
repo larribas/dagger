@@ -10,7 +10,7 @@ All dependencies in _Dagger_ are defined implicitly by the relationship between 
 
 DAGs can themselves have inputs and outputs:
 
-* The inputs of a DAG may come from a parameter, or from the output of a sibiling node (if the DAG is nested inside of another DAG).
+* The inputs of a DAG may come from a parameter, or from the output of a sibling node (if the DAG is nested inside of another DAG).
 * The outputs of a DAG must come from the output of one of its nodes.
 
 
@@ -44,7 +44,7 @@ A DAG can have multiple inputs.
 
 Inputs can come:
 
-* `FromParam(name: str)`. This indicates the input comes from a paremeter named `name`, supplied when the DAG is executed.
+* `FromParam(name: str)`. This indicates the input comes from a parameter named `name`, supplied when the DAG is executed.
 * `FromNodeOutput(node: str, output: str)`. This indicates the input comes from an output named `output`, which comes from another node named `node`. The current DAG and the node must be siblings in the same parent DAG.
 
 

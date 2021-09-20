@@ -1,6 +1,6 @@
 # AsJSON
 
-`AsJSON` serializes values to and from [JSON](https://www.json.org/json-en.html) using Python's standard [json library](https://docs.python.org/3/library/json.html).
+`AsJSON` serializes values to and from [JSON](https://www.json.org/json-en.html) using Python's standard [`json` library](https://docs.python.org/3/library/json.html).
 
 __This is the default serialization mechanism for _Dagger_. If you don't override it, _Dagger_ will try to use JSON to serialize the output of each task.__
 

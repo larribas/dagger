@@ -35,7 +35,7 @@ The names of the inputs must correspond to those of the function's arguments.
 
 Inputs can come:
 
-* `FromParam(name: str)`. This indicates the input comes from a paremeter named `name`, passed to the task's parent (a DAG).
+* `FromParam(name: str)`. This indicates the input comes from a parameter named `name`, passed to the task's parent (a DAG).
 * `FromNodeOutput(node: str, output: str)`. This indicates the input comes from an output named `output`, which comes from another node named `node`. The current task and the node must be siblings in the same DAG.
 
 

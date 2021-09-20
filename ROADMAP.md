@@ -2,7 +2,7 @@
 
 This document describes the current state of _Dagger_ and the features we will prioritize in the future.
 
-The roadmap of the project is meant to be flexible, shaped by our interactions with the community and the time our contributors can dedicate to the project. Thus, if you have a suggestion or believe a certain ticket should be prioritized, please let us know through [GitHub Discussions](TODO) or via [email: dagger@larribas.me](mailto:dagger@larribas.me).
+The roadmap of the project is meant to be flexible, shaped by our interactions with the community and the time our contributors can dedicate to the project. Thus, if you have a suggestion or believe a certain ticket should be prioritized, please let us know through [GitHub Discussions](https://github.com/larribas/dagger/discussions) or via [email: dagger@larribas.me](mailto:dagger@larribas.me).
 
 
 __Use cases__
@@ -33,12 +33,12 @@ _If you have developed a custom runtime outside of this repository and you belie
 
 __Built-in Serializers__
 
-- [x] AsJSON
-- [x] AsPickle
-- [ ] AsMessagePack ([format](https://msgpack.org/index.html))
-- [ ] AsAvro ([format])(https://avro.apache.org/docs/current/)
-- [ ] AsParquet (for Pandas DataFrames)
-- [ ] AsCSV (for Pandas DataFrames)
+- [x] `AsJSON`
+- [x] `AsPickle`
+- [ ] `AsMessagePack` ([format](https://msgpack.org/index.html))
+- [ ] `AsAvro` ([format])(https://avro.apache.org/docs/current/)
+- [ ] `AsParquet` (for Pandas DataFrames)
+- [ ] `AsCSV` (for Pandas DataFrames)
 
 
 _If you have developed a custom serializer outside of this repository and you believe it may be useful for the community, please open a PR linking to it here (or consider adding it to the main library)._
@@ -48,19 +48,18 @@ __Documentation__
 
 - [x] README and project overview.
 - [x] Contribution Guidelines.
-- [ ] Web-based Documentation Portal.
-- [ ] Curated examples covering beginner and advanced use cases.
-- [ ] Quickstart guide.
-- [ ] Tutorials.
-- [ ] API reference.
-- [ ] Core concepts:
-    * [ ] DAGs and Tasks (Nodes)
-    * [ ] Node Outputs
-    * [ ] Node Inputs
-    * [ ] Output and Node partitioning; Map-Reduce operations
-    * [ ] Serializers
-    * [ ] Runtimes
-    * [ ] Imperative DSL
+- [x] Web-based Documentation Portal.
+- [x] Curated examples covering beginner and advanced use cases.
+- [x] Quick start guide.
+- [x] API reference.
+- [x] Core concepts:
+    * [x] DAGs and Tasks (Nodes)
+    * [x] Node Outputs
+    * [x] Node Inputs
+    * [x] Output and Node partitioning; Map-Reduce operations
+    * [x] Serializers
+    * [x] Runtimes
+    * [x] Imperative DSL
 
 
 

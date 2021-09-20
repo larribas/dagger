@@ -1,6 +1,6 @@
 # Write your own Serializer
 
-Sometimes you may be dealing with objects that need to be serialized in a specific format that doensn't come out of the box with _Dagger_.
+Sometimes you may be dealing with objects that need to be serialized in a specific format that doesn't come out of the box with _Dagger_.
 
 For example, you may want to serialize:
 
