@@ -17,6 +17,11 @@
 ![mkapi](dagger.serializer.AsJSON)
 
 
+### Initialization
+
+![mkapi](dagger.serializer.AsJSON.__init__)
+
+
 ## AsPickle
 
 ![mkapi](dagger.serializer.AsPickle)

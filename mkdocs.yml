@@ -23,7 +23,7 @@ theme:
       name: Switch to dark mode
   - scheme: slate
     media: "(prefers-color-scheme: dark)"
-    primary: blue grey
+    primary: green
     accent: lime
     toggle:
       icon: material/weather-sunny
@@ -59,7 +59,6 @@ nav:
   - user-guide/runtimes/local.md
   - user-guide/runtimes/cli.md
   - user-guide/runtimes/argo.md
-  - user-guide/runtimes/runtime-options.md
   - user-guide/runtimes/write-your-own.md
 - API Reference:
   - api/init.md

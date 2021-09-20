@@ -56,9 +56,7 @@ class AsJSON:
         try:
             return json.loads(serialized_value)
         except (TypeError, JSONDecodeError) as e:
-            raise DeserializationError(
-                f"We cannot deserialize value '{str(serialized_value)}' as JSON. {str(e)}"
-            )
+            raise DeserializationError(e)
 
     def __repr__(self) -> str:
         """Get a human-readable string representation of the serializer."""
