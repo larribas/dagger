@@ -1,31 +1,43 @@
+import tempfile
 import warnings
 
 import pytest
 
 from dagger.input import FromParam
 from dagger.output import FromKey, FromReturnValue
-from dagger.runtime.local import invoke
+from dagger.runtime.local.output import deserialized_outputs
+from dagger.runtime.local.task import invoke_task
 from dagger.serializer import AsJSON, SerializationError
 from dagger.task import Task
 
 
-def test__invoke__task_without_inputs_or_outputs():
+def test__invoke_task__without_inputs_or_outputs():
     invocations = []
     task = Task(lambda: invocations.append(1))
-    assert invoke(task) == {}
+
+    with tempfile.TemporaryDirectory() as tmp:
+        assert invoke_task(task, params={}, output_path=tmp) == {}
+
     assert invocations == [1]
 
 
-def test__invoke__task_with_single_input_and_output():
+def test__invoke_task__with_single_input_and_output():
     task = Task(
         lambda number: number * 2,
         inputs=dict(number=FromParam()),
         outputs=dict(doubled_number=FromReturnValue()),
     )
-    assert invoke(task, params=dict(number=2)) == dict(doubled_number=b"4")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        outputs = invoke_task(
+            task,
+            params={"number": 2},
+            output_path=tmp,
+        )
+        assert deserialized_outputs(outputs) == {"doubled_number": 4}
 
 
-def test__invoke__task_with_multiple_inputs_and_outputs():
+def test__invoke_task__with_multiple_inputs_and_outputs():
     task = Task(
         lambda first_name, last_name: dict(
             message=f"Hello {first_name} {last_name}",
@@ -40,13 +52,19 @@ def test__invoke__task_with_multiple_inputs_and_outputs():
             name_length=FromKey("name_length"),
         ),
     )
-    assert invoke(task, params=dict(first_name="John", last_name="Doe",),) == dict(
-        message=b'"Hello John Doe"',
-        name_length=b"7",
-    )
+    with tempfile.TemporaryDirectory() as tmp:
+        outputs = invoke_task(
+            task,
+            params={"first_name": "John", "last_name": "Doe"},
+            output_path=tmp,
+        )
+        assert deserialized_outputs(outputs) == {
+            "message": "Hello John Doe",
+            "name_length": 7,
+        }
 
 
-def test__invoke__task_with_missing_input_parameter():
+def test__invoke_task__with_missing_input_parameter():
     task = Task(
         lambda a, b: 1,
         inputs=dict(
@@ -55,7 +73,8 @@ def test__invoke__task_with_missing_input_parameter():
         ),
     )
     with pytest.raises(ValueError) as e:
-        invoke(task, params={})
+        with tempfile.TemporaryDirectory() as tmp:
+            invoke_task(task, params={}, output_path=tmp)
 
     assert (
         str(e.value)
@@ -63,10 +82,11 @@ def test__invoke__task_with_missing_input_parameter():
     )
 
 
-def test__invoke__task_with_mismatched_outputs():
+def test__invoke_task__with_mismatched_outputs():
     task = Task(lambda: 1, outputs=dict(a=FromKey("x")))
     with pytest.raises(TypeError) as e:
-        invoke(task, params={})
+        with tempfile.TemporaryDirectory() as tmp:
+            invoke_task(task, params={}, output_path=tmp)
 
     assert (
         str(e.value)
@@ -74,10 +94,11 @@ def test__invoke__task_with_mismatched_outputs():
     )
 
 
-def test__invoke__task_with_missing_outputs():
+def test__invoke_task__with_missing_outputs():
     task = Task(lambda: dict(a=1), outputs=dict(x=FromKey("x")))
     with pytest.raises(ValueError) as e:
-        invoke(task, params={})
+        with tempfile.TemporaryDirectory() as tmp:
+            invoke_task(task, params={}, output_path=tmp)
 
     assert (
         str(e.value)
@@ -85,10 +106,11 @@ def test__invoke__task_with_missing_outputs():
     )
 
 
-def test__invoke__task_with_unserializable_outputs():
+def test__invoke_task__with_unserializable_outputs():
     task = Task(lambda: dict(a=lambda: 2), outputs=dict(x=FromKey("a")))
     with pytest.raises(SerializationError) as e:
-        invoke(task, params={})
+        with tempfile.TemporaryDirectory() as tmp:
+            invoke_task(task, params={}, output_path=tmp)
 
     assert (
         str(e.value)
@@ -96,21 +118,25 @@ def test__invoke__task_with_unserializable_outputs():
     )
 
 
-def test__invoke__task_overriding_the_serializer():
+def test__invoke_task__overriding_the_serializer():
     task = Task(
         lambda: {"a": 2},
         outputs=dict(x=FromReturnValue(serializer=AsJSON(indent=1))),
     )
-    assert invoke(task, params={}) == {
-        "x": b'{\n "a": 2\n}',
-    }
+    with tempfile.TemporaryDirectory() as tmp:
+        outputs = invoke_task(task, params={}, output_path=tmp)
+
+        with open(outputs["x"].filename, "rb") as f:
+            assert f.read() == b'{\n "a": 2\n}'
 
 
-def test__invoke__task_with_superfluous_parameters():
+def test__invoke_task__with_superfluous_parameters():
     task = Task(lambda: 1)
 
     with warnings.catch_warnings(record=True) as w:
-        invoke(task, params={"a": 1, "b": 2})
+        with tempfile.TemporaryDirectory() as tmp:
+            invoke_task(task, params={"a": 1, "b": 2}, output_path=tmp)
+
         assert len(w) == 1
         assert (
             str(w[0].message)
@@ -118,7 +144,7 @@ def test__invoke__task_with_superfluous_parameters():
         )
 
 
-def test__invoke__task_with_partitioned_output_from_iterator():
+def test__invoke_task__with_partitioned_output_from_iterator():
     class CustomIterator:
         def __init__(self):
             self.n = 2
@@ -144,13 +170,16 @@ def test__invoke__task_with_partitioned_output_from_iterator():
             "not_partitioned": FromKey("not_partitioned"),
         },
     )
-    outputs = invoke(task, params={})
 
-    assert outputs["not_partitioned"] == b"1"
-    assert list(outputs["partitioned"]) == [b"1", b"0"]
+    with tempfile.TemporaryDirectory() as tmp:
+        outputs = invoke_task(task, params={}, output_path=tmp)
+        assert deserialized_outputs(outputs) == {
+            "not_partitioned": 1,
+            "partitioned": [1, 0],
+        }
 
 
-def test__invoke__task_with_partitioned_output_that_cannot_be_partitioned():
+def test__invoke_task__with_partitioned_output_that_cannot_be_partitioned():
     task = Task(
         lambda: 1,
         outputs={
@@ -158,7 +187,8 @@ def test__invoke__task_with_partitioned_output_that_cannot_be_partitioned():
         },
     )
     with pytest.raises(TypeError) as e:
-        invoke(task, params={})
+        with tempfile.TemporaryDirectory() as tmp:
+            invoke_task(task, params={}, output_path=tmp)
 
     assert (
         str(e.value)

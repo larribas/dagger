@@ -1,8 +1,17 @@
 """Data types used for local invocations."""
 
-from typing import Any, Generic, Iterable, Iterator, Mapping, TypeVar, Union
+from typing import Any, Generic, Iterable, Iterator, Mapping, NamedTuple, TypeVar, Union
+
+from dagger.serializer import Serializer
 
 T = TypeVar("T")
+
+
+class OutputFile(NamedTuple):
+    """Represents a file in the local file system that holds the serialized value for a node output."""
+
+    filename: str
+    serializer: Serializer
 
 
 class PartitionedOutput(Generic[T]):
@@ -27,7 +36,7 @@ class PartitionedOutput(Generic[T]):
 
 
 #: One of the outputs of a node, which may be partitioned
-NodeOutput = Union[bytes, PartitionedOutput[bytes]]
+NodeOutput = Union[OutputFile, PartitionedOutput[OutputFile]]
 
 #: All outputs of a node indexed by their name. Node executions may be partitioned, in which case this is a list.
 NodeOutputs = Mapping[str, NodeOutput]
