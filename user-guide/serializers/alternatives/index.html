@@ -1,0 +1,1117 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation portal for the Dagger (py-dagger) Python library.">
+      
+      
+      
+        <meta name="author" content="Lorenzo Arribas (@larribas)">
+      
+      
+        <link rel="canonical" href="https://larribas.me/dagger/user-guide/serializers/alternatives/">
+      
+      <link rel="icon" href="../../../assets/images/logo/favicon.ico">
+      <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.2.8">
+    
+    
+      
+        <title>Serializers - Dagger - Distributed Data Pipelines in Python</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.92558b1b.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.3f5d1f46.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+      <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.8.1/css/all.css">
+    
+      <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.8.1/css/v4-shims.css">
+    
+      <link rel="stylesheet" href="../../../css/mkapi-common.css">
+    
+    
+      
+
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="green" data-md-color-accent="pink">
+  
+    
+    <script>function __prefix(e){return new URL("../../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+      <script>var palette=__get("__palette");if(null!==palette&&"object"==typeof palette.color)for(var key in palette.color)document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#serializers" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Dagger - Distributed Data Pipelines in Python" class="md-header__button md-logo" aria-label="Dagger - Distributed Data Pipelines in Python" data-md-component="logo">
+      
+  <img src="../../../assets/images/logo/favicon-32x32.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Dagger - Distributed Data Pipelines in Python
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Serializers
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <form class="md-header__option" data-md-component="palette">
+        
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="green" data-md-color-accent="pink"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+          
+            <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31z"/></svg>
+            </label>
+          
+        
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="green" data-md-color-accent="lime"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+          
+            <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22z"/></svg>
+            </label>
+          
+        
+      </form>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        
+<a href="https://github.com/larribas/dagger/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Dagger - Distributed Data Pipelines in Python" class="md-nav__button md-logo" aria-label="Dagger - Distributed Data Pipelines in Python" data-md-component="logo">
+      
+  <img src="../../../assets/images/logo/favicon-32x32.png" alt="logo">
+
+    </a>
+    Dagger - Distributed Data Pipelines in Python
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/larribas/dagger/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../quick-start/" class="md-nav__link">
+        Quick Start
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tasks/" class="md-nav__link">
+        Tasks
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dags/" class="md-nav__link">
+        DAGs
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dag-composition/" class="md-nav__link">
+        DAG Composition
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../partitioning/" class="md-nav__link">
+        Parallelization: Output and node partitioning
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../map-reduce/" class="md-nav__link">
+        Map-Reduce
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dsl/" class="md-nav__link">
+        Imperative DSL
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_9" type="checkbox" id="__nav_9" checked>
+      
+      <label class="md-nav__link" for="__nav_9">
+        Serializers
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Serializers" data-md-level="1">
+        <label class="md-nav__title" for="__nav_9">
+          <span class="md-nav__icon md-icon"></span>
+          Serializers
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Serializers
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Serializers
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#built-in-serializers" class="md-nav__link">
+    📦 Built-in Serializers
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#default-serializer-asjson" class="md-nav__link">
+    🃏 Default Serializer: AsJSON
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setting-a-specific-serializer-to-use-with-an-output" class="md-nav__link">
+    💡 Setting a specific serializer to use with an output
+  </a>
+  
+    <nav class="md-nav" aria-label="💡 Setting a specific serializer to use with an output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#different-serializers-for-multiple-outputs" class="md-nav__link">
+    Different Serializers for Multiple Outputs
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementing-your-own-serializer" class="md-nav__link">
+    🛠️ Implementing your own serializer
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../json/" class="md-nav__link">
+        AsJSON
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pickle/" class="md-nav__link">
+        AsPickle
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../write-your-own/" class="md-nav__link">
+        Write your own Serializer
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_10" type="checkbox" id="__nav_10" >
+      
+      <label class="md-nav__link" for="__nav_10">
+        Runtimes
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Runtimes" data-md-level="1">
+        <label class="md-nav__title" for="__nav_10">
+          <span class="md-nav__icon md-icon"></span>
+          Runtimes
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runtimes/alternatives/" class="md-nav__link">
+        Runtimes
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runtimes/local/" class="md-nav__link">
+        Local Runtime
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runtimes/cli/" class="md-nav__link">
+        CLI Runtime
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runtimes/argo/" class="md-nav__link">
+        Argo Runtime
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runtimes/write-your-own/" class="md-nav__link">
+        Write your own Runtime
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_11" type="checkbox" id="__nav_11" >
+      
+      <label class="md-nav__link" for="__nav_11">
+        API Reference
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="API Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_11">
+          <span class="md-nav__icon md-icon"></span>
+          API Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/init/" class="md-nav__link">
+        dagger
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/dag/" class="md-nav__link">
+        dagger.dag
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/task/" class="md-nav__link">
+        dagger.task
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/input/" class="md-nav__link">
+        dagger.input
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/output/" class="md-nav__link">
+        dagger.output
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/serializer/" class="md-nav__link">
+        dagger.serializer
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/dsl/" class="md-nav__link">
+        dagger.dsl
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/runtime-local/" class="md-nav__link">
+        dagger.runtime.local
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/runtime-cli/" class="md-nav__link">
+        dagger.runtime.cli
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/runtime-argo/" class="md-nav__link">
+        dagger.runtime.argo
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://github.com/larribas/dagger/releases" class="md-nav__link">
+        Releases ⧉
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://pypi.org/project/py-dagger/" class="md-nav__link">
+        PyPI ⧉
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#built-in-serializers" class="md-nav__link">
+    📦 Built-in Serializers
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#default-serializer-asjson" class="md-nav__link">
+    🃏 Default Serializer: AsJSON
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setting-a-specific-serializer-to-use-with-an-output" class="md-nav__link">
+    💡 Setting a specific serializer to use with an output
+  </a>
+  
+    <nav class="md-nav" aria-label="💡 Setting a specific serializer to use with an output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#different-serializers-for-multiple-outputs" class="md-nav__link">
+    Different Serializers for Multiple Outputs
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementing-your-own-serializer" class="md-nav__link">
+    🛠️ Implementing your own serializer
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/larribas/dagger/edit/main/docs/user-guide/serializers/alternatives.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                <h1 id="serializers">Serializers<a class="headerlink" href="#serializers" title="Permanent link">&para;</a></h1>
+<p>When you run your DAGs with a runtime, the outputs produced by every task are serialized from a native Python type (such as a <code>str</code>, a <code>dict</code>, a <code>pd.DataFrame</code> or even a custom <code>class</code>) into a string of <code>bytes</code>.</p>
+<p>Serializing outputs is necessary because two tasks may run on completely different physical machines, and <em>Dagger</em> needs a consistent format to store them and transmit them over the network.</p>
+<h2 id="built-in-serializers">📦 Built-in Serializers<a class="headerlink" href="#built-in-serializers" title="Permanent link">&para;</a></h2>
+<p><em>Dagger</em> comes with a few serializers built in. Namely:</p>
+<ul>
+<li><a href="../json/"><code>dagger.AsJSON</code></a>, which uses Python's <a href="https://docs.python.org/3/library/json.html">json library</a>.</li>
+<li><a href="../pickle/"><code>dagger.AsPickle</code></a>, which uses Python's <a href="https://docs.python.org/3/library/pickle.html">pickle library</a></li>
+</ul>
+<h2 id="default-serializer-asjson">🃏 Default Serializer: <code>AsJSON</code><a class="headerlink" href="#default-serializer-asjson" title="Permanent link">&para;</a></h2>
+<p>By default, outputs are serialized using JSON.</p>
+<p>JSON works well for most basic types (<code>int</code>, <code>float</code>, <code>str</code>, <code>bool</code>, <code>dict</code>, <code>list</code> and <code>None</code> values). However, soon you will need to work with more complex types of values. For instance:</p>
+<ul>
+<li>You may be working with <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html">Pandas DataFrames</a>, which you'd like to serialize as CSV or Parquet files.</li>
+<li>You may be working with contracts which you'd like to serialize using <a href="https://developers.google.com/protocol-buffers">Protocol Buffers</a> or <a href="https://avro.apache.org/">Apache Avro</a>.</li>
+</ul>
+<p>For those cases, <strong><em>Dagger</em> allows you to change the serializers used for each value returned by a task, and implement your custom serializers</strong>.</p>
+<h2 id="setting-a-specific-serializer-to-use-with-an-output">💡 Setting a specific serializer to use with an output<a class="headerlink" href="#setting-a-specific-serializer-to-use-with-an-output" title="Permanent link">&para;</a></h2>
+<p>Say you have a task that returns an object which we want to serialize using the <a href="https://docs.python.org/3/library/pickle.html">Pickle protocol</a>. Here's how you can instruct <em>Dagger</em> to do so:</p>
+<div class="tabbed-set" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><label for="__tabbed_1_1">Imperative DSL</label><div class="tabbed-content">
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dagger</span> <span class="kn">import</span> <span class="n">AsPickle</span><span class="p">,</span> <span class="n">dsl</span>
+
+
+<span class="k">class</span> <span class="nc">CustomType</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">task</span><span class="p">(</span><span class="n">serializer</span><span class="o">=</span><span class="n">dsl</span><span class="o">.</span><span class="n">Serialize</span><span class="p">(</span><span class="n">AsPickle</span><span class="p">()))</span>
+<span class="k">def</span> <span class="nf">generate_object</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">CustomType</span><span class="p">()</span>
+</code></pre></div>
+</td></tr></table>
+</div>
+<input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><label for="__tabbed_1_2">Declarative Data Structures</label><div class="tabbed-content">
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dagger</span> <span class="kn">import</span> <span class="n">AsPickle</span><span class="p">,</span> <span class="n">FromReturnValue</span><span class="p">,</span> <span class="n">Task</span>
+
+
+<span class="k">class</span> <span class="nc">CustomType</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+
+<span class="k">def</span> <span class="nf">generate_object</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">CustomType</span><span class="p">()</span>
+
+
+<span class="n">task</span> <span class="o">=</span> <span class="n">Task</span><span class="p">(</span>
+    <span class="n">generate_object</span><span class="p">,</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;object&quot;</span><span class="p">:</span> <span class="n">FromReturnValue</span><span class="p">(</span><span class="n">serializer</span><span class="o">=</span><span class="n">AsPickle</span><span class="p">()),</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+</div>
+</div>
+<h3 id="different-serializers-for-multiple-outputs">Different Serializers for Multiple Outputs<a class="headerlink" href="#different-serializers-for-multiple-outputs" title="Permanent link">&para;</a></h3>
+<p>Now imagine the task actually returned multiple outputs:</p>
+<ul>
+<li>A boolean which can be serialized as JSON.</li>
+<li>A custom object which we want to serialize using Pickle.</li>
+</ul>
+<p>Here's how you can instruct <em>Dagger</em> to use a different serializer for each of the outputs:</p>
+<div class="tabbed-set" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><label for="__tabbed_2_1">Imperative DSL</label><div class="tabbed-content">
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dagger</span> <span class="kn">import</span> <span class="n">AsJSON</span><span class="p">,</span> <span class="n">AsPickle</span><span class="p">,</span> <span class="n">dsl</span>
+
+
+<span class="k">class</span> <span class="nc">CustomType</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">task</span><span class="p">(</span>
+    <span class="n">serializer</span><span class="o">=</span><span class="n">dsl</span><span class="o">.</span><span class="n">Serialize</span><span class="p">(</span>
+        <span class="n">a_boolean</span><span class="o">=</span><span class="n">AsJSON</span><span class="p">(),</span>
+        <span class="n">a_custom_object</span><span class="o">=</span><span class="n">AsPickle</span><span class="p">(),</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="k">def</span> <span class="nf">generate_multiple_outputs</span><span class="p">():</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;a_boolean&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;a_custom_object&quot;</span><span class="p">:</span> <span class="n">CustomType</span><span class="p">(),</span>
+    <span class="p">}</span>
+</code></pre></div>
+</td></tr></table>
+</div>
+<input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><label for="__tabbed_2_2">Declarative Data Structures</label><div class="tabbed-content">
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dagger</span> <span class="kn">import</span> <span class="n">AsPickle</span><span class="p">,</span> <span class="n">FromKey</span><span class="p">,</span> <span class="n">Task</span>
+
+
+<span class="k">class</span> <span class="nc">CustomType</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+
+<span class="k">def</span> <span class="nf">generate_multiple_outputs</span><span class="p">():</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;a_boolean&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;a_custom_object&quot;</span><span class="p">:</span> <span class="n">CustomType</span><span class="p">(),</span>
+    <span class="p">}</span>
+
+
+<span class="n">task</span> <span class="o">=</span> <span class="n">Task</span><span class="p">(</span>
+    <span class="n">generate_multiple_outputs</span><span class="p">,</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;boolean&quot;</span><span class="p">:</span> <span class="n">FromKey</span><span class="p">(</span><span class="s2">&quot;a_boolean&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;custom_obj&quot;</span><span class="p">:</span> <span class="n">FromKey</span><span class="p">(</span><span class="s2">&quot;a_custom_object&quot;</span><span class="p">,</span> <span class="n">serializer</span><span class="o">=</span><span class="n">AsPickle</span><span class="p">()),</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+</div>
+</div>
+<h2 id="implementing-your-own-serializer">🛠️ Implementing your own serializer<a class="headerlink" href="#implementing-your-own-serializer" title="Permanent link">&para;</a></h2>
+<p>To understand how to write your own serialization mechanism you can read <a href="../write-your-own/">this guide</a>.</p>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+          <a href="#" class="md-top md-icon" data-md-component="top" data-md-state="hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"/></svg>
+            Back to top
+          </a>
+        
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../../dsl/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Imperative DSL" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Imperative DSL
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../json/" class="md-footer__link md-footer__link--next" aria-label="Next: AsJSON" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              AsJSON
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+        
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.top", "search.highlight"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../../assets/javascripts/workers/search.94ec81fe.min.js", "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.48dfec6c.min.js"></script>
+      
+        <script src="../../../js/mkapi.js"></script>
+      
+    
+  </body>
+</html>

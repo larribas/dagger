@@ -1,0 +1,1232 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation portal for the Dagger (py-dagger) Python library.">
+      
+      
+      
+        <meta name="author" content="Lorenzo Arribas (@larribas)">
+      
+      
+        <link rel="canonical" href="https://larribas.me/dagger/user-guide/partitioning/">
+      
+      <link rel="icon" href="../../assets/images/logo/favicon.ico">
+      <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.2.8">
+    
+    
+      
+        <title>Parallelization: Output and node partitioning - Dagger - Distributed Data Pipelines in Python</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.92558b1b.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.3f5d1f46.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+      <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.8.1/css/all.css">
+    
+      <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.8.1/css/v4-shims.css">
+    
+      <link rel="stylesheet" href="../../css/mkapi-common.css">
+    
+    
+      
+
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="green" data-md-color-accent="pink">
+  
+    
+    <script>function __prefix(e){return new URL("../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+      <script>var palette=__get("__palette");if(null!==palette&&"object"==typeof palette.color)for(var key in palette.color)document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#parallelization-output-and-node-partitioning" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Dagger - Distributed Data Pipelines in Python" class="md-header__button md-logo" aria-label="Dagger - Distributed Data Pipelines in Python" data-md-component="logo">
+      
+  <img src="../../assets/images/logo/favicon-32x32.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Dagger - Distributed Data Pipelines in Python
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Parallelization: Output and node partitioning
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <form class="md-header__option" data-md-component="palette">
+        
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="green" data-md-color-accent="pink"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+          
+            <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31z"/></svg>
+            </label>
+          
+        
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="green" data-md-color-accent="lime"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+          
+            <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22z"/></svg>
+            </label>
+          
+        
+      </form>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        
+<a href="https://github.com/larribas/dagger/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Dagger - Distributed Data Pipelines in Python" class="md-nav__button md-logo" aria-label="Dagger - Distributed Data Pipelines in Python" data-md-component="logo">
+      
+  <img src="../../assets/images/logo/favicon-32x32.png" alt="logo">
+
+    </a>
+    Dagger - Distributed Data Pipelines in Python
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/larribas/dagger/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quick-start/" class="md-nav__link">
+        Quick Start
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tasks/" class="md-nav__link">
+        Tasks
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dags/" class="md-nav__link">
+        DAGs
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dag-composition/" class="md-nav__link">
+        DAG Composition
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Parallelization: Output and node partitioning
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Parallelization: Output and node partitioning
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    💡 Example
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-and-memory" class="md-nav__link">
+    ⚙️ Performance and memory
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    ⛔ Limitations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#learn-more-about" class="md-nav__link">
+    🧠 Learn more about...
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../map-reduce/" class="md-nav__link">
+        Map-Reduce
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dsl/" class="md-nav__link">
+        Imperative DSL
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_9" type="checkbox" id="__nav_9" >
+      
+      <label class="md-nav__link" for="__nav_9">
+        Serializers
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Serializers" data-md-level="1">
+        <label class="md-nav__title" for="__nav_9">
+          <span class="md-nav__icon md-icon"></span>
+          Serializers
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../serializers/alternatives/" class="md-nav__link">
+        Serializers
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../serializers/json/" class="md-nav__link">
+        AsJSON
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../serializers/pickle/" class="md-nav__link">
+        AsPickle
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../serializers/write-your-own/" class="md-nav__link">
+        Write your own Serializer
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_10" type="checkbox" id="__nav_10" >
+      
+      <label class="md-nav__link" for="__nav_10">
+        Runtimes
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Runtimes" data-md-level="1">
+        <label class="md-nav__title" for="__nav_10">
+          <span class="md-nav__icon md-icon"></span>
+          Runtimes
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runtimes/alternatives/" class="md-nav__link">
+        Runtimes
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runtimes/local/" class="md-nav__link">
+        Local Runtime
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runtimes/cli/" class="md-nav__link">
+        CLI Runtime
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runtimes/argo/" class="md-nav__link">
+        Argo Runtime
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runtimes/write-your-own/" class="md-nav__link">
+        Write your own Runtime
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_11" type="checkbox" id="__nav_11" >
+      
+      <label class="md-nav__link" for="__nav_11">
+        API Reference
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="API Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_11">
+          <span class="md-nav__icon md-icon"></span>
+          API Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/init/" class="md-nav__link">
+        dagger
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/dag/" class="md-nav__link">
+        dagger.dag
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/task/" class="md-nav__link">
+        dagger.task
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/input/" class="md-nav__link">
+        dagger.input
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/output/" class="md-nav__link">
+        dagger.output
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/serializer/" class="md-nav__link">
+        dagger.serializer
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/dsl/" class="md-nav__link">
+        dagger.dsl
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/runtime-local/" class="md-nav__link">
+        dagger.runtime.local
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/runtime-cli/" class="md-nav__link">
+        dagger.runtime.cli
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/runtime-argo/" class="md-nav__link">
+        dagger.runtime.argo
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://github.com/larribas/dagger/releases" class="md-nav__link">
+        Releases ⧉
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://pypi.org/project/py-dagger/" class="md-nav__link">
+        PyPI ⧉
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    💡 Example
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-and-memory" class="md-nav__link">
+    ⚙️ Performance and memory
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    ⛔ Limitations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#learn-more-about" class="md-nav__link">
+    🧠 Learn more about...
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/larribas/dagger/edit/main/docs/user-guide/partitioning.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                <h1 id="parallelization-output-and-node-partitioning">Parallelization: Output and node partitioning<a class="headerlink" href="#parallelization-output-and-node-partitioning" title="Permanent link">&para;</a></h1>
+<p>Tasks in <em>Dagger</em> can return partitioned outputs.</p>
+<p>Partitioned outputs are just <strong>outputs that can be split into several chunks</strong>, and joined back together later on. The value of a partitioned output is expected to be an <a href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable">Iterable</a>.</p>
+<p><strong>Nodes may also be partitioned based on one of their inputs</strong>, provided that such an input comes from a partitioned output.</p>
+<p>When a node is partitioned, <strong>each of the partitions may be executed in parallel</strong>. The outputs of a partitioned node are also partitioned.</p>
+<h2 id="example">💡 Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h2>
+<p>Let's take the example from the section about <a href="../dag-composition/">dag composition</a> and extend it a bit.</p>
+<p>In that scenario, we were first retrieving a dataset from a source (e.g. a data lake), and then invoking a different DAG to apply multiple transformations to that dataset.</p>
+<p>Now, we will assume the dataset we fetch can be arbitrarily large, so we will partition it into chunks according to some logic and invoke the set of transformations separately for each chunk.</p>
+<div class="tabbed-set" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><label for="__tabbed_1_1">Imperative DSL</label><div class="tabbed-content">
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">dagger</span> <span class="kn">import</span> <span class="n">dsl</span>
+
+<span class="n">DataSet</span> <span class="o">=</span> <span class="nb">str</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># DAG that processes and transforms a dataset</span>
+<span class="c1"># ===========================================</span>
+<span class="c1">#</span>
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">task</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">encode_field_a</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataSet</span><span class="p">:</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">, with field a encoded&quot;</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">task</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">aggregate_fields_b_and_c</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataSet</span><span class="p">:</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">, with fields b and c aggregated&quot;</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">task</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">calculate_moving_average_for_d</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataSet</span><span class="p">:</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">, with moving average for d calculated&quot;</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">DAG</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">transform_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">):</span>
+    <span class="n">ds_1</span> <span class="o">=</span> <span class="n">encode_field_a</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+    <span class="n">ds_2</span> <span class="o">=</span> <span class="n">aggregate_fields_b_and_c</span><span class="p">(</span><span class="n">ds_1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">calculate_moving_average_for_d</span><span class="p">(</span><span class="n">ds_2</span><span class="p">)</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># DAG that splits a large dataset into chunks</span>
+<span class="c1"># and invokes the previous DAG for each chunk</span>
+<span class="c1"># ===========================================</span>
+<span class="c1">#</span>
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">task</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">retrieve_dataset</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">DataSet</span><span class="p">:</span>
+    <span class="k">return</span> <span class="s2">&quot;original dataset&quot;</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">task</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">split_dataset_into_chunks</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">DataSet</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2"> (chunk </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">)&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">DAG</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">dag</span><span class="p">():</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">retrieve_dataset</span><span class="p">()</span>
+    <span class="n">chunks</span> <span class="o">=</span> <span class="n">split_dataset_into_chunks</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">:</span>
+        <span class="n">transform_dataset</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+</div>
+<input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><label for="__tabbed_1_2">Declarative Data Structures</label><div class="tabbed-content">
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">dagger</span> <span class="kn">import</span> <span class="n">DAG</span><span class="p">,</span> <span class="n">FromNodeOutput</span><span class="p">,</span> <span class="n">FromParam</span><span class="p">,</span> <span class="n">FromReturnValue</span><span class="p">,</span> <span class="n">Task</span>
+
+<span class="n">DataSet</span> <span class="o">=</span> <span class="nb">str</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># DAG that processes and transforms a dataset</span>
+<span class="c1"># ===========================================</span>
+<span class="c1">#</span>
+<span class="k">def</span> <span class="nf">encode_field_a</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataSet</span><span class="p">:</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">, with field a encoded&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">aggregate_fields_b_and_c</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataSet</span><span class="p">:</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">, with fields b and c aggregated&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">calculate_moving_average_for_d</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataSet</span><span class="p">:</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">, with moving average for d calculated&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">dataset_transformation_dag</span><span class="p">(</span><span class="n">dataset_input</span><span class="p">:</span> <span class="n">FromNodeOutput</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DAG</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">DAG</span><span class="p">(</span>
+        <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dataset&quot;</span><span class="p">:</span> <span class="n">dataset_input</span><span class="p">},</span>
+        <span class="n">nodes</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;encode-field-a&quot;</span><span class="p">:</span> <span class="n">Task</span><span class="p">(</span>
+                <span class="n">encode_field_a</span><span class="p">,</span>
+                <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dataset&quot;</span><span class="p">:</span> <span class="n">FromParam</span><span class="p">(</span><span class="s2">&quot;dataset&quot;</span><span class="p">)},</span>
+                <span class="n">outputs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dataset&quot;</span><span class="p">:</span> <span class="n">FromReturnValue</span><span class="p">()},</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;aggregate-fields-b-and-c&quot;</span><span class="p">:</span> <span class="n">Task</span><span class="p">(</span>
+                <span class="n">aggregate_fields_b_and_c</span><span class="p">,</span>
+                <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dataset&quot;</span><span class="p">:</span> <span class="n">FromNodeOutput</span><span class="p">(</span><span class="s2">&quot;encode-field-a&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">)},</span>
+                <span class="n">outputs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dataset&quot;</span><span class="p">:</span> <span class="n">FromReturnValue</span><span class="p">()},</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;calculate-moving-average-for-d&quot;</span><span class="p">:</span> <span class="n">Task</span><span class="p">(</span>
+                <span class="n">calculate_moving_average_for_d</span><span class="p">,</span>
+                <span class="n">inputs</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;dataset&quot;</span><span class="p">:</span> <span class="n">FromNodeOutput</span><span class="p">(</span><span class="s2">&quot;aggregate-fields-b-and-c&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">)</span>
+                <span class="p">},</span>
+                <span class="n">outputs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dataset&quot;</span><span class="p">:</span> <span class="n">FromReturnValue</span><span class="p">()},</span>
+            <span class="p">),</span>
+        <span class="p">},</span>
+        <span class="n">outputs</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;dataset&quot;</span><span class="p">:</span> <span class="n">FromNodeOutput</span><span class="p">(</span><span class="s2">&quot;calculate-moving-average-for-d&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">)</span>
+        <span class="p">},</span>
+        <span class="n">partition_by_input</span><span class="o">=</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># DAG that splits a large dataset into chunks</span>
+<span class="c1"># and invokes the previous DAG for each chunk</span>
+<span class="c1"># ===========================================</span>
+<span class="c1">#</span>
+<span class="k">def</span> <span class="nf">retrieve_dataset</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">DataSet</span><span class="p">:</span>
+    <span class="k">return</span> <span class="s2">&quot;original dataset&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">split_dataset_into_chunks</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">DataSet</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2"> (chunk </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">)&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+
+
+<span class="n">dag</span> <span class="o">=</span> <span class="n">DAG</span><span class="p">(</span>
+    <span class="n">nodes</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;retrieve-dataset&quot;</span><span class="p">:</span> <span class="n">Task</span><span class="p">(</span>
+            <span class="n">retrieve_dataset</span><span class="p">,</span>
+            <span class="n">outputs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dataset&quot;</span><span class="p">:</span> <span class="n">FromReturnValue</span><span class="p">()},</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;split-dataset-into-chunks&quot;</span><span class="p">:</span> <span class="n">Task</span><span class="p">(</span>
+            <span class="n">split_dataset_into_chunks</span><span class="p">,</span>
+            <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dataset&quot;</span><span class="p">:</span> <span class="n">FromNodeOutput</span><span class="p">(</span><span class="s2">&quot;retrieve-dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">)},</span>
+            <span class="n">outputs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;chunks&quot;</span><span class="p">:</span> <span class="n">FromReturnValue</span><span class="p">(</span><span class="n">is_partitioned</span><span class="o">=</span><span class="kc">True</span><span class="p">)},</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;process-chunk&quot;</span><span class="p">:</span> <span class="n">dataset_transformation_dag</span><span class="p">(</span>
+            <span class="n">FromNodeOutput</span><span class="p">(</span><span class="s2">&quot;split-dataset-into-chunks&quot;</span><span class="p">,</span> <span class="s2">&quot;chunks&quot;</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+</div>
+</div>
+<h2 id="performance-and-memory">⚙️ Performance and memory<a class="headerlink" href="#performance-and-memory" title="Permanent link">&para;</a></h2>
+<p>One of the main tenets of <em>Dagger</em> is that it should support arbitrarily large data pipelines without a big impact on its memory footprint.</p>
+<p>In particular, the following design- and implementation-level decisions help keeping memory usage constant:</p>
+<!-- - Serializers work with buffered I/O types, allowing you to serialize and deserialize values backed by a local or remote file system. -->
+<ul>
+<li>When working with partitioned outputs, <strong>each partition is loaded lazily into memory</strong>.</li>
+</ul>
+<!-- This means you should be able to use native Python types such as [Dask's DataFrames](https://docs.dask.org/en/latest/dataframe.html) to process large datasets and pass them between nodes without requiring the machine's memory to scale linearly. -->
+
+<h2 id="limitations">⛔ Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
+<p>If not managed properly, combining partitioned outputs and nodes may lead to a lot of complexity (resulting in non-intuitive behavior for you, the library's users, and making the implementation of runtimes quite hard for anyone who wants to maintain or extend its behavior by <a href="../runtimes/write-your-own/">creating new runtimes</a>).</p>
+<p>When designing <em>Dagger</em>, <strong>we made a conscious decision to limit the way in which partitioning can be used</strong>. Our goal is to provide parallelization and map-reduce patterns that are easy to use and reason about, and rely on DAG composition and application code to combine the existing patterns into more sophisticated scenarios as elegantly as possible.</p>
+<p>Here are some of the limitations of node and output partitioning:</p>
+<ul>
+<li>Nodes may only be partitioned by one of their inputs.</li>
+<li>Nodes may only be partitioned by an input that comes from a partitioned output.</li>
+<li>Nodes may NOT be partitioned by an input that comes from a parameter.</li>
+<li>DAGs may NOT return outputs that come directly from a partitioned node.</li>
+</ul>
+<p>All these limitations can be overcome by the use of DAG composition and extra application code. <strong>The section on <a href="../map-reduce/">map-reduce patterns</a> provides useful solutions to all these limitations</strong>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Whenever you try to use a partitioning pattern that is not allowed, <em>Dagger</em> will try to provide a useful error message explaining the root of the problem and pointing you to the documentation.</p>
+</div>
+<h2 id="learn-more-about">🧠 Learn more about...<a class="headerlink" href="#learn-more-about" title="Permanent link">&para;</a></h2>
+<ul>
+<li>How to implement <a href="../map-reduce/">map-reduce</a> patterns (also known as fan-out-fan-in, or scatter-gather patterns).</li>
+<li>How to run your DAGs with the different <a href="../runtimes/alternatives/">runtimes</a>.</li>
+</ul>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+          <a href="#" class="md-top md-icon" data-md-component="top" data-md-state="hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"/></svg>
+            Back to top
+          </a>
+        
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../dag-composition/" class="md-footer__link md-footer__link--prev" aria-label="Previous: DAG Composition" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              DAG Composition
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../map-reduce/" class="md-footer__link md-footer__link--next" aria-label="Next: Map-Reduce" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Map-Reduce
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+        
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.top", "search.highlight"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.94ec81fe.min.js", "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.48dfec6c.min.js"></script>
+      
+        <script src="../../js/mkapi.js"></script>
+      
+    
+  </body>
+</html>

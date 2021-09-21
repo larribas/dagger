@@ -1,0 +1,1133 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation portal for the Dagger (py-dagger) Python library.">
+      
+      
+      
+        <meta name="author" content="Lorenzo Arribas (@larribas)">
+      
+      
+        <link rel="canonical" href="https://larribas.me/dagger/user-guide/dsl/">
+      
+      <link rel="icon" href="../../assets/images/logo/favicon.ico">
+      <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.2.8">
+    
+    
+      
+        <title>Imperative DSL - Dagger - Distributed Data Pipelines in Python</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.92558b1b.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.3f5d1f46.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+      <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.8.1/css/all.css">
+    
+      <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.8.1/css/v4-shims.css">
+    
+      <link rel="stylesheet" href="../../css/mkapi-common.css">
+    
+    
+      
+
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="green" data-md-color-accent="pink">
+  
+    
+    <script>function __prefix(e){return new URL("../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+      <script>var palette=__get("__palette");if(null!==palette&&"object"==typeof palette.color)for(var key in palette.color)document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#imperative-dsl" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Dagger - Distributed Data Pipelines in Python" class="md-header__button md-logo" aria-label="Dagger - Distributed Data Pipelines in Python" data-md-component="logo">
+      
+  <img src="../../assets/images/logo/favicon-32x32.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Dagger - Distributed Data Pipelines in Python
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Imperative DSL
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <form class="md-header__option" data-md-component="palette">
+        
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="green" data-md-color-accent="pink"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+          
+            <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31z"/></svg>
+            </label>
+          
+        
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="green" data-md-color-accent="lime"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+          
+            <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22z"/></svg>
+            </label>
+          
+        
+      </form>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        
+<a href="https://github.com/larribas/dagger/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Dagger - Distributed Data Pipelines in Python" class="md-nav__button md-logo" aria-label="Dagger - Distributed Data Pipelines in Python" data-md-component="logo">
+      
+  <img src="../../assets/images/logo/favicon-32x32.png" alt="logo">
+
+    </a>
+    Dagger - Distributed Data Pipelines in Python
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/larribas/dagger/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quick-start/" class="md-nav__link">
+        Quick Start
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tasks/" class="md-nav__link">
+        Tasks
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dags/" class="md-nav__link">
+        DAGs
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dag-composition/" class="md-nav__link">
+        DAG Composition
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../partitioning/" class="md-nav__link">
+        Parallelization: Output and node partitioning
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../map-reduce/" class="md-nav__link">
+        Map-Reduce
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Imperative DSL
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Imperative DSL
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-illusion-of-control" class="md-nav__link">
+    The Illusion of Control
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-time-vs-runtime" class="md-nav__link">
+    Build time vs. runtime
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#capabilities" class="md-nav__link">
+    Capabilities
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    ⛔ Limitations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dsl-implementation" class="md-nav__link">
+    🛠️ DSL Implementation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-reference" class="md-nav__link">
+    📗 API Reference
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#learn-more-about" class="md-nav__link">
+    🧠 Learn more about...
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_9" type="checkbox" id="__nav_9" >
+      
+      <label class="md-nav__link" for="__nav_9">
+        Serializers
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Serializers" data-md-level="1">
+        <label class="md-nav__title" for="__nav_9">
+          <span class="md-nav__icon md-icon"></span>
+          Serializers
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../serializers/alternatives/" class="md-nav__link">
+        Serializers
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../serializers/json/" class="md-nav__link">
+        AsJSON
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../serializers/pickle/" class="md-nav__link">
+        AsPickle
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../serializers/write-your-own/" class="md-nav__link">
+        Write your own Serializer
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_10" type="checkbox" id="__nav_10" >
+      
+      <label class="md-nav__link" for="__nav_10">
+        Runtimes
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Runtimes" data-md-level="1">
+        <label class="md-nav__title" for="__nav_10">
+          <span class="md-nav__icon md-icon"></span>
+          Runtimes
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runtimes/alternatives/" class="md-nav__link">
+        Runtimes
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runtimes/local/" class="md-nav__link">
+        Local Runtime
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runtimes/cli/" class="md-nav__link">
+        CLI Runtime
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runtimes/argo/" class="md-nav__link">
+        Argo Runtime
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runtimes/write-your-own/" class="md-nav__link">
+        Write your own Runtime
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_11" type="checkbox" id="__nav_11" >
+      
+      <label class="md-nav__link" for="__nav_11">
+        API Reference
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="API Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_11">
+          <span class="md-nav__icon md-icon"></span>
+          API Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/init/" class="md-nav__link">
+        dagger
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/dag/" class="md-nav__link">
+        dagger.dag
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/task/" class="md-nav__link">
+        dagger.task
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/input/" class="md-nav__link">
+        dagger.input
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/output/" class="md-nav__link">
+        dagger.output
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/serializer/" class="md-nav__link">
+        dagger.serializer
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/dsl/" class="md-nav__link">
+        dagger.dsl
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/runtime-local/" class="md-nav__link">
+        dagger.runtime.local
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/runtime-cli/" class="md-nav__link">
+        dagger.runtime.cli
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/runtime-argo/" class="md-nav__link">
+        dagger.runtime.argo
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://github.com/larribas/dagger/releases" class="md-nav__link">
+        Releases ⧉
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://pypi.org/project/py-dagger/" class="md-nav__link">
+        PyPI ⧉
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-illusion-of-control" class="md-nav__link">
+    The Illusion of Control
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-time-vs-runtime" class="md-nav__link">
+    Build time vs. runtime
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#capabilities" class="md-nav__link">
+    Capabilities
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    ⛔ Limitations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dsl-implementation" class="md-nav__link">
+    🛠️ DSL Implementation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-reference" class="md-nav__link">
+    📗 API Reference
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#learn-more-about" class="md-nav__link">
+    🧠 Learn more about...
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/larribas/dagger/edit/main/docs/user-guide/dsl.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                <h1 id="imperative-dsl">Imperative DSL<a class="headerlink" href="#imperative-dsl" title="Permanent link">&para;</a></h1>
+<p>If you've been following along the examples in the previous sections, you will have noticed there are two ways of defining your DAGs with <em>Dagger</em>: An imperative DSL and the (declarative) data structures.</p>
+<p>The core data structures are the foundation of <em>Dagger</em> (they are the language runtimes understand). However, as DAGs become more complex, the data structures can become quite verbose and difficult to understand.</p>
+<p>To make the task of defining data pipelines as intuitive as possible, <em>Dagger</em> also exposes an imperative <a href="https://en.wikipedia.org/wiki/Domain-specific_language">domain-specific language (DSL)</a> whose <em>domain</em> consists of defining DAGs.</p>
+<p><strong>You can use the DSL to define DAGs as if you were writing local Python code</strong>. What could be more natural than that?</p>
+<p><a href="../../assets/images/diagrams/components_dsl_vs_core_ds.png"><img alt="components" src="../../assets/images/diagrams/components_dsl_vs_core_ds.png" /></a></p>
+<h2 id="the-illusion-of-control">The Illusion of Control<a class="headerlink" href="#the-illusion-of-control" title="Permanent link">&para;</a></h2>
+<p>Notice how in the last paragraph we said <em>"...as if you were writing local Python code"</em>?</p>
+<p>One of the most important concepts to grasp when using <em>Dagger</em>'s DSL is that, <strong>as soon as functions are decorated</strong> with <code>dagger.dsl.task</code> or <code>dagger.dsl.DAG</code>, <strong>they stop behaving as regular Python functions</strong>, so to speak.</p>
+<p>Instead, they become <code>NodeInvocationRecorder</code> objects whose purpose is to <strong>record how you expect a DAG to behave</strong> without actually executing any of its tasks.</p>
+<p>When you do:</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="nd">@dsl</span><span class="o">.</span><span class="n">DAG</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">dag</span><span class="p">(</span><span class="n">sample_size</span><span class="p">):</span>
+    <span class="n">datasets</span> <span class="o">=</span> <span class="n">prepare_datasets</span><span class="p">(</span><span class="n">sample_size</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">train_model</span><span class="p">(</span><span class="n">datasets</span><span class="p">[</span><span class="s2">&quot;training&quot;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">measure_model_performance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">datasets</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">])</span>
+</code></pre></div>
+</td></tr></table>
+<p>This is what <em>Dagger</em> is able to understand:</p>
+<ul>
+<li>From the signature of the function <code>dag</code>, the DSL knows the DAG has a single parameter named <code>sample_size</code>.</li>
+<li>Then, the DSL records your intention to invoke:<ul>
+<li>The task <code>prepare_datasets</code> passing the parameter as a single argument.</li>
+<li>The task <code>train_model</code> passing the sub-key "training" from the output of <code>prepare_datasets</code>.</li>
+<li>The task <code>measure_model_performance</code> passing both the output of <code>train_model</code> and the sub-key "test" from the output of <code>prepare_datasets</code>.</li>
+</ul>
+</li>
+<li>Finally, the DSL interprets that you want to <code>return</code> the output of <code>measure_model_performance</code> as the output of the DAG.</li>
+</ul>
+<h2 id="build-time-vs-runtime">Build time vs. runtime<a class="headerlink" href="#build-time-vs-runtime" title="Permanent link">&para;</a></h2>
+<p>When you use a compiled language like C, your code has two phases: compilation (where C code gets transformed into machine code for a particular computer architecture) and execution (where the machine code is run by that computer architecture).</p>
+<p><strong>You can think of the DSL as a compilation process that takes Python code and transforms it into a <code>dagger.DAG</code> data structure</strong>.</p>
+<p>Thus, when you do this:</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dagger</span> <span class="kn">import</span> <span class="n">dsl</span>
+<span class="kn">from</span> <span class="nn">dagger.runtime.local</span> <span class="kn">import</span> <span class="n">invoke</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">task</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">my_task</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Hello at runtime!&quot;</span><span class="p">)</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">DAG</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">my_pipeline</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Hello at build time!&quot;</span><span class="p">)</span>
+    <span class="n">my_task</span><span class="p">()</span>
+
+
+<span class="n">dag</span> <span class="o">=</span> <span class="n">dsl</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">my_pipeline</span><span class="p">)</span>
+<span class="n">invoke</span><span class="p">(</span><span class="n">dag</span><span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+<p>The string <code>"Hello at build time!"</code> will only be printed when you call <code>dsl.build()</code>, whereas the string <code>"Hello at runtime!"</code> will be printed when you call <code>invoke()</code>. Notice how the print statement is NOT executed at runtime.</p>
+<p>Similarly, if you mix functions decorated with <code>@dsl.task()</code> and other Python functions, you may obtain unintended results. Take the following piece of code:</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">random</span>
+
+<span class="kn">from</span> <span class="nn">dagger</span> <span class="kn">import</span> <span class="n">dsl</span>
+<span class="kn">from</span> <span class="nn">dagger.runtime.local</span> <span class="kn">import</span> <span class="n">invoke</span>
+
+
+<span class="k">def</span> <span class="nf">coin_toss</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="s2">&quot;heads&quot;</span><span class="p">,</span> <span class="s2">&quot;tails&quot;</span><span class="p">])</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">task</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">order</span><span class="p">(</span><span class="n">food_type</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ordering </span><span class="si">{</span><span class="n">food_type</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">DAG</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">my_pipeline</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">coin_toss</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;heads&quot;</span><span class="p">:</span>
+        <span class="n">order</span><span class="p">(</span><span class="s2">&quot;chinese&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">order</span><span class="p">(</span><span class="s2">&quot;italian&quot;</span><span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+<p>In this case, <code>coin_toss</code> will be invoked at build time and return heads or tails. The if condition will be evaluated at build time, which means when we call <code>dsl.build()</code>, it will generate one of two possible DAGs: a DAG that always orders Chinese food, or a DAG that always orders Italian. If you had intended to execute this DAG periodically and add some variety to your diet, we've got bad news: It seems you'll be stuck with the same type of food for some time!</p>
+<p>This may or may not be what you intended. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Mixing decorated and undecorated functions may certainly be useful. <strong>What's important is that you are able to distinguish between the things that will happen at build time and the things that will happen at runtime</strong>.</p>
+</div>
+<h2 id="capabilities">Capabilities<a class="headerlink" href="#capabilities" title="Permanent link">&para;</a></h2>
+<p>Like with all domain-specific languages, <strong>the number of things you can do inside of a function decorated with <code>dagger.dsl.DAG</code> is limited</strong>. Here goes a short summary:</p>
+<ul>
+<li>Parameterize a DAG by adding arguments to its function signature.</li>
+<li>Invoke nodes passing literal or hardcoded values as parameters.</li>
+<li>Invoke nodes passing the outputs of other nodes as parameters.</li>
+<li>Access keys from a node's output, when the output of that node is a mapping (e.g. a dictionary).</li>
+<li>Access properties of a node's output, when the output of that node is an object (e.g. a data class).</li>
+<li>Iterate over the results of an invocation to parallelize the execution of a node.</li>
+<li>Add all the results of a partitioned node in a list and pass that list to a fan-in node.</li>
+<li>Return multiple outputs from the DAG by returning a dictionary of <code class="highlight"><span class="nb">str</span> <span class="o">-&gt;</span> <span class="n">node_output</span></code>.</li>
+</ul>
+<h2 id="limitations">⛔ Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
+<p>Technically speaking, anything that hasn't been listed as a capability in the previous section can be considered a limitation.</p>
+<p>That said, there are some extra limitations to keep in mind when using the DSL:</p>
+<ul>
+<li>As far as we know, Python is not able to inspect the name of the local variable that holds a value. Therefore, when you assign the output of a task to a variable <code class="highlight"><span class="n">my_var</span> <span class="o">=</span> <span class="n">my_task</span><span class="p">()</span></code> and use it from <code class="highlight"><span class="n">another_task</span><span class="p">(</span><span class="n">my_var</span><span class="p">,</span> <span class="n">my_var</span><span class="p">[</span><span class="s2">&quot;my-key&quot;</span><span class="p">],</span> <span class="n">my_var</span><span class="o">.</span><span class="n">my_attr</span><span class="p">)</span></code>, the DAG you build from the DSL will name the outputs of <code>my_task</code>: <code>"return_value"</code>, <code>"key_my-key"</code> and <code>"property_my_attr"</code>.</li>
+<li><strong>Parameter defaults are ignored by the DSL</strong>. A task with the signature <code class="highlight"><span class="k">def</span> <span class="nf">my_task</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span></code> will still expect <code>b</code> to be passed as a parameter every time it's used. The same is true for DAG parameters. This may change in the future, if <a href="https://github.com/larribas/dagger/issues/35">this feature request</a> is implemented.</li>
+<li><strong>Only the outputs that are used by other tasks will be exported</strong>. The rest will be omitted. If you assign the output of a task to a variable (<code class="highlight"><span class="n">output</span> <span class="o">=</span> <span class="n">my_task</span><span class="p">()</span></code>), but don't use the variable <code>output</code> again, <em>Dagger</em> will assume you don't care about the output of that task. The task will still be executed, of course, but you may find the artifact not being saved in a runtime such as <em>Argo Workflows</em>.</li>
+</ul>
+<h2 id="dsl-implementation">🛠️ DSL Implementation<a class="headerlink" href="#dsl-implementation" title="Permanent link">&para;</a></h2>
+<p>To be able to capture this definition from a simple Python function, we make extensive use of Python's <a href="https://rszalski.github.io/magicmethods/">magic methods</a>, <a href="https://docs.python.org/3/library/contextvars.html">context variables</a> and other <a href="https://en.wikipedia.org/wiki/Metaprogramming">metaprogramming</a> capabilities.</p>
+<p>The specific implementation of <em>Dagger</em>'s DSL is quite interesting and will probably be the subject of an article in the future. Here are some of the highlights:</p>
+<p>Functions decorated by <code>dagger.dsl.task</code> or <code>dagger.dsl.DAG</code> are converted into an instance of <code>NodeInvocationRecorder</code>. This object implements the magic method <code class="highlight"><span class="fm">__call__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code> so that invoking the decorated function looks just like invoking the original function.</p>
+<p>Whenever the function <code class="highlight"><span class="n">dagger</span><span class="o">.</span><span class="n">dsl</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">func_decorated_by_dag</span><span class="p">)</span></code> is called, it:</p>
+<ol>
+<li>Inspects the signature of the DAG to look for parameters.</li>
+<li>Creates a new <a href="https://docs.python.org/3/library/contextvars.html">context</a> to isolate the definition of different DAGs (as we use global variables to record node invocations).</li>
+<li>Runs the body of the decorated function within that context.</li>
+</ol>
+<p>When we run the body of a function decorated with <code>dagger.dsl.DAG</code>, we may be invoking <code class="highlight"><span class="n">NodeInvocationRecorder</span><span class="o">.</span><span class="fm">__call__</span><span class="p">()</span></code> multiple times. Each invocation:</p>
+<ul>
+<li>Generates a unique ID for the execution of that task.</li>
+<li>Binds the <code>*args, **kwargs</code> to the arguments of the function we decorated.</li>
+<li>Marks all the inputs it receives as "consumed". We do this to understand which values from another task need to be exported as outputs.</li>
+<li>Registers itself on the global list of <code>node_invocations</code>.</li>
+<li>Returns an object of type <code>NodeOutputUsage</code>.</li>
+</ul>
+<p>The purpose of a <code>NodeOutputUsage</code> is to record how the output of a node is used by the rest of the nodes in a DAG:</p>
+<ul>
+<li>If the output is never consumed, the DSL assumes the node that generated it doesn't need to export any outputs (since no other node seems to care about them).</li>
+<li>If the output is consumed directly, the DSL assumes we are interested in the return value as a whole.</li>
+<li>If a sub-key (<code class="highlight"><span class="fm">__getitem__</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span></code>) or sub-property (<code class="highlight"><span class="fm">__getattr__</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span></code>) of the output is consumed, the DSL assumes we're interested in that sub-value.</li>
+<li>If the output it iterated upon (<code class="highlight"><span class="fm">__iter__</span><span class="p">()</span></code>), the DSL assumes the output is partitioned, and so is the node that depends on the elements returned by that iterator.</li>
+</ul>
+<p><strong>After all node invocations and output usages have been properly recorded, the <code>dagger.dsl.build()</code> method inspects them and generates a <code>dagger.DAG</code> data structure</strong>.</p>
+<h2 id="api-reference">📗 API Reference<a class="headerlink" href="#api-reference" title="Permanent link">&para;</a></h2>
+<p>Check the <a href="../../api/dsl/">API Reference</a> for more details.</p>
+<h2 id="learn-more-about">🧠 Learn more about...<a class="headerlink" href="#learn-more-about" title="Permanent link">&para;</a></h2>
+<ul>
+<li>How to use <a href="../serializers/alternatives/">different serializers</a> for your inputs and outputs.</li>
+<li>How to run your DAGs with the different <a href="../runtimes/alternatives/">runtimes</a>.</li>
+</ul>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+          <a href="#" class="md-top md-icon" data-md-component="top" data-md-state="hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"/></svg>
+            Back to top
+          </a>
+        
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../map-reduce/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Map-Reduce" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Map-Reduce
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../serializers/alternatives/" class="md-footer__link md-footer__link--next" aria-label="Next: Serializers" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Serializers
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+        
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.top", "search.highlight"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.94ec81fe.min.js", "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.48dfec6c.min.js"></script>
+      
+        <script src="../../js/mkapi.js"></script>
+      
+    
+  </body>
+</html>
