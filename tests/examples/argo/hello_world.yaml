@@ -19,5 +19,6 @@ spec:
       image: local.registry/dagger
       command: ["python", "examples/hello_world.py"]
       args: [
-        --node-name, say-hello-world
+        --node-name,
+        say-hello-world
       ]

@@ -208,17 +208,22 @@ def _translate_invocation_ids_into_readable_names(
 
     ```
     {
-        "f": "<uuid>",
-        "g-1": "<uuid>",
-        "g-2": "<uuid>",
+        "<uuid>": "f",
+        "<uuid>": "g-1",
+        "<uuid>": "g-2",
     }
     ```
 
     The sequence number is only appended if the same task is invoked multiple times.
     """
     node_names_by_id = {}
-    for node_name, group in groupby(
+    # groupby only groups consecutive elements therefore we need to sort them by name
+    # first
+    name_invocations_sorted_by_name = sorted(
         node_invocations, key=lambda invocation: invocation.name
+    )
+    for node_name, group in groupby(
+        name_invocations_sorted_by_name, key=lambda invocation: invocation.name
     ):
         nodes_with_the_same_name = list(group)
 
@@ -227,7 +232,6 @@ def _translate_invocation_ids_into_readable_names(
         else:
             for i in range(0, len(nodes_with_the_same_name)):
                 node_names_by_id[nodes_with_the_same_name[i].id] = f"{node_name}-{i+1}"
-
     return node_names_by_id
 
 

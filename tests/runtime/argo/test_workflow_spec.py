@@ -234,7 +234,9 @@ def test__workflow_spec__with_template_overrides_that_affect_essential_attribute
                 lambda: 1,
                 runtime_options={
                     "argo_template_overrides": {
-                        "container": {},
+                        "container": {
+                            "image": "a-different-image",
+                        },
                         "name": "x",
                     }
                 },
@@ -247,7 +249,7 @@ def test__workflow_spec__with_template_overrides_that_affect_essential_attribute
 
     assert (
         str(e.value)
-        == "In n, you are trying to override the value of ['container', 'name']. The Argo runtime uses these attributes to guarantee the behavior of the supplied DAG is correct. Therefore, we cannot let you override them."
+        == "You are trying to override the value of 'n.container.image'. The Argo runtime already sets a value for this key, and it uses it to guarantee the correctness of the behavior. Therefore, we cannot let you override them."
     )
 
 
@@ -270,7 +272,7 @@ def test__workflow_spec__with_container_overrides_that_affect_essential_attribut
 
     assert (
         str(e.value)
-        == "In n, you are trying to override the value of ['image']. The Argo runtime uses these attributes to guarantee the behavior of the supplied DAG is correct. Therefore, we cannot let you override them."
+        == "You are trying to override the value of 'n.image'. The Argo runtime already sets a value for this key, and it uses it to guarantee the correctness of the behavior. Therefore, we cannot let you override them."
     )
 
 
@@ -354,7 +356,7 @@ def test__workflow_spec__with_dag_template_overrides_that_affect_essential_attri
         {"n": Task(lambda: 1)},
         runtime_options={
             "argo_dag_template_overrides": {
-                "tasks": [],
+                "tasks": None,
             },
         },
     )
@@ -364,7 +366,7 @@ def test__workflow_spec__with_dag_template_overrides_that_affect_essential_attri
 
     assert (
         str(e.value)
-        == "In this DAG, you are trying to override the value of ['tasks']. The Argo runtime uses these attributes to guarantee the behavior of the supplied DAG is correct. Therefore, we cannot let you override them."
+        == "You are trying to override the value of 'DAG.tasks'. The Argo runtime already sets a value for this key, and it uses it to guarantee the correctness of the behavior. Therefore, we cannot let you override them."
     )
 
 

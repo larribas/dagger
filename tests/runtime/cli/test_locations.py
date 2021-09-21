@@ -116,7 +116,10 @@ def test__store_output_in_location__with_partitioned_output():
 
 def test__store_output_in_location__when_file_already_exists_but_is_a_directory():
     with tempfile.TemporaryDirectory() as tmp:
-        with pytest.raises(IsADirectoryError):
+        # Although we generally expect an IsADirectoryError, Python captures
+        # a PermissionError on Windows due to a bug:
+        # https://bugs.python.org/issue43095
+        with pytest.raises((IsADirectoryError, PermissionError)):
             store_output_in_location(
                 output_location=tmp,
                 output_value=b"2",

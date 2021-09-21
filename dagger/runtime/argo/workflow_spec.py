@@ -1,6 +1,5 @@
 """Generate Workflow specifications."""
 import itertools
-import os
 from typing import Any, Dict, List, Mapping, Sequence, Union
 
 from dagger.dag import DAG, Node
@@ -13,8 +12,8 @@ from dagger.serializer import Serializer
 from dagger.task import Task
 
 BASE_DAG_NAME = "dag"
-INPUT_PATH = "/tmp/inputs/"
-OUTPUT_PATH = "/tmp/outputs/"
+INPUT_PATH = "/tmp/inputs"
+OUTPUT_PATH = "/tmp/outputs"
 
 
 def workflow_spec(
@@ -202,7 +201,7 @@ def _dag_template(
     template["dag"] = with_extra_spec_options(
         original=template["dag"],
         extra_options=dag.runtime_options.get("argo_dag_template_overrides", {}),
-        context=".".join(address) if address else "this DAG",
+        context=".".join(address) if address else "DAG",
     )
 
     return template
@@ -533,9 +532,11 @@ def _task_template_inputs(task: Task) -> Mapping[str, Any]:
     artifacts = [
         {
             "name": input_name,
-            "path": os.path.join(
-                INPUT_PATH,
-                f"{input_name}.{task.inputs[input_name].serializer.extension}",
+            "path": "/".join(
+                [
+                    INPUT_PATH,
+                    f"{input_name}.{task.inputs[input_name].serializer.extension}",
+                ],
             ),
         }
         for input_name in task.inputs
@@ -574,9 +575,11 @@ def _task_template_outputs(task: Task) -> Mapping[str, Any]:
     artifacts = [
         {
             "name": output_name,
-            "path": os.path.join(
-                OUTPUT_PATH,
-                f"{output_name}.{task.outputs[output_name].serializer.extension}",
+            "path": "/".join(
+                [
+                    OUTPUT_PATH,
+                    f"{output_name}.{task.outputs[output_name].serializer.extension}",
+                ]
             ),
             "archive": {"none": {}},
             "s3": {
