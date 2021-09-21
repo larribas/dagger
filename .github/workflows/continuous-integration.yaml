@@ -155,6 +155,9 @@ jobs:
         with:
           path: ~/.cache/pypoetry/virtualenvs
           key: ${{ runner.os }}-${{ env.PYTHON}}-poetry-${{ hashFiles('poetry.lock') }}
+      - name: Install Aspell
+        run: |
+          sudo apt-get install aspell aspell-en
       - name: Poetry Install
         run: make install
       - name: Verify the documentation portal can be built successfully
