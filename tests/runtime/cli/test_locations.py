@@ -43,23 +43,39 @@ def test__retrieve_input_from_location__can_read_partitioned_directory():
         assert list(retrieve_input_from_location(dir_path)) == partitions
 
 
+def test__retrieve_input_from_location__sorts_partitions_in_the_same_order_they_were_stored():
+    with tempfile.TemporaryDirectory() as tmp:
+        dir_path = os.path.join(tmp, "partitioned_dir")
+
+        # We're specifically testing the order of 11 partitions whose filenames
+        # are named 1..11. When sorting them lexicographically, 2 > 10.
+        # Instead, we need to sort them numerically.
+        partitions = [bytes(i) for i in range(11)]
+        store_output_in_location(
+            output_location=dir_path,
+            output_value=PartitionedOutput(partitions),
+        )
+
+        assert list(retrieve_input_from_location(dir_path)) == partitions
+
+
 def test__retrieve_input_from_location__reads_partitions_lazily():
     with tempfile.TemporaryDirectory() as tmp:
         dir_path = os.path.join(tmp, "partitioned_dir")
         os.mkdir(dir_path)
 
-        for c in ["a", "b", "c"]:
+        for c in ["0", "1", "2"]:
             with open(os.path.join(dir_path, c), "wb") as f:
                 # Create the file but do not write anything yet
                 f.write(b"")
 
         lazily_loaded_partitions = retrieve_input_from_location(dir_path)
 
-        with open(os.path.join(dir_path, "a"), "wb") as f:
+        with open(os.path.join(dir_path, "0"), "wb") as f:
             f.write(b"1")
         assert next(lazily_loaded_partitions) == b"1"
 
-        with open(os.path.join(dir_path, "b"), "wb") as f:
+        with open(os.path.join(dir_path, "1"), "wb") as f:
             f.write(b"2")
         assert next(lazily_loaded_partitions) == b"2"
 
