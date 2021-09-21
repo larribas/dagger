@@ -1,5 +1,6 @@
 """Serialization strategy based on the Pickle protocol."""
 
+import io
 from typing import Any
 
 from dagger.serializer.errors import DeserializationError, SerializationError
@@ -14,21 +15,21 @@ class AsPickle:
 
     extension = "pickle"
 
-    def serialize(self, value: Any) -> bytes:
+    def serialize(self, value: Any, writer: io.BufferedWriter):
         """Serialize a value using the Pickle protocol."""
         import pickle
 
         try:
-            return pickle.dumps(value)
+            pickle.dump(value, writer)
         except (pickle.PicklingError, AttributeError) as e:
             raise SerializationError(e)
 
-    def deserialize(self, serialized_value: bytes) -> Any:
+    def deserialize(self, reader: io.BufferedReader) -> Any:
         """Deserialize a pickled object into the value it represents."""
         import pickle
 
         try:
-            return pickle.loads(serialized_value)
+            return pickle.load(reader)
         except (
             pickle.UnpicklingError,
             AttributeError,
@@ -37,9 +38,7 @@ class AsPickle:
             IndexError,
             TypeError,
         ) as e:
-            raise DeserializationError(
-                f"We cannot unpickle value '{str(serialized_value)}'. {str(e)}"
-            )
+            raise DeserializationError(e)
 
     def __repr__(self) -> str:
         """Get a human-readable string representation of the serializer."""
