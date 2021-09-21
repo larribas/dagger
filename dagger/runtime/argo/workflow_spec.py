@@ -1,6 +1,5 @@
 """Generate Workflow specifications."""
 import itertools
-from dataclasses import dataclass, field
 from typing import Any, Dict, List, Mapping, Sequence, Union
 
 from dagger.dag import DAG, Node
@@ -8,42 +7,13 @@ from dagger.dag import SupportedInputs as SupportedDAGInputs
 from dagger.dag import validate_parameters
 from dagger.input import FromNodeOutput, FromParam
 from dagger.runtime.argo.extra_spec_options import with_extra_spec_options
+from dagger.runtime.argo.workflow import Workflow
 from dagger.serializer import Serializer
 from dagger.task import Task
 
 BASE_DAG_NAME = "dag"
 INPUT_PATH = "/tmp/inputs"
 OUTPUT_PATH = "/tmp/outputs"
-
-
-@dataclass(frozen=True)
-class Workflow:
-    """
-    Configuration for a Workflow. This class will be supplied to the runtime to help it create a workflow that will work on your environment.
-
-    Parameters
-    ----------
-    container_image
-        The URI to the container image Argo will use for each of the tasks
-
-    container_entrypoint_to_dag_cli
-        The container's entrypoint.
-        It must run the specified DAG via the CLI runtime.
-        Check the examples and documentation to understand better how to containerize your projects and expose your DAGs through the container.
-
-    params
-        Parameters to inject to the DAG.
-        They must match the inputs the DAG expects.
-
-    extra_spec_options
-        WorkflowSpec properties to set (if they are not used by the runtime).
-
-    """
-
-    container_image: str
-    container_entrypoint_to_dag_cli: List[str] = field(default_factory=list)
-    params: Mapping[str, Any] = field(default_factory=dict)
-    extra_spec_options: Mapping[str, Any] = field(default_factory=dict)
 
 
 def workflow_spec(

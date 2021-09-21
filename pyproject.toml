@@ -39,6 +39,7 @@ PyYAML = "^5.4.1"
 mkdocs = "^1.2.2"
 mkapi = "^1.0.14"
 mkdocs-material = "^7.2.6"
+pyspelling = "^2.7.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

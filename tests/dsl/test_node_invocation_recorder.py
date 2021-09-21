@@ -75,13 +75,12 @@ def test__task_invocation__returns_node_output_usage():
 
 
 def test__task_invocation__records_inputs_from_different_sources():
-    def my_func(param, param_with_name, node_output):
+    def my_func(param, node_output):
         pass
 
     ctx = copy_context()
     invocation_id = "y"
-    param_usage = ParameterUsage()
-    param_with_name_usage = ParameterUsage(name="overridden")
+    param_usage = ParameterUsage(name="param-name")
     node_output_usage = NodeOutputUsage(invocation_id="x")
 
     recorder = NodeInvocationRecorder(
@@ -93,7 +92,6 @@ def test__task_invocation__records_inputs_from_different_sources():
     ctx.run(
         recorder,
         param=param_usage,
-        param_with_name=param_with_name_usage,
         node_output=node_output_usage,
     )
 
@@ -105,8 +103,7 @@ def test__task_invocation__records_inputs_from_different_sources():
             node_type=NodeType.TASK,
             func=my_func,
             inputs={
-                "param": ParameterUsage(),
-                "param_with_name": ParameterUsage(name=param_with_name_usage.name),
+                "param": ParameterUsage(name="param-name"),
                 "node_output": node_output_usage,
             },
             output=NodeOutputUsage(invocation_id),

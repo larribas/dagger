@@ -5,7 +5,7 @@ import sys
 from typing import List
 
 from dagger.dag import DAG
-from dagger.runtime.cli.invoke import invoke_with_locations
+from dagger.runtime.cli.invoke_with_locations import invoke_with_locations
 
 
 def invoke(

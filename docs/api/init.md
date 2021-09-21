@@ -1,7 +1,7 @@
 # ![mkapi](dagger)
 
-Exports:
+## Top-level objects exported
 
 ```python
-from dagger import dsl, DAG, Task
+--8<-- "dagger/__init__.py"
 ```

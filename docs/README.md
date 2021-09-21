@@ -1,7 +1,5 @@
 # Dagger
 
-Define sophisticated data pipelines and run them on different distributed systems (such as Argo Workflows).
-
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/larribas/dagger/blob/main/LICENSE.md)
 ![Python Versions Supported](https://img.shields.io/badge/python-3.8+-blue.svg)
 [![Latest PyPI version](https://badge.fury.io/py/py-dagger.svg)](https://badge.fury.io/py/py-dagger)
@@ -15,32 +13,32 @@ _Dagger_ is a Python library that allows you to:
 
 
 
-## Features
+## 🧰 Features
 
-- Define tasks and DAGs, and compose them together seamlessly.
-- Parameterize DAGs and pass parameters between nodes in plain Python (the runtime takes care of serializing and transmitting data on your behalf).
-- Create dynamic for loops, map-reduce operations easily.
+- Express DAGs succinctly.
+- Create dynamic for loops and map-reduce operations.
+- Invoke DAGs from other DAGs.
 - Run your DAGs locally or using a distributed workflow orchestrator (such as Argo Workflows).
-- Extend your tasks to take advantage of all the features offered by your runtime (e.g. Retry strategies, Kubernetes scheduling directives, etc.)
+- Take advantage of advanced runtime features (e.g. Retry strategies, Kubernetes scheduling directives, etc.)
 - ... All with a simple _Pythonic_ DSL that feels just like coding regular Python functions.
 
 
-Other nice features of _Dagger_ are: Zero dependencies, 100% test coverage, great documentation and plenty of examples to get you started.
+Other nice features of _Dagger_ are: it adds __no extra dependencies__ to your project, it is __reliable__ (with 100% test coverage), and it has __great documentation and plenty of examples__ to get you started.
 
 
-## Guiding Principles
+## 🎯 Guiding Principles
 
-_Dagger_ was created to facilitate the creation and ongoing maintenance of data and ML pipelines.
+_Dagger_ was created to facilitate the implementation and ongoing maintenance of data and ML pipelines.
 
 This goal is reflected in _Dagger_'s architecture and main design decisions:
 
 - To make __common use cases__ and patterns (such as dynamic loops or map-reduce operations) __as easy as possible__.
-- To __minimize boilerplate, plumbing or low-level code__ (such as serializing inputs/outputs and storing them in a local/remote file system).
+- To __minimize boilerplate, plumbing or low-level code__ (with _Dagger_ you don't need to serialize your outputs, store them in a remote file system, download them and deserialize them again; all of this is done for you).
 - To __onboard users in just a couple of hours__ through great documentation, comprehensive examples and tutorials.
-- To __never sacrifice reliability and performance__.
+- To __never sacrifice reliability and performance__, and to keep a low memory footprint by using lazy loading and streaming I/O throughout the codebase.
 
 
-## Architecture
+## ⛩️ Architecture
 
 _Dagger_ is built around 3 components:
 
@@ -49,7 +47,7 @@ _Dagger_ is built around 3 components:
 - Multiple __runtimes__ that inspect the core data structures to run the corresponding DAG, or prepare the DAG to run in a specific pipeline executor.
 
 
-[![image](assets/images/diagrams/components.png)](assets/images/diagrams/components.png)
+[![components](assets/images/diagrams/components.png)](assets/images/diagrams/components.png)
 
 
 ### The Core Data Structures
@@ -66,12 +64,13 @@ _Dagger_ defines DAGs using a series of immutable data structures. These structu
 
 They are divided into different categories:
 
-[![image](assets/images/diagrams/core_data_structures.png)](assets/images/diagrams/core_data_structures.png)
+[![core data structures](assets/images/diagrams/core_data_structures.png)](assets/images/diagrams/core_data_structures.png)
 
-- __Nodes__ may be tasks (functions) or DAGs (a series of nodes connected together). DAGs can be nested into other dags and composed elegantly.
+- __Nodes__ may be tasks (functions) or DAGs (a series of nodes connected together). DAGs can be nested inside of other DAGs.
 - __Inputs__ may come from a DAG parameter or from the output of another node.
 - __Outputs__ may be retrieved directly from the return value of a task's function, or from a sub-element of that value (a key or a property).
 - Every input/output has a __serializer__ associated with it. The serializer is responsible for turning the value of that input/output into a string of bytes, and a string of bytes back into its original value.
 
 
+Does it sound interesting? [See it in action!](quick-start.md)
 
