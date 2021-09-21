@@ -31,6 +31,7 @@ theme:
 markdown_extensions:
 - pymdownx.highlight: 
     linenums: true
+- pymdownx.inlinehilite
 - pymdownx.snippets
 - pymdownx.superfences
 - pymdownx.tabbed
@@ -42,7 +43,6 @@ plugins:
 nav:
 - Overview: README.md
 - quick-start.md
-- user-guide/introduction.md
 - user-guide/tasks.md
 - user-guide/dags.md
 - user-guide/dag-composition.md

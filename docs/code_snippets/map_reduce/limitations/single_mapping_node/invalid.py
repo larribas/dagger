@@ -30,9 +30,8 @@ def dag():
     partitions = get_partitions()
     partial_results = []
     for partition in partitions:
-        transformed_partition = do_something_with(partition)
-        partial_results.append(
-            do_something_else_with(transformed_partition),
-        )
+        p1 = do_something_with(partition)
+        p2 = do_something_else_with(p1)
+        partial_results.append(p2)
 
     return aggregate(partial_results)

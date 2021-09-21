@@ -48,9 +48,8 @@ def dataset_transformation_dag(dataset_input: FromNodeOutput) -> DAG:
 
 
 #
-# DAG that splits a large dataset into chunks
-# and invokes the previous DAG for each chunk
-# ===========================================
+# DAG that retrieves the dataset and invokes the previous DAG for each chunk
+# ==========================================================================
 #
 def retrieve_dataset() -> DataSet:
     return "original dataset"

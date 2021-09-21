@@ -1,12 +1,12 @@
-# Map-Reduce Patterns
+# Map-Reduce
 
-One of the most common patterns you may find yourself implementing with _Dagger_ is a map-reduce operation.
+One of the most common patterns you may find yourself implementing with _Dagger_ is a map-reduce.
 
-Also known as a fan-out-fan-in or scatter-and-gather operation, a map-reduce has the following shape:
+Also known as a _fan-out-fan-in_ or _scatter-and-gather_, a _map-reduce_ pattern has the following shape:
 
 - There will be __a node producing a partitioned output__ (fan-out). This could be a list of countries, a dataset split into multiple chunks, or any other segmentation strategy you may be using in your project.
 - After the partitions are generated, __a number of "mapping" nodes will run in parallel__, processing each of the partitions and generating a partial result.
-- Finally, there will be a node that waits until all the "mapping" nodes have finished and will __aggregate the partial results__.
+- Finally, there will be a node that waits until all the "mapping" nodes have finished and will __aggregate the partial results into a final result__.
 
 The following picture shows how _Argo Workflows_ represents the execution of a very basic map-reduce DAG:
 
@@ -18,14 +18,14 @@ The following picture shows how _Argo Workflows_ represents the execution of a v
 Here are some common map-reduce implementations we've seen in _Dagger_:
 
 * A pipeline that trains multiple version of a Machine Learning model and then picks the one that performs best.
-* A pipelines that trains ML models for different countries in parallel, uploads each separately, and then integrates the metadata of every training session into a single human-readable report.
-* An ETL pipeline that splits a large dataset into chunks, aggregates each chunk into a partial result and then aggregates all the partial results together (for instance, to calculate the average delivery time of different types of orders).
+* A pipeline that trains ML models for different countries in parallel, uploads each separately, and then integrates the metadata of every training session into a single human-readable report.
+* An ETL pipeline that splits a large dataset into chunks, aggregates each chunk into a partial result and then aggregates all the partial results together (for instance, to calculate the average delivery time of an online purchase).
 
 
 
-## Example
+## 💡 Example
 
-The following example demonstrates how we can use _Dagger_ to implement a Machine Learning training pipeline that trains multiple versions of a model in parallel, and then picks the one that performs the best against a test suite.
+The following example demonstrates how we can use _Dagger_ to implement a (mocked) Machine Learning training pipeline that trains multiple versions of a model in parallel, and then picks the one that performs the best against a test suite.
 
 
 === "Imperative DSL"
@@ -41,22 +41,23 @@ The following example demonstrates how we can use _Dagger_ to implement a Machin
     ```
 
 
-## Limitations
+## ⛔ Limitations
 
 As explained in the [partitioning limitations](partitioning.md#limitations) section, map-reduce patterns in _Dagger_ have very specific constraints.
 
-At first sight, these constraints may look too limiting, but in the long run they will make your code more understandable and predictable, and the _Dagger_ codebase more stable and extensible.
+At first sight, these constraints may look too strict, but in the long run they will make your code more understandable and predictable, and the _Dagger_ codebase more reliable and extensible.
 
 In this section we will go through the different constraints and show you how you can overcome them.
 
 
-### You can only have 1 mapping node
+### You may only have a single mapping node per DAG
 
 Say you have a DAG where you want to perform multiple mapping operations after a fan-out.
 
 In _Dagger_, you cannot do this in the same `for` block. Instead, you need to wrap all the mapping operations inside of another DAG.
 
-This also allows you to keep most map-reduce DAGs to a single line: `return reduce([map(partition) for partition in fan_out()])`.
+!!! note
+    On the plus side, this allows you to keep most map-reduce DAGs to a single line: `return reduce([map(partition) for partition in fan_out()])`.
 
 
 === "Invalid pattern"
@@ -76,7 +77,7 @@ This also allows you to keep most map-reduce DAGs to a single line: `return redu
 
 Say you have a DAG where you receive all potential partitions at runtime as a parameter.
 
-In _Dagger_, you cannot do a `for` loop directly over the parameter. Only the outputs of other nodes may be iterable.
+In _Dagger_, you cannot do a `for` loop directly over the parameter. __Only the outputs of other nodes are iterable__.
 
 The solution here would be to transform that parameter into a node output by just passing it through an "identity" function (that is, a function that returns the same parameters it received).
 
@@ -120,7 +121,7 @@ Instead, you need to create 2 separate DAGs (each parallelizing by a different d
 
 Say you want to split a large dataset into smaller chunks, transform each chunk in parallel and then return the whole dataset as the result of the DAG.
 
-In _Dagger_, DAG outputs can only come from the outputs of nodes that are not partitioned.
+In _Dagger_, __DAG outputs can only come from the outputs of nodes that are not partitioned__.
 
 If you want to return the full dataset as the DAG's output you will need to concatenate the chunks back together in a fan-in/reduce task. You can use an "identity" function for this (a function that returns the same parameters it received).
 
@@ -138,7 +139,7 @@ If you want to return the full dataset as the DAG's output you will need to conc
     ```
 
 
-## Learn more about...
+## 🧠 Learn more about...
 
 - How the [imperative DSL](dsl.md) works.
 - How to run your DAGs with the different [runtimes](runtimes/alternatives.md).

@@ -7,10 +7,10 @@ For example, you may want to serialize:
 - A Pandas DataFrame as a CSV or a Parquet file.
 - A Protocol Buffers contract.
 
-In those cases, you can bring your custom serialization implementation to _Dagger_ and use it in your tasks.
+In those cases, __you can bring your custom serialization implementation to _Dagger_ and use it in your tasks__.
 
 
-## Serializer Protocol
+## ☑️ Serializer Protocol
 
 To write a custom serializer, you need to create a class that implements the following protocol:
 
@@ -20,7 +20,7 @@ To write a custom serializer, you need to create a class that implements the fol
 ```
 
 
-## Example: A YAML serializer
+## 💡 Example: A YAML serializer
 
 Say you want to serialize some of your outputs as YAML. Here's how a (slightly naive) implementation of a YAML serializer would look like:
 

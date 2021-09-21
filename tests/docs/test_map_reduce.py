@@ -6,15 +6,16 @@ from dagger import dsl
 from dagger.runtime.local import invoke
 
 
-def test_declarative():
-    invoke(declarative.dag)
-    # Raises no exceptions
-
-
 def test_imperative_can_be_built():
-    dag = dsl.build(imperative.dag)
-    invoke(dag)
+    dsl.build(imperative.dag)
     # Raises no exceptions
+
+
+def test_declarative_and_imperative_return_equivalent_results():
+    declarative_result = invoke(declarative.dag)["best_model"]
+    imperative_result = invoke(dsl.build(imperative.dag))["return_value"]
+
+    assert declarative_result == imperative_result
 
 
 def test_dag_output_from_partitioned_node():

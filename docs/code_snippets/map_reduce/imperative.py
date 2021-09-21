@@ -1,55 +1,41 @@
-from typing import List
-
 from dagger import dsl
 
-DataSet = str
 
-
-#
-# DAG that processes and transforms a dataset
-# ===========================================
-#
 @dsl.task()
-def encode_field_a(dataset: DataSet) -> DataSet:
-    return f"{dataset}, with field a encoded"
+def prepare_datasets():
+    return {
+        "training": ["..."],
+        "test": ["..."],
+    }
 
 
 @dsl.task()
-def aggregate_fields_b_and_c(dataset: DataSet) -> DataSet:
-    return f"{dataset}, with fields b and c aggregated"
+def generate_training_combinations():
+    return [
+        {"model_type": "neural_network", "params": ["..."]},
+        {"model_type": "boosted_tree", "params": ["..."]},
+    ]
 
 
 @dsl.task()
-def calculate_moving_average_for_d(dataset: DataSet) -> DataSet:
-    return f"{dataset}, with moving average for d calculated"
-
-
-@dsl.DAG()
-def transform_dataset(dataset: DataSet):
-    ds_1 = encode_field_a(dataset)
-    ds_2 = aggregate_fields_b_and_c(ds_1)
-    return calculate_moving_average_for_d(ds_2)
-
-
-#
-# DAG that splits a large dataset into chunks
-# and invokes the previous DAG for each chunk
-# ===========================================
-#
-@dsl.task()
-def retrieve_dataset() -> DataSet:
-    return "original dataset"
+def train_model(training_dataset, parameters):
+    return "trained model"
 
 
 @dsl.task()
-def split_dataset_into_chunks(dataset: DataSet) -> List[DataSet]:
-    return [f"{dataset} (chunk {i})" for i in range(3)]
+def choose_best_model(alternative_models, test_dataset):
+    return "best_model"
 
 
 @dsl.DAG()
 def dag():
-    dataset = retrieve_dataset()
-    chunks = split_dataset_into_chunks(dataset)
+    datasets = prepare_datasets()
+    alternative_models = []
 
-    for chunk in chunks:
-        transform_dataset(chunk)
+    for training_parameters in generate_training_combinations():
+        model = train_model(datasets["training"], training_parameters)
+        alternative_models.append(model)
+
+    best_model = choose_best_model(alternative_models, datasets["test"])
+
+    return best_model

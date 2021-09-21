@@ -1,10 +1,10 @@
-# Alternatives
+# Serializers
 
 When you run your DAGs with a runtime, the outputs produced by every task are serialized from a native Python type (such as a `str`, a `dict`, a `pd.DataFrame` or even a custom `class`) into a string of `bytes`.
 
 Serializing outputs is necessary because two tasks may run on completely different physical machines, and _Dagger_ needs a consistent format to store them and transmit them over the network.
 
-## Built-in Serializers
+## 📦 Built-in Serializers
 
 _Dagger_ comes with a few serializers built in. Namely:
 
@@ -12,21 +12,21 @@ _Dagger_ comes with a few serializers built in. Namely:
 * [`dagger.AsPickle`](pickle.md), which uses Python's [pickle library](https://docs.python.org/3/library/pickle.html)
 
 
-## Default Serializer: AsJSON
+## 🃏 Default Serializer: `AsJSON`
 
-By default, outputs are serialized using `AsJSON`.
+By default, outputs are serialized using JSON.
 
-JSON works well for most basic types (`int`, `float`, `str`, `bool`, `dict`, `list` and `None` values). However, you will most likely need to work with other types of values. For instance:
+JSON works well for most basic types (`int`, `float`, `str`, `bool`, `dict`, `list` and `None` values). However, soon you will need to work with more complex types of values. For instance:
 
-* You may be working with `pd.DataFrame` values, which you'd like to serialize as CSVs or Parquet files.
+* You may be working with [Pandas DataFrames](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html), which you'd like to serialize as CSV or Parquet files.
 * You may be working with contracts which you'd like to serialize using [Protocol Buffers](https://developers.google.com/protocol-buffers) or [Apache Avro](https://avro.apache.org/).
 
-For those cases, _Dagger_ allows you to __set specific serializers__ for each value returned by a task, and __implement your custom serializer__.
+For those cases, ___Dagger_ allows you to change the serializers used for each value returned by a task, and implement your custom serializers__.
 
 
-## Setting a specific serializer to use with an output
+## 💡 Setting a specific serializer to use with an output
 
-Say you have a task that returns an object which we want to serialize using pickle. Here's how you can instruct _Dagger_ to do so:
+Say you have a task that returns an object which we want to serialize using the [Pickle protocol](https://docs.python.org/3/library/pickle.html). Here's how you can instruct _Dagger_ to do so:
 
 === "Imperative DSL"
 
@@ -40,6 +40,8 @@ Say you have a task that returns an object which we want to serialize using pick
     --8<-- "docs/code_snippets/single_serializer/declarative.py"
     ```
 
+
+### Different Serializers for Multiple Outputs
 
 Now imagine the task actually returned multiple outputs:
 
@@ -62,7 +64,7 @@ Here's how you can instruct _Dagger_ to use a different serializer for each of t
     ```
 
 
-## Implementing your own serializer
+## 🛠️ Implementing your own serializer
 
 To understand how to write your own serialization mechanism you can read [this guide](write-your-own.md).
 

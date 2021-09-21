@@ -2,12 +2,13 @@
 
 The CLI runtime is responsible for exposing a DAG through a Command-Line Interface.
 
-This runtime is not meant to be used by humans, but by other runtimes, as a building block to run DAGs from container images or virtual machines.
+!!! warning
+    This runtime is not meant to be used by humans. It is meant to be used by other runtimes, as a building block to run DAGs from container images or virtual machines.
 
-The reason why it may be a bit tricky for humans to use is that it requires every input to be passed as a file whose contents are the serialized representation of that input's value.
+    The reason why it may be a bit tricky for humans to use is that __it requires every input to be passed as a file whose contents are the serialized representation of that input's value__.
 
 
-## The Interface
+## 💻 The Interface
 
 Say you have a file `say_hello.py` that describes your DAG. You can use the CLI runtime to expose that DAG on the command line, like this:
 
@@ -52,11 +53,11 @@ optional arguments:
 
 As you can see, you can do 3 things with the CLI:
 
-- You can select a specific node for execution (try doing `pythong say_hello --node-name=say-hello`).
+- You can select a specific node for execution (try doing `python say_hello --node-name=say-hello`).
 - You can pass any number of inputs. The location of each input needs to be a local file that contains the serialized value of the input.
 - You can pass any number of outputs. The location of each output needs to be a local file where the serialized value of the output will be stored.
 
 
-## API Reference
+## 📗 API Reference
 
 Check the [API Reference](../../api/runtime-cli.md) for more details about this runtime.

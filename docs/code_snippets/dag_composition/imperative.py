@@ -32,9 +32,9 @@ def transform_dataset(dataset: DataSet):
 
 
 #
-# DAG that splits a large dataset into chunks
-# and invokes the previous DAG for each chunk
-# ===========================================
+# DAG that retrieves the dataset and invokes
+# the previous DAG for each chunk.
+# ==========================================
 #
 @dsl.task()
 def retrieve_dataset() -> DataSet:
