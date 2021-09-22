@@ -1,4 +1,5 @@
 """Command-line Interface to run DAGs or Tasks taking their inputs from files and storing their outputs into files."""
+import tempfile
 from typing import Any, Iterable, List, Mapping
 
 import dagger.runtime.local as local
@@ -55,13 +56,18 @@ def invoke_with_locations(
 
     params = _deserialized_params(nested_node, input_locations)
 
-    outputs = local.invoke(nested_node.node, params)
-
-    for output_name in output_locations:
-        store_output_in_location(
-            output_location=output_locations[output_name],
-            output_value=outputs[output_name],
+    with tempfile.TemporaryDirectory() as tmp:
+        outputs = local.invoke(
+            nested_node.node,
+            params=params,
+            outputs=local.StoreSerializedOutputsInPath(tmp),
         )
+
+        for output_name in output_locations:
+            store_output_in_location(
+                output_location=output_locations[output_name],
+                output_value=outputs[output_name],
+            )
 
 
 def _validate_inputs(
@@ -95,15 +101,10 @@ def _deserialized_params(
     """Retrieve and deserialize all the parameters expected by a Node."""
     params = {}
     for input_name in input_locations:
-        input_value = retrieve_input_from_location(input_locations[input_name])
-        input_type = nested_node.node.inputs[input_name]
-
-        if isinstance(input_value, local.PartitionedOutput):
-            params[input_name] = [
-                input_type.serializer.deserialize(partition)
-                for partition in input_value
-            ]
-        else:
-            params[input_name] = input_type.serializer.deserialize(input_value)
+        input_value = retrieve_input_from_location(
+            input_location=input_locations[input_name],
+            serializer=nested_node.node.inputs[input_name].serializer,
+        )
+        params[input_name] = input_value
 
     return params
