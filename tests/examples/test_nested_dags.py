@@ -6,7 +6,13 @@ from tests.examples.verification import verify_dag_works_with_all_runtimes
 
 def validate_results(results: Dict[str, bytes]):
     assert results == {
-        "album": b'{"name": "big dag", "tracks": ["recording of (hip hop song about love)", "recording of (hip hop song about loss)"]}'
+        "album": {
+            "name": "big dag",
+            "tracks": [
+                "recording of (hip hop song about love)",
+                "recording of (hip hop song about loss)",
+            ],
+        }
     }
 
 

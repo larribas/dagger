@@ -9,7 +9,6 @@ from dagger.data_structures import FrozenMapping
 from dagger.input import FromNodeOutput, FromParam
 from dagger.input import validate_name as validate_input_name
 from dagger.output import validate_name as validate_output_name
-from dagger.serializer import SerializationError
 from dagger.task import SupportedInputs as SupportedTaskInputs
 from dagger.task import Task
 

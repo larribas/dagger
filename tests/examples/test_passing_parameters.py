@@ -5,7 +5,7 @@ from tests.examples.verification import verify_dag_works_with_all_runtimes
 
 
 def validate_results(results: Dict[str, bytes]):
-    assert results == {"number-doubled-and-squared": b"100"}
+    assert results == {"number-doubled-and-squared": 100}
 
 
 def test():

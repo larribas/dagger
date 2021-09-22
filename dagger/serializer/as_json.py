@@ -2,7 +2,7 @@
 
 import io
 from json.decoder import JSONDecodeError
-from typing import Any, Optional
+from typing import Any, BinaryIO, Optional
 
 from dagger.serializer.errors import DeserializationError, SerializationError
 
@@ -33,7 +33,7 @@ class AsJSON:
         self._indent = indent
         self._allow_nan = allow_nan
 
-    def serialize(self, value: Any, writer: io.BufferedWriter):
+    def serialize(self, value: Any, writer: BinaryIO):
         """
         Serialize a value into a JSON object, encoded into binary format using utf-8.
 
@@ -51,7 +51,7 @@ class AsJSON:
         except (TypeError, ValueError) as e:
             raise SerializationError(e)
 
-    def deserialize(self, reader: io.BufferedReader) -> Any:
+    def deserialize(self, reader: BinaryIO) -> Any:
         """Deserialize a utf-8-encoded json object into the value it represents."""
         import json
 

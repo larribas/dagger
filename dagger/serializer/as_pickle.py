@@ -1,7 +1,6 @@
 """Serialization strategy based on the Pickle protocol."""
 
-import io
-from typing import Any
+from typing import Any, BinaryIO
 
 from dagger.serializer.errors import DeserializationError, SerializationError
 
@@ -15,7 +14,7 @@ class AsPickle:
 
     extension = "pickle"
 
-    def serialize(self, value: Any, writer: io.BufferedWriter):
+    def serialize(self, value: Any, writer: BinaryIO):
         """Serialize a value using the Pickle protocol."""
         import pickle
 
@@ -24,7 +23,7 @@ class AsPickle:
         except (pickle.PicklingError, AttributeError) as e:
             raise SerializationError(e)
 
-    def deserialize(self, reader: io.BufferedReader) -> Any:
+    def deserialize(self, reader: BinaryIO) -> Any:
         """Deserialize a pickled object into the value it represents."""
         import pickle
 

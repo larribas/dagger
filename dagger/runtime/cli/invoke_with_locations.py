@@ -44,6 +44,9 @@ def invoke_with_locations(
     TypeError
         When any of the outputs cannot be obtained from the return value of their node
 
+    OSError
+        When there is a problem with the operating system's permissions to access the supplied input/output locations.
+
     SerializationError
         When some of the outputs cannot be serialized with the specified Serializer
     """
@@ -64,10 +67,15 @@ def invoke_with_locations(
         )
 
         for output_name in output_locations:
-            store_output_in_location(
-                output_location=output_locations[output_name],
-                output_value=outputs[output_name],
-            )
+            try:
+                store_output_in_location(
+                    output_location=output_locations[output_name],
+                    output_value=outputs[output_name],
+                )
+            except (OSError, FileExistsError, IsADirectoryError, PermissionError) as e:
+                raise OSError(
+                    f"When storing output '{output_name}', we got the following error: {str(e)}"
+                ) from e
 
 
 def _validate_inputs(
@@ -101,10 +109,14 @@ def _deserialized_params(
     """Retrieve and deserialize all the parameters expected by a Node."""
     params = {}
     for input_name in input_locations:
-        input_value = retrieve_input_from_location(
-            input_location=input_locations[input_name],
-            serializer=nested_node.node.inputs[input_name].serializer,
-        )
-        params[input_name] = input_value
+        try:
+            params[input_name] = retrieve_input_from_location(
+                input_location=input_locations[input_name],
+                serializer=nested_node.node.inputs[input_name].serializer,
+            )
+        except (FileNotFoundError, PermissionError) as e:
+            raise OSError(
+                f"When retrieving input '{input_name}' from the provided location, we got the following error: {str(e)}"
+            ) from e
 
     return params

@@ -11,4 +11,4 @@ def test_build():
 def test_invoke():
     dag = dsl.build(map_reduce_pipeline)
     result = invoke(dag, params={"seed": 1, "exponent": 2})
-    assert result == {"return_value": b"91"}
+    assert result == {"return_value": 91}

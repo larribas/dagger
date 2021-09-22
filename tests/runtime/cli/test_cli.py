@@ -16,6 +16,7 @@ from dagger.runtime.cli.locations import (
 from dagger.runtime.local import PartitionedOutput
 from dagger.serializer import AsPickle
 from dagger.task import Task
+from tests.runtime.cli.utils import store_value
 
 
 def test__invoke__whole_dag():
@@ -251,7 +252,7 @@ def test__invoke__nested_node_with_inputs_from_another_node_output():
             f.write(b"5")
 
         with open(y_input, "wb") as f:
-            f.write(AsPickle().serialize(6))
+            AsPickle().serialize(6, f)
 
         invoke(
             dag,
@@ -349,10 +350,15 @@ def test__invoke__node_with_partitioned_input():
     with tempfile.TemporaryDirectory() as tmp:
         partitioned_input = os.path.join(tmp, "partitioned_input")
         together_output = os.path.join(tmp, "together_output")
-
         store_output_in_location(
             output_location=partitioned_input,
-            output_value=PartitionedOutput([b"1", b"2", b"3"]),
+            output_value=PartitionedOutput(
+                [
+                    store_value(1, tmp),
+                    store_value(2, tmp),
+                    store_value(3, tmp),
+                ]
+            ),
         )
         assert os.path.isdir(partitioned_input)
 

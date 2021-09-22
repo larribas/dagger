@@ -14,7 +14,10 @@ from dagger.serializer import Serializer
 PARTITION_MANIFEST_FILENAME = "partitions.json"
 
 
-def retrieve_input_from_location(input_location: str, serializer: Serializer) -> Any:
+def retrieve_input_from_location(
+    input_location: str,
+    serializer: Serializer,
+) -> Any:
     """
     Given an input location, retrieve the contents of the file/directory it points to.
 
@@ -52,20 +55,25 @@ def retrieve_input_from_location(input_location: str, serializer: Serializer) ->
         ]
         sorted_partition_filenames = sorted(partition_filenames, key=int)
 
-        def load_lazily(partition_filename: str) -> Any:
+        def load(partition_filename: str) -> Any:
             with open(os.path.join(input_location, partition_filename), "rb") as reader:
                 return serializer.deserialize(reader)
 
-        return map(load_lazily, sorted_partition_filenames)
+        return [load(fname) for fname in sorted_partition_filenames]
 
     else:
         with open(input_location, "rb") as reader:
             return serializer.deserialize(reader)
 
 
-def store_output_in_location(output_location: str, output_value: NodeOutput):
+def store_output_in_location(
+    output_location: str,
+    output_value: NodeOutput,
+):
     """
     Store a serialized output into the specified location.
+
+    It uses os.rename(): https://docs.python.org/3/library/os.html#os.rename
 
     Parameters
     ----------
@@ -85,13 +93,13 @@ def store_output_in_location(output_location: str, output_value: NodeOutput):
     Raises
     ------
     OSError
-        If the output location already exists
+        If the output location is a non-empty directory, in Unix
 
     FileExistsError
-        If the output location already exists.
+        If the output location already exists, in Windows
 
     IsADirectoryError
-        If the output location already exists.
+        If the output location exists and it is an empty directory, in Unix.
 
     PermissionError
         If the current execution context doesn't have enough permissions to read the file.
@@ -114,5 +122,4 @@ def store_output_in_location(output_location: str, output_value: NodeOutput):
         with open(os.path.join(output_location, PARTITION_MANIFEST_FILENAME), "w") as p:
             json.dump(partition_filenames, p)
     else:
-
         os.rename(output_value.filename, output_location)

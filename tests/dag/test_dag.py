@@ -6,7 +6,7 @@ import pytest
 from dagger.dag import DAG, CyclicDependencyError, validate_parameters
 from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromReturnValue
-from dagger.serializer import AsPickle, DefaultSerializer, SerializationError
+from dagger.serializer import AsPickle, DefaultSerializer
 from dagger.task import Task
 
 #
