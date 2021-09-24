@@ -1,3 +1,4 @@
+import pickle
 import tempfile
 import warnings
 
@@ -7,7 +8,7 @@ from dagger.input import FromParam
 from dagger.output import FromKey, FromReturnValue
 from dagger.runtime.local.output import deserialized_outputs
 from dagger.runtime.local.task import invoke_task
-from dagger.serializer import AsJSON, SerializationError
+from dagger.serializer import AsPickle, SerializationError
 from dagger.task import Task
 
 
@@ -119,15 +120,16 @@ def test__invoke_task__with_unserializable_outputs():
 
 
 def test__invoke_task__overriding_the_serializer():
+    value = {"a": 2}
     task = Task(
-        lambda: {"a": 2},
-        outputs=dict(x=FromReturnValue(serializer=AsJSON(indent=1))),
+        lambda: value,
+        outputs=dict(x=FromReturnValue(serializer=AsPickle())),
     )
     with tempfile.TemporaryDirectory() as tmp:
         outputs = invoke_task(task, params={}, output_path=tmp)
 
         with open(outputs["x"].filename, "rb") as f:
-            assert f.read() == b'{\n "a": 2\n}'
+            assert f.read() == pickle.dumps(value)
 
 
 def test__invoke_task__with_superfluous_parameters():

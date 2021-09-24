@@ -5,8 +5,6 @@ import tracemalloc
 import uuid
 from typing import Any, BinaryIO
 
-import pytest
-
 KB = 1024
 MB = KB ** 2
 

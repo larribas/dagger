@@ -1,5 +1,6 @@
 import io
 import os
+import sys
 import tempfile
 
 import pytest
@@ -42,6 +43,10 @@ def test_serialization_and_deserialization__with_valid_values():
             assert value == deserialized_value
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="windows uses different whitespace characters to handle indentation",
+)
 def test_serialization__with_indentation():
     serializer = AsJSON(indent=2)
 
