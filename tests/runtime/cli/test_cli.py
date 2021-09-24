@@ -284,6 +284,19 @@ def test__invoke__with_missing_input_parameter():
     )
 
 
+def test__invoke__with_input_parameter_from_missing_file():
+    dag = DAG(
+        inputs={"x": FromParam()},
+        nodes={"n": Task(lambda x: x, inputs={"x": FromParam("x")})},
+    )
+    with pytest.raises(OSError) as e:
+        invoke(dag, argv=["--input", "x", "missing_file"])
+
+    assert str(e.value).startswith(
+        "When retrieving input 'x' from the provided location, we got the following error:"
+    )
+
+
 def test__invoke__with_missing_output_parameter():
     dag = DAG(
         outputs={"x": FromNodeOutput("n", "x")},
@@ -295,6 +308,20 @@ def test__invoke__with_missing_output_parameter():
     assert (
         str(e.value)
         == "This node is supposed to receive a pointer to an output named 'x'. However, only the following output pointers were supplied: ['y']"
+    )
+
+
+def test__invoke__with_invalid_output_location():
+    dag = DAG(
+        outputs={"x": FromNodeOutput("n", "x")},
+        nodes={"n": Task(lambda: 1, outputs={"x": FromReturnValue()})},
+    )
+    with pytest.raises(OSError) as e:
+        with tempfile.TemporaryDirectory() as tmp:
+            invoke(dag, argv=["--output", "x", tmp])
+
+    assert str(e.value).startswith(
+        "When storing output 'x', we got the following error:"
     )
 
 
