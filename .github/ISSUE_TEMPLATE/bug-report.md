@@ -14,7 +14,7 @@ labels: bug
 #### How to reproduce it (as minimally and precisely as possible):
 
 #### Environment:
-- Dagger version:
+- `py-dagger` version:
 - Python version:
 - Operating system and version:
 
