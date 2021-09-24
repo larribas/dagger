@@ -1,7 +1,8 @@
 """Serialization strategy based on JSON."""
 
+import io
 from json.decoder import JSONDecodeError
-from typing import Any, Optional
+from typing import Any, BinaryIO, Optional
 
 from dagger.serializer.errors import DeserializationError, SerializationError
 
@@ -32,7 +33,7 @@ class AsJSON:
         self._indent = indent
         self._allow_nan = allow_nan
 
-    def serialize(self, value: Any) -> bytes:
+    def serialize(self, value: Any, writer: BinaryIO):
         """
         Serialize a value into a JSON object, encoded into binary format using utf-8.
 
@@ -41,20 +42,21 @@ class AsJSON:
         import json
 
         try:
-            return json.dumps(
+            json.dump(
                 value,
+                io.TextIOWrapper(writer, encoding="utf-8"),
                 indent=self._indent,
                 allow_nan=self._allow_nan,
-            ).encode("utf-8")
+            )
         except (TypeError, ValueError) as e:
             raise SerializationError(e)
 
-    def deserialize(self, serialized_value: bytes) -> Any:
+    def deserialize(self, reader: BinaryIO) -> Any:
         """Deserialize a utf-8-encoded json object into the value it represents."""
         import json
 
         try:
-            return json.loads(serialized_value)
+            return json.load(reader)
         except (TypeError, JSONDecodeError) as e:
             raise DeserializationError(e)
 

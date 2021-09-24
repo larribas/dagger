@@ -35,7 +35,7 @@ This goal is reflected in _Dagger_'s architecture and main design decisions:
 - To make __common use cases__ and patterns (such as dynamic loops or map-reduce operations) __as easy as possible__.
 - To __minimize boilerplate, plumbing or low-level code__ (with _Dagger_ you don't need to serialize your outputs, store them in a remote file system, download them and deserialize them again; all of this is done for you).
 - To __onboard users in just a couple of hours__ through great documentation, comprehensive examples and tutorials.
-- To __never sacrifice reliability and performance__, and to keep a low memory footprint by using lazy loading and streaming I/O throughout the codebase.
+- To __never sacrifice reliability and performance__, and to keep a low memory footprint by using I/O streams and lazy loading where possible.
 
 
 ## ⛩️ Architecture

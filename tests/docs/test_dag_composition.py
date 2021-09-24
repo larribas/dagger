@@ -6,7 +6,7 @@ from dagger.runtime.local import invoke
 
 def test_declarative():
     assert invoke(declarative.dag) == {
-        "dataset": b'"original dataset, with field a encoded, with fields b and c aggregated, with moving average for d calculated"',
+        "dataset": "original dataset, with field a encoded, with fields b and c aggregated, with moving average for d calculated",
     }
 
 

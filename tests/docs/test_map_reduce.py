@@ -31,7 +31,7 @@ def test_dag_output_from_partitioned_node():
     )
 
     dag = dsl.build(valid.dag)  # no error
-    assert invoke(dag) == {"return_value": b'["processed chunk1", "processed chunk2"]'}
+    assert invoke(dag) == {"return_value": ["processed chunk1", "processed chunk2"]}
 
 
 def test_for_based_on_param():
@@ -80,4 +80,4 @@ def test_single_mapping_node():
     )
 
     dag = dsl.build(valid.dag)  # no error
-    assert invoke(dag) == {"return_value": b'"first*$, second*$, ...*$, last*$"'}
+    assert invoke(dag) == {"return_value": "first*$, second*$, ...*$, last*$"}

@@ -1,22 +1,26 @@
 """Run tasks in memory."""
+import os
 import warnings
-from typing import Any, Dict, Iterable, List, Mapping
+from typing import Any, Dict, Iterable, Mapping
 
+from dagger.runtime.local.output import dump
 from dagger.runtime.local.types import NodeOutput, NodeOutputs, PartitionedOutput
 from dagger.serializer import SerializationError
 from dagger.task import SupportedInputs, SupportedOutputs, Task
 
 
-def _invoke_task(
+def invoke_task(
     task: Task,
-    params: Mapping[str, Any] = None,
+    params: Mapping[str, Any],
+    output_path: str,
 ) -> NodeOutputs:
-    params = params or {}
+    """Invoke a task locally with the specified parameters and dump the serialized outputs on the path provided."""
     inputs = _validate_and_filter_inputs(inputs=task.inputs, params=params)
 
     return_value = task.func(**inputs)
 
     return _serialize_outputs(
+        path=output_path,
         outputs=task.outputs,
         return_value=return_value,
     )
@@ -42,18 +46,20 @@ def _validate_and_filter_inputs(
 
 
 def _serialize_outputs(
+    path: str,
     outputs: Mapping[str, SupportedOutputs],
     return_value: Any,
 ) -> Mapping[str, NodeOutput]:
 
-    node_outputs: Dict[str, List[bytes]] = {}
+    node_outputs: Dict[str, NodeOutput] = {}
     for output_name in outputs:
         output_type = outputs[output_name]
         try:
             node_outputs[output_name] = _serialize_output(
-                output_name=output_name,
-                output_type=outputs[output_name],
-                output_value=output_type.from_function_return_value(return_value),
+                path=path,
+                name=output_name,
+                value=output_type.from_function_return_value(return_value),
+                type_=outputs[output_name],
             )
 
         except (TypeError, ValueError, SerializationError) as e:
@@ -65,18 +71,30 @@ def _serialize_outputs(
 
 
 def _serialize_output(
-    output_name: str,
-    output_type: SupportedOutputs,
-    output_value: Any,
+    path: str,
+    name: str,
+    value: Any,
+    type_: SupportedOutputs,
 ) -> NodeOutput:
-    if output_type.is_partitioned:
-        if not isinstance(output_value, Iterable):
+    if type_.is_partitioned:
+        if not isinstance(value, Iterable):
             raise TypeError(
-                f"Output '{output_name}' was declared as a partitioned output, but the return value was not an iterable (instead, it was of type '{type(output_value).__name__}'). Partitioned outputs should be iterables of values (e.g. lists or sets). Each value in the iterable must be serializable with the serializer defined in the output."
+                f"Output '{name}' was declared as a partitioned output, but the return value was not an iterable (instead, it was of type '{type(value).__name__}'). Partitioned outputs should be iterables of values (e.g. lists or sets). Each value in the iterable must be serializable with the serializer defined in the output."
             )
 
         return PartitionedOutput(
-            map(lambda o: output_type.serializer.serialize(o), output_value)
+            map(
+                lambda v: dump(
+                    filename=os.path.join(path, name),
+                    serializer=type_.serializer,
+                    value=v,
+                ),
+                value,
+            )
         )
     else:
-        return output_type.serializer.serialize(output_value)
+        return dump(
+            filename=os.path.join(path, name),
+            value=value,
+            serializer=type_.serializer,
+        )

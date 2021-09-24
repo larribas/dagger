@@ -16,6 +16,7 @@ from dagger.runtime.cli.locations import (
 from dagger.runtime.local import PartitionedOutput
 from dagger.serializer import AsPickle
 from dagger.task import Task
+from tests.runtime.cli.utils import store_value
 
 
 def test__invoke__whole_dag():
@@ -251,7 +252,7 @@ def test__invoke__nested_node_with_inputs_from_another_node_output():
             f.write(b"5")
 
         with open(y_input, "wb") as f:
-            f.write(AsPickle().serialize(6))
+            AsPickle().serialize(6, f)
 
         invoke(
             dag,
@@ -283,6 +284,19 @@ def test__invoke__with_missing_input_parameter():
     )
 
 
+def test__invoke__with_input_parameter_from_missing_file():
+    dag = DAG(
+        inputs={"x": FromParam()},
+        nodes={"n": Task(lambda x: x, inputs={"x": FromParam("x")})},
+    )
+    with pytest.raises(OSError) as e:
+        invoke(dag, argv=["--input", "x", "missing_file"])
+
+    assert str(e.value).startswith(
+        "When retrieving input 'x' from the provided location, we got the following error:"
+    )
+
+
 def test__invoke__with_missing_output_parameter():
     dag = DAG(
         outputs={"x": FromNodeOutput("n", "x")},
@@ -294,6 +308,20 @@ def test__invoke__with_missing_output_parameter():
     assert (
         str(e.value)
         == "This node is supposed to receive a pointer to an output named 'x'. However, only the following output pointers were supplied: ['y']"
+    )
+
+
+def test__invoke__with_invalid_output_location():
+    dag = DAG(
+        outputs={"x": FromNodeOutput("n", "x")},
+        nodes={"n": Task(lambda: 1, outputs={"x": FromReturnValue()})},
+    )
+    with pytest.raises(OSError) as e:
+        with tempfile.TemporaryDirectory() as tmp:
+            invoke(dag, argv=["--output", "x", tmp])
+
+    assert str(e.value).startswith(
+        "When storing output 'x', we got the following error:"
     )
 
 
@@ -349,10 +377,15 @@ def test__invoke__node_with_partitioned_input():
     with tempfile.TemporaryDirectory() as tmp:
         partitioned_input = os.path.join(tmp, "partitioned_input")
         together_output = os.path.join(tmp, "together_output")
-
         store_output_in_location(
             output_location=partitioned_input,
-            output_value=PartitionedOutput([b"1", b"2", b"3"]),
+            output_value=PartitionedOutput(
+                [
+                    store_value(1, tmp),
+                    store_value(2, tmp),
+                    store_value(3, tmp),
+                ]
+            ),
         )
         assert os.path.isdir(partitioned_input)
 

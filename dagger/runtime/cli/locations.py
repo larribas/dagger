@@ -6,13 +6,18 @@ At the moment, only locations in the local filesystem are supported.
 
 import json
 import os
+from typing import Any
 
 from dagger.runtime.local import NodeOutput, PartitionedOutput
+from dagger.serializer import Serializer
 
 PARTITION_MANIFEST_FILENAME = "partitions.json"
 
 
-def retrieve_input_from_location(input_location: str) -> NodeOutput:
+def retrieve_input_from_location(
+    input_location: str,
+    serializer: Serializer,
+) -> Any:
     """
     Given an input location, retrieve the contents of the file/directory it points to.
 
@@ -24,10 +29,13 @@ def retrieve_input_from_location(input_location: str) -> NodeOutput:
         and concatenate all existing partitions based on the lexicographical order
         of their filenames.
 
+    serializer
+        The serializer implementation to use to deserialize the input file.
+
 
     Returns
     -------
-    The serialized version of the input. If the input is partitioned, it returns a list of serialized partitions.
+    The original value of the input. If the input is partitioned, it returns an iterable of values.
 
 
     Raises
@@ -47,20 +55,25 @@ def retrieve_input_from_location(input_location: str) -> NodeOutput:
         ]
         sorted_partition_filenames = sorted(partition_filenames, key=int)
 
-        def load_lazily(partition_filename: str):
-            with open(os.path.join(input_location, partition_filename), "rb") as f:
-                return f.read()
+        def load(partition_filename: str) -> Any:
+            with open(os.path.join(input_location, partition_filename), "rb") as reader:
+                return serializer.deserialize(reader)
 
-        return PartitionedOutput(map(load_lazily, sorted_partition_filenames))
+        return [load(fname) for fname in sorted_partition_filenames]
 
     else:
-        with open(input_location, "rb") as f:
-            return f.read()
+        with open(input_location, "rb") as reader:
+            return serializer.deserialize(reader)
 
 
-def store_output_in_location(output_location: str, output_value: NodeOutput):
+def store_output_in_location(
+    output_location: str,
+    output_value: NodeOutput,
+):
     """
     Store a serialized output into the specified location.
+
+    It uses os.rename(): https://docs.python.org/3/library/os.html#os.rename
 
     Parameters
     ----------
@@ -69,7 +82,7 @@ def store_output_in_location(output_location: str, output_value: NodeOutput):
         The path must not exist previously.
 
     output_value
-        The serialized representation of a node output.
+        A NodeOutput, pointing to the file that contains the serialized version of the output value.
         It may be partitioned. If it is, we will treat the output_location as a directory
         and dump each partition separately, together with a file named "partitions.json"
         containing a json-serialized list with all the partitions.
@@ -79,11 +92,14 @@ def store_output_in_location(output_location: str, output_value: NodeOutput):
 
     Raises
     ------
-    IsADirectoryError
-        If the output_location is a directory.
+    OSError
+        If the output location is a non-empty directory, in Unix
 
     FileExistsError
-        If the output_location already exists.
+        If the output location already exists, in Windows
+
+    IsADirectoryError
+        If the output location exists and it is an empty directory, in Unix.
 
     PermissionError
         If the current execution context doesn't have enough permissions to read the file.
@@ -92,14 +108,18 @@ def store_output_in_location(output_location: str, output_value: NodeOutput):
         os.mkdir(output_location)
         partition_filenames = []
 
-        for i, partition in enumerate(output_value):
+        for i, src in enumerate(output_value):
             partition_filename = str(i)
+            os.rename(
+                src.filename,
+                os.path.join(
+                    output_location,
+                    partition_filename,
+                ),
+            )
             partition_filenames.append(partition_filename)
-            with open(os.path.join(output_location, partition_filename), "wb") as f:
-                f.write(partition)
 
         with open(os.path.join(output_location, PARTITION_MANIFEST_FILENAME), "w") as p:
             json.dump(partition_filenames, p)
     else:
-        with open(output_location, "wb") as f:
-            f.write(output_value)
+        os.rename(output_value.filename, output_location)

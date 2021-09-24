@@ -104,7 +104,7 @@ def verify_dag_works_with_cli_runtime(
         for param_name, param_value in params.items():
             with open(os.path.join(tmp, param_name), "wb") as f:
                 serializer = dag.inputs[param_name].serializer
-                f.write(serializer.serialize(param_value))
+                serializer.serialize(param_value, f)
 
         invoke(
             dag,
@@ -121,9 +121,9 @@ def verify_dag_works_with_cli_runtime(
         )
 
         results = {}
-        for output_name in dag.outputs:
+        for output_name, output_type in dag.outputs.items():
             with open(os.path.join(tmp, output_name), "rb") as f:
-                results[output_name] = f.read()
+                results[output_name] = output_type.serializer.deserialize(f)
 
         validate_results(results)
 

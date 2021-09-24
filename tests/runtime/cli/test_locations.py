@@ -10,6 +10,8 @@ from dagger.runtime.cli.locations import (
     store_output_in_location,
 )
 from dagger.runtime.local import PartitionedOutput
+from dagger.serializer import DefaultSerializer
+from tests.runtime.cli.utils import store_value
 
 
 def test__retrieve_input_from_location__when_location_doesnt_exist():
@@ -17,30 +19,42 @@ def test__retrieve_input_from_location__when_location_doesnt_exist():
         input_file = os.path.join(tmp, "input")
 
         with pytest.raises(FileNotFoundError):
-            retrieve_input_from_location(input_file)
+            retrieve_input_from_location(
+                input_location=input_file,
+                serializer=DefaultSerializer,
+            )
 
 
 def test__retrieve_input_from_location__pointing_to_a_file():
     with tempfile.TemporaryDirectory() as tmp:
-        input_file = os.path.join(tmp, "input")
+        file_ = store_value(2, tmp)
 
-        with open(input_file, "wb") as f:
-            f.write(b"2")
-
-        assert retrieve_input_from_location(input_file) == b"2"
+        assert (
+            retrieve_input_from_location(
+                input_location=file_.filename,
+                serializer=file_.serializer,
+            )
+            == 2
+        )
 
 
 def test__retrieve_input_from_location__can_read_partitioned_directory():
     with tempfile.TemporaryDirectory() as tmp:
         dir_path = os.path.join(tmp, "partitioned_dir")
 
-        partitions = [b"1", b"2"]
         store_output_in_location(
             output_location=dir_path,
-            output_value=PartitionedOutput(partitions),
+            output_value=PartitionedOutput(
+                [
+                    store_value(1, tmp),
+                    store_value(2, tmp),
+                ]
+            ),
         )
 
-        assert list(retrieve_input_from_location(dir_path)) == partitions
+        assert list(
+            retrieve_input_from_location(dir_path, serializer=DefaultSerializer)
+        ) == [1, 2]
 
 
 def test__retrieve_input_from_location__sorts_partitions_in_the_same_order_they_were_stored():
@@ -50,64 +64,29 @@ def test__retrieve_input_from_location__sorts_partitions_in_the_same_order_they_
         # We're specifically testing the order of 11 partitions whose filenames
         # are named 1..11. When sorting them lexicographically, 2 > 10.
         # Instead, we need to sort them numerically.
-        partitions = [bytes(i) for i in range(11)]
+        values = list(range(11))
+
         store_output_in_location(
             output_location=dir_path,
-            output_value=PartitionedOutput(partitions),
+            output_value=PartitionedOutput([store_value(v, tmp) for v in values]),
         )
 
-        assert list(retrieve_input_from_location(dir_path)) == partitions
-
-
-def test__retrieve_input_from_location__reads_partitions_lazily():
-    with tempfile.TemporaryDirectory() as tmp:
-        dir_path = os.path.join(tmp, "partitioned_dir")
-        os.mkdir(dir_path)
-
-        for c in ["0", "1", "2"]:
-            with open(os.path.join(dir_path, c), "wb") as f:
-                # Create the file but do not write anything yet
-                f.write(b"")
-
-        lazily_loaded_partitions = retrieve_input_from_location(dir_path)
-
-        with open(os.path.join(dir_path, "0"), "wb") as f:
-            f.write(b"1")
-        assert next(lazily_loaded_partitions) == b"1"
-
-        with open(os.path.join(dir_path, "1"), "wb") as f:
-            f.write(b"2")
-        assert next(lazily_loaded_partitions) == b"2"
-
-        # This one hasn't been written, so it should return an empty bytestring
-        assert next(lazily_loaded_partitions) == b""
-
-        with pytest.raises(StopIteration):
-            next(lazily_loaded_partitions)
-
-
-def test__retrieve_input_from_location__can_read_partitioned_directory_without_a_partitions_manifest():
-    with tempfile.TemporaryDirectory() as tmp:
-        dir_path = os.path.join(tmp, "partitioned_dir")
-        os.mkdir(dir_path)
-
-        partitions = [b"1", b"2", b"3"]
-        for i, partition in enumerate(partitions):
-            with open(os.path.join(dir_path, str(i)), "wb") as f:
-                f.write(partition)
-
-        assert list(retrieve_input_from_location(dir_path)) == partitions
+        assert (
+            list(retrieve_input_from_location(dir_path, serializer=DefaultSerializer))
+            == values
+        )
 
 
 def test__store_output_in_location__with_simple_output():
     with tempfile.TemporaryDirectory() as tmp:
-        output_path = os.path.join(tmp, "output")
+        cli_output_path = os.path.join(tmp, "cli")
+
         store_output_in_location(
-            output_location=output_path,
-            output_value=b"2",
+            output_location=cli_output_path,
+            output_value=store_value(2, tmp),
         )
 
-        with open(output_path, "rb") as f:
+        with open(cli_output_path, "rb") as f:
             assert f.read() == b"2"
 
 
@@ -116,7 +95,12 @@ def test__store_output_in_location__with_partitioned_output():
         output_path = os.path.join(tmp, "output")
         store_output_in_location(
             output_location=output_path,
-            output_value=PartitionedOutput([b"1", b"2"]),
+            output_value=PartitionedOutput(
+                [
+                    store_value(1, tmp),
+                    store_value(2, tmp),
+                ]
+            ),
         )
 
         with open(os.path.join(output_path, PARTITION_MANIFEST_FILENAME), "r") as f:
@@ -128,24 +112,3 @@ def test__store_output_in_location__with_partitioned_output():
                 partitions.append(f.read())
 
         assert partitions == [b"1", b"2"]
-
-
-def test__store_output_in_location__when_file_already_exists_but_is_a_directory():
-    with tempfile.TemporaryDirectory() as tmp:
-        # Although we generally expect an IsADirectoryError, Python captures
-        # a PermissionError on Windows due to a bug:
-        # https://bugs.python.org/issue43095
-        with pytest.raises((IsADirectoryError, PermissionError)):
-            store_output_in_location(
-                output_location=tmp,
-                output_value=b"2",
-            )
-
-
-def test__store_output_in_location__when_partition_directory_already_exists():
-    with tempfile.TemporaryDirectory() as tmp:
-        with pytest.raises(FileExistsError):
-            store_output_in_location(
-                output_location=tmp,
-                output_value=PartitionedOutput([b"2"]),
-            )

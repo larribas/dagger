@@ -1,9 +1,12 @@
+import tempfile
+
 import pytest
 
 from dagger.dag import DAG
 from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromKey, FromReturnValue
-from dagger.runtime.local import invoke
+from dagger.runtime.local.dag import invoke_dag
+from dagger.runtime.local.output import deserialized_outputs
 from dagger.task import Task
 
 
@@ -14,7 +17,9 @@ def test__invoke_dag__with_no_inputs_or_outputs():
             "single-task": Task(lambda: invocations.append(1)),
         }
     )
-    assert invoke(dag) == {}
+    with tempfile.TemporaryDirectory() as tmp:
+        assert invoke_dag(dag, params={}, output_path=tmp) == {}
+
     assert invocations == [1]
 
 
@@ -30,7 +35,13 @@ def test__invoke_dag__with_inputs_and_outputs():
         inputs=dict(x=FromParam()),
         outputs=dict(x_squared=FromNodeOutput("square", "x_squared")),
     )
-    assert invoke(dag, params=dict(x=3)) == dict(x_squared=b"9")
+    with tempfile.TemporaryDirectory() as tmp:
+        outputs = invoke_dag(
+            dag,
+            params={"x": 3},
+            output_path=tmp,
+        )
+        assert deserialized_outputs(outputs) == {"x_squared": 9}
 
 
 def test__invoke_dag__with_missing_input_parameter():
@@ -39,7 +50,8 @@ def test__invoke_dag__with_missing_input_parameter():
         inputs=dict(a=FromParam()),
     )
     with pytest.raises(ValueError) as e:
-        invoke(dag, params=dict(y=3))
+        with tempfile.TemporaryDirectory() as tmp:
+            invoke_dag(dag, params=dict(y=3), output_path=tmp)
 
     assert (
         str(e.value)
@@ -60,7 +72,9 @@ def test__invoke_dag__mapping_dag_parameters_to_node_inputs():
         ),
     )
 
-    assert invoke(dag, params=dict(a=1)) == {"x": b"3"}
+    with tempfile.TemporaryDirectory() as tmp:
+        outputs = invoke_dag(dag, params=dict(a=1), output_path=tmp)
+        assert deserialized_outputs(outputs) == {"x": 3}
 
 
 def test__invoke_dag__propagates_task_exceptions_extending_the_details():
@@ -75,7 +89,8 @@ def test__invoke_dag__propagates_task_exceptions_extending_the_details():
         inputs=dict(x=FromParam()),
     )
     with pytest.raises(TypeError) as e:
-        invoke(dag, params=dict(x=3))
+        with tempfile.TemporaryDirectory() as tmp:
+            invoke_dag(dag, params=dict(x=3), output_path=tmp)
 
     assert (
         str(e.value)
@@ -103,7 +118,9 @@ def test__invoke_dag__invokes_nodes_in_the_right_order_based_on_their_dependenci
         },
         outputs=dict(n=FromNodeOutput("divide-number-by-three", "n")),
     )
-    assert invoke(dag) == dict(n=b"27")
+    with tempfile.TemporaryDirectory() as tmp:
+        outputs = invoke_dag(dag, params={}, output_path=tmp)
+        assert deserialized_outputs(outputs) == {"n": 27}
 
 
 def test__invoke_dag__with_nested_dags():
@@ -132,7 +149,9 @@ def test__invoke_dag__with_nested_dags():
         outputs=dict(yyyy=FromNodeOutput("outermost", "yyy")),
     )
 
-    assert invoke(dag) == dict(yyyy=b"2")
+    with tempfile.TemporaryDirectory() as tmp:
+        outputs = invoke_dag(dag, params={}, output_path=tmp)
+        assert deserialized_outputs(outputs) == {"yyyy": 2}
 
 
 def test__invoke_dag__with_dynamic_partitions():
@@ -159,9 +178,11 @@ def test__invoke_dag__with_dynamic_partitions():
         outputs=dict(result=FromNodeOutput("gather-messages", "result")),
     )
 
-    assert invoke(dag) == dict(
-        result=b"\"Got messages: letter 'a', and letter 'b', and letter 'c'.\""
-    )
+    with tempfile.TemporaryDirectory() as tmp:
+        outputs = invoke_dag(dag, params={}, output_path=tmp)
+        assert deserialized_outputs(outputs) == {
+            "result": "Got messages: letter 'a', and letter 'b', and letter 'c'."
+        }
 
 
 def test__invoke_dag__with_partitioned_output():
@@ -177,7 +198,11 @@ def test__invoke_dag__with_partitioned_output():
         },
     )
 
-    assert list(invoke(dag)["result"]) == [b"1", b"2", b"3"]
+    with tempfile.TemporaryDirectory() as tmp:
+        outputs = invoke_dag(dag, params={}, output_path=tmp)
+        assert deserialized_outputs(outputs) == {
+            "result": [1, 2, 3],
+        }
 
 
 def test__invoke_dag__with_partitions_but_invalid_outputs():
@@ -196,7 +221,8 @@ def test__invoke_dag__with_partitions_but_invalid_outputs():
     )
 
     with pytest.raises(TypeError) as e:
-        invoke(dag)
+        with tempfile.TemporaryDirectory() as tmp:
+            invoke_dag(dag, params={}, output_path=tmp)
 
     assert (
         str(e.value)

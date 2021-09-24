@@ -5,7 +5,7 @@ from tests.examples.verification import verify_dag_works_with_all_runtimes
 
 
 def validate_results(results: Dict[str, bytes]):
-    assert results == {"sum": b"30"}
+    assert results == {"sum": 30}
 
 
 def test():

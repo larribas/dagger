@@ -1,3 +1,7 @@
+import io
+import os
+import tempfile
+
 import pytest
 
 from dagger import DeserializationError, SerializationError, Serializer
@@ -22,10 +26,17 @@ def test_serialize_valid_values():
         {"one": 2, "three": [4, "five"]},
     ]
 
-    for value in valid_values:
-        serialized_value = serializer.serialize(value)
-        deserialized_value = serializer.deserialize(serialized_value)
-        assert value == deserialized_value
+    with tempfile.TemporaryDirectory() as tmp:
+        filename = os.path.join(tmp, "value.yaml")
+
+        for value in valid_values:
+            with open(filename, "wb") as writer:
+                serializer.serialize(value, writer)
+
+            with open(filename, "rb") as reader:
+                deserialized_value = serializer.deserialize(reader)
+
+            assert value == deserialized_value
 
 
 def test_serialize_invalid_values():
@@ -40,7 +51,7 @@ def test_serialize_invalid_values():
 
     for value in invalid_values:
         with pytest.raises(SerializationError):
-            serializer.serialize(value)
+            serializer.serialize(value, io.BytesIO())
 
 
 def test_deserialize_invalid_values():
@@ -53,4 +64,4 @@ def test_deserialize_invalid_values():
 
     for value in invalid_values:
         with pytest.raises(DeserializationError):
-            serializer.deserialize(value)
+            serializer.deserialize(io.BytesIO(value))

@@ -1,10 +1,12 @@
 """Run a DAG in memory."""
 import itertools
+import os
 from typing import Any, Dict, Iterable, Mapping, Union
 
 from dagger.dag import DAG, Node, validate_parameters
 from dagger.input import FromNodeOutput, FromParam
-from dagger.runtime.local.task import _invoke_task
+from dagger.runtime.local.output import load
+from dagger.runtime.local.task import invoke_task
 from dagger.runtime.local.types import (
     NodeExecutions,
     NodeOutput,
@@ -16,49 +18,24 @@ from dagger.serializer import SerializationError, Serializer
 from dagger.task import Task
 
 
-def invoke(
+def invoke_node(
     node: Union[DAG, Task],
-    params: Mapping[str, Any] = None,
+    params: Mapping[str, Any],
+    output_path: str,
 ) -> Mapping[str, NodeOutput]:
-    """
-    Invoke a node with a series of parameters.
-
-    Parameters
-    ----------
-    node
-        Node to execute
-
-    params
-        Inputs to the task, indexed by input/parameter name.
-
-
-    Returns
-    -------
-    Serialized outputs of the task, indexed by output name.
-
-
-    Raises
-    ------
-    ValueError
-        When any required parameters are missing
-
-    TypeError
-        When any of the outputs cannot be obtained from the return value of the task's function
-
-    SerializationError
-        When some of the outputs cannot be serialized with the specified Serializer
-    """
+    """Invoke a Node locally with the specified parameters and dump the serialized outputs on the path provided."""
     if isinstance(node, DAG):
-        return _invoke_dag(node, params=params)
+        return invoke_dag(node, output_path=output_path, params=params)
     else:
-        return _invoke_task(node, params=params)
+        return invoke_task(node, output_path=output_path, params=params)
 
 
-def _invoke_dag(
+def invoke_dag(
     dag: DAG,
-    params: Mapping[str, Any] = None,
+    params: Mapping[str, Any],
+    output_path: str,
 ) -> NodeOutputs:
-    params = params or {}
+    """Invoke a DAG locally with the specified parameters and dump the serialized outputs on the path provided."""
     validate_parameters(dag.inputs, params)
 
     outputs: Dict[str, NodeExecutions] = {}
@@ -68,16 +45,23 @@ def _invoke_dag(
         node = dag.nodes[node_name]
 
         try:
-            outputs[node_name] = PartitionedOutput(
-                [
-                    invoke(node, params=p)
-                    for p in _node_param_partitions(
-                        node=node,
-                        params=params,
-                        outputs=outputs,
-                    )
-                ]
-            )
+            partitions = []
+
+            for i, p in enumerate(
+                _node_param_partitions(
+                    node=node,
+                    params=params,
+                    outputs=outputs,
+                )
+            ):
+                node_output_path = os.path.join(output_path, "nodes", node_name, str(i))
+                os.makedirs(node_output_path)
+
+                partitions.append(
+                    invoke_node(node, params=p, output_path=node_output_path)
+                )
+
+            outputs[node_name] = PartitionedOutput(partitions)
 
             if not node.partition_by_input:
                 outputs[node_name] = next(outputs[node_name])
@@ -155,6 +139,8 @@ def _node_param_from_output(
     node_output: NodeOutput,
 ) -> Union[Any, PartitionedOutput[Any]]:
     if isinstance(node_output, PartitionedOutput):
-        return PartitionedOutput(map(lambda v: serializer.deserialize(v), node_output))
+        return PartitionedOutput(
+            map(lambda n: load(filename=n.filename, serializer=serializer), node_output)
+        )
     else:
-        return serializer.deserialize(node_output)
+        return load(filename=node_output.filename, serializer=serializer)

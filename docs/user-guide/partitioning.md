@@ -31,17 +31,6 @@ Now, we will assume the dataset we fetch can be arbitrarily large, so we will pa
     ```
 
 
-## ⚙️ Performance and memory
-
-One of the main tenets of _Dagger_ is that it should support arbitrarily large data pipelines without a big impact on its memory footprint.
-
-In particular, the following design- and implementation-level decisions help keeping memory usage constant:
-
-<!-- - Serializers work with buffered I/O types, allowing you to serialize and deserialize values backed by a local or remote file system. -->
-- When working with partitioned outputs, __each partition is loaded lazily into memory__.
-
-<!-- This means you should be able to use native Python types such as [Dask's DataFrames](https://docs.dask.org/en/latest/dataframe.html) to process large datasets and pass them between nodes without requiring the machine's memory to scale linearly. -->
-
 
 ## ⛔ Limitations
 

@@ -64,6 +64,15 @@ Here's how you can instruct _Dagger_ to use a different serializer for each of t
     ```
 
 
+## ⚙️ Performance and memory
+
+One of the main tenets of _Dagger_ is that it should support arbitrarily large data pipelines without a big impact on its memory footprint.
+
+To fulfill that promise, serializers work with I/O streams, allowing you to serialize and deserialize values backed by a local or remote file system.
+
+This means you should be able to use native Python types such as [Dask's DataFrames](https://docs.dask.org/en/latest/dataframe.html) to process large datasets and pass them between nodes without requiring the machine's memory to scale linearly with the size of the datasets.
+
+
 ## 🛠️ Implementing your own serializer
 
 To understand how to write your own serialization mechanism you can read [this guide](write-your-own.md).

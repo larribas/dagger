@@ -9,7 +9,6 @@ from dagger.data_structures import FrozenMapping
 from dagger.input import FromNodeOutput, FromParam
 from dagger.input import validate_name as validate_input_name
 from dagger.output import validate_name as validate_output_name
-from dagger.serializer import SerializationError
 from dagger.task import SupportedInputs as SupportedTaskInputs
 from dagger.task import Task
 
@@ -208,9 +207,6 @@ def validate_parameters(
     ------
     ValueError
         If the set of parameters does not contain all the required inputs.
-
-    SerializationError
-        If the value provided for a parameter is not compatible with the serializer defined for that input.
     """
     missing_params = inputs.keys() - params.keys()
     if missing_params:
@@ -223,14 +219,6 @@ def validate_parameters(
         warnings.warn(
             f"The following parameters were supplied to this DAG, but are not necessary: {sorted(list(superfluous_params))}"
         )
-
-    for input_name in inputs:
-        try:
-            inputs[input_name].serializer.serialize(params[input_name])
-        except SerializationError as e:
-            raise SerializationError(
-                f"The value supplied for input '{input_name}' is not compatible with the serializer defined for that input ({inputs[input_name].serializer}): {e}"
-            )
 
 
 def _validate_node_name(name: str):
