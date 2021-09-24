@@ -2,137 +2,137 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://larribas.me/dagger/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/quick-start/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/api/dag/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/api/dsl/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/api/init/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/api/input/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/api/output/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/api/runtime-argo/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/api/runtime-cli/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/api/runtime-local/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/api/serializer/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/api/task/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/user-guide/dag-composition/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/user-guide/dags/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/user-guide/dsl/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/user-guide/map-reduce/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/user-guide/partitioning/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/user-guide/tasks/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/user-guide/runtimes/alternatives/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/user-guide/runtimes/argo/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/user-guide/runtimes/cli/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/user-guide/runtimes/local/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/user-guide/runtimes/write-your-own/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/user-guide/serializers/alternatives/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/user-guide/serializers/json/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/user-guide/serializers/pickle/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://larribas.me/dagger/user-guide/serializers/write-your-own/</loc>
-         <lastmod>2021-09-21</lastmod>
+         <lastmod>2021-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
