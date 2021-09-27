@@ -1,0 +1,128 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: continue-on-fail-
+spec:
+  entrypoint: dag
+  templates:
+  - dag:
+      tasks:
+      - arguments:
+          parameters:
+          - name: return_value_output_path
+            value: '{{workflow.uid}}/{{inputs.parameters.name}}/generate-partitions/return_value.json'
+        name: generate-partitions
+        template: dag-generate-partitions
+      - arguments:
+          artifacts:
+          - name: num
+            s3:
+              key: '{{workflow.uid}}/{{inputs.parameters.name}}/generate-partitions/return_value.json/{{item}}'
+          parameters:
+          - name: return_value_output_path
+            value: '{{workflow.uid}}/{{inputs.parameters.name}}/succeed-if-even/return_value.json/{{item}}'
+        continueOn:
+          failed: true
+        dependencies:
+        - generate-partitions
+        name: succeed-if-even
+        template: dag-succeed-if-even
+        withParam: '{{tasks.generate-partitions.outputs.parameters.return_value_partitions}}'
+      - arguments:
+          artifacts:
+          - name: numbers
+            s3:
+              key: '{{workflow.uid}}/{{inputs.parameters.name}}/succeed-if-even/return_value.json'
+        dependencies:
+        - succeed-if-even
+        name: gather-all-even-numbers
+        template: dag-gather-all-even-numbers
+    inputs:
+      parameters:
+      - name: name
+        value: dag
+    name: dag
+  - container:
+      args:
+      - --node-name
+      - generate-partitions
+      - --output
+      - return_value
+      - '{{outputs.artifacts.return_value.path}}'
+      command:
+      - python
+      - examples/argo_map_reduce_continue_on.py
+      image: local.registry/dagger
+      volumeMounts:
+      - mountPath: /tmp/outputs
+        name: outputs
+    inputs:
+      parameters:
+      - name: return_value_output_path
+    name: dag-generate-partitions
+    outputs:
+      artifacts:
+      - archive:
+          none: {}
+        name: return_value
+        path: /tmp/outputs/return_value.json
+        s3:
+          key: '{{inputs.parameters.return_value_output_path}}'
+      parameters:
+      - name: return_value_partitions
+        valueFrom:
+          path: '{{outputs.artifacts.return_value.path}}/partitions.json'
+    volumes:
+    - emptyDir: {}
+      name: outputs
+  - container:
+      args:
+      - --node-name
+      - succeed-if-even
+      - --input
+      - num
+      - '{{inputs.artifacts.num.path}}'
+      - --output
+      - return_value
+      - '{{outputs.artifacts.return_value.path}}'
+      command:
+      - python
+      - examples/argo_map_reduce_continue_on.py
+      image: local.registry/dagger
+      volumeMounts:
+      - mountPath: /tmp/outputs
+        name: outputs
+    inputs:
+      artifacts:
+      - name: num
+        path: /tmp/inputs/num.json
+      parameters:
+      - name: return_value_output_path
+    name: dag-succeed-if-even
+    outputs:
+      artifacts:
+      - archive:
+          none: {}
+        name: return_value
+        path: /tmp/outputs/return_value.json
+        s3:
+          key: '{{inputs.parameters.return_value_output_path}}'
+    volumes:
+    - emptyDir: {}
+      name: outputs
+  - container:
+      args:
+      - --node-name
+      - gather-all-even-numbers
+      - --input
+      - numbers
+      - '{{inputs.artifacts.numbers.path}}'
+      command:
+      - python
+      - examples/argo_map_reduce_continue_on.py
+      image: local.registry/dagger
+    inputs:
+      artifacts:
+      - name: numbers
+        path: /tmp/inputs/numbers.json
+    name: dag-gather-all-even-numbers
