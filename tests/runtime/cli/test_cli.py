@@ -318,7 +318,9 @@ def test__invoke__with_invalid_output_location():
     )
     with pytest.raises(OSError) as e:
         with tempfile.TemporaryDirectory() as tmp:
-            invoke(dag, argv=["--output", "x", tmp])
+            nonexistent_dir = os.path.join(tmp, "nested-dir", "that-doesnt-exist")
+
+            invoke(dag, argv=["--output", "x", nonexistent_dir])
 
     assert str(e.value).startswith(
         "When storing output 'x', we got the following error:"
