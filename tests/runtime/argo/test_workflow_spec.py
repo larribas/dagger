@@ -253,6 +253,29 @@ def test__workflow_spec__with_template_overrides_that_affect_essential_attribute
     )
 
 
+def test__workflow_spec__with_task_overrides_that_affect_essential_attributes__fails():
+    dag = DAG(
+        {
+            "n": Task(
+                lambda: 1,
+                runtime_options={
+                    "argo_task_overrides": {
+                        "name": "different-name",
+                    }
+                },
+            )
+        }
+    )
+
+    with pytest.raises(ValueError) as e:
+        workflow_spec(dag, Workflow(container_image="my-image"))
+
+    assert (
+        str(e.value)
+        == "You are trying to override the value of 'n.name'. The Argo runtime already sets a value for this key, and it uses it to guarantee the correctness of the behavior. Therefore, we cannot let you override them."
+    )
+
+
 def test__workflow_spec__with_container_overrides_that_affect_essential_attributes__fails():
     dag = DAG(
         {
@@ -279,6 +302,11 @@ def test__workflow_spec__with_container_overrides_that_affect_essential_attribut
 def test__workflow_spec__with_task_overrides():
     container_image = "my-image"
     options = {
+        "argo_task_overrides": {
+            "continueOn": {
+                "failed": True,
+            },
+        },
         "argo_template_overrides": {
             "timeout": "31m",
             "retryStrategy": {
@@ -322,6 +350,9 @@ def test__workflow_spec__with_task_overrides():
                         {
                             "name": "n",
                             "template": "dag-n",
+                            "continueOn": {
+                                "failed": True,
+                            },
                         },
                     ],
                 },
