@@ -1355,7 +1355,7 @@
 <li><em>Dagger</em> doesn't understand that you may want to fine-tune how your tasks are scheduled in your <em>Kubernetes</em> cluster using node selectors, tolerations or affinities.</li>
 </ul>
 <p>Nevertheless, <strong><em>Dagger</em> allows you to set all of these settings together with the behavior of your task</strong>, so you don't lose your head doing complex post-processing of the manifests, or defining all these options in a separate configuration file.</p>
-<div class="tabbed-set" data-tabs="3:5"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><label for="__tabbed_3_1">Container options</label><div class="tabbed-content">
+<div class="tabbed-set" data-tabs="3:6"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><label for="__tabbed_3_1">Container options</label><div class="tabbed-content">
 <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1394,7 +1394,40 @@
 </code></pre></div>
 </td></tr></table>
 </div>
-<input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><label for="__tabbed_3_2">Template options</label><div class="tabbed-content">
+<input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><label for="__tabbed_3_2">Task options</label><div class="tabbed-content">
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dagger</span> <span class="kn">import</span> <span class="n">dsl</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">task</span><span class="p">(</span>
+    <span class="n">runtime_options</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;argo_task_overrides&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="c1"># Available options to override: https://argoproj.github.io/argo-workflows/fields/#dagtask</span>
+            <span class="s2">&quot;continueOn&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;failed&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="k">def</span> <span class="nf">say_hello</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Hello!&quot;</span><span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+</div>
+<input id="__tabbed_3_3" name="__tabbed_3" type="radio" /><label for="__tabbed_3_3">Task Template options</label><div class="tabbed-content">
 <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1425,7 +1458,7 @@
 </code></pre></div>
 </td></tr></table>
 </div>
-<input id="__tabbed_3_3" name="__tabbed_3" type="radio" /><label for="__tabbed_3_3">DAG Template options</label><div class="tabbed-content">
+<input id="__tabbed_3_4" name="__tabbed_3" type="radio" /><label for="__tabbed_3_4">DAG Template options</label><div class="tabbed-content">
 <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1464,7 +1497,7 @@
 </code></pre></div>
 </td></tr></table>
 </div>
-<input id="__tabbed_3_4" name="__tabbed_3" type="radio" /><label for="__tabbed_3_4">Workflow options</label><div class="tabbed-content">
+<input id="__tabbed_3_5" name="__tabbed_3" type="radio" /><label for="__tabbed_3_5">Workflow options</label><div class="tabbed-content">
 <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1523,7 +1556,7 @@
 </code></pre></div>
 </td></tr></table>
 </div>
-<input id="__tabbed_3_5" name="__tabbed_3" type="radio" /><label for="__tabbed_3_5">Cron Workflow options</label><div class="tabbed-content">
+<input id="__tabbed_3_6" name="__tabbed_3" type="radio" /><label for="__tabbed_3_6">Cron Workflow options</label><div class="tabbed-content">
 <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
