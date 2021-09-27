@@ -316,6 +316,12 @@ def _dag_task(
             input_type=node.inputs[node.partition_by_input],
         )
 
+    dag_task = with_extra_spec_options(
+        original=dag_task,
+        extra_options=node.runtime_options.get("argo_task_overrides", {}),
+        context=".".join(node_address) if node_address else "DAG",
+    )
+
     return dag_task
 
 

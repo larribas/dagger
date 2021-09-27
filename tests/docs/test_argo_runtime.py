@@ -38,6 +38,12 @@ def test_extra_template_options():
     assert say_hello.runtime_options["argo_template_overrides"] != {}
 
 
+def test_extra_task_options():
+    from docs.code_snippets.argo_runtime.extra_task_options import say_hello
+
+    assert say_hello.runtime_options["argo_task_overrides"] != {}
+
+
 def test_extra_dag_template_options():
     from docs.code_snippets.argo_runtime.extra_dag_template_options import dag
 
