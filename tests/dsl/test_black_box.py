@@ -225,10 +225,10 @@ def test__build__input_from_node_output():
     )
 
 
-def test__build__function_with_variadic_parameters():
+def test__build__function_with_variadic_keyword_parameters():
     @dsl.task()
-    def variadic_kwargs_as_dict(**kwargs):
-        return kwargs
+    def variadic_kwargs_as_dict(**keyword_arguments):
+        return keyword_arguments
 
     @dsl.DAG()
     def dag(v1, v2):
