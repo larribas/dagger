@@ -6,6 +6,7 @@ At the moment, only locations in the local filesystem are supported.
 
 import json
 import os
+import shutil
 from typing import Any
 
 from dagger.runtime.local import NodeOutput, PartitionedOutput
@@ -73,7 +74,7 @@ def store_output_in_location(
     """
     Store a serialized output into the specified location.
 
-    It uses os.rename(): https://docs.python.org/3/library/os.html#os.rename
+    It uses shutil.move(): https://docs.python.org/3/library/shutil.html#shutil.move
 
     Parameters
     ----------
@@ -110,7 +111,7 @@ def store_output_in_location(
 
         for i, src in enumerate(output_value):
             partition_filename = str(i)
-            os.rename(
+            shutil.move(
                 src.filename,
                 os.path.join(
                     output_location,
@@ -122,4 +123,4 @@ def store_output_in_location(
         with open(os.path.join(output_location, PARTITION_MANIFEST_FILENAME), "w") as p:
             json.dump(partition_filenames, p)
     else:
-        os.rename(output_value.filename, output_location)
+        shutil.move(output_value.filename, output_location)
