@@ -225,6 +225,43 @@ def test__build__input_from_node_output():
     )
 
 
+def test__build__function_with_variadic_parameters():
+    @dsl.task()
+    def variadic_kwargs_as_dict(**kwargs):
+        return kwargs
+
+    @dsl.DAG()
+    def dag(v1, v2):
+        return variadic_kwargs_as_dict(a=v1, b=v2)
+
+    verify_dags_are_equivalent(
+        dsl.build(dag),
+        DAG(
+            inputs={
+                "v1": FromParam("v1"),
+                "v2": FromParam("v2"),
+            },
+            outputs={
+                "return_value": FromNodeOutput(
+                    "variadic-kwargs-as-dict", "return_value"
+                ),
+            },
+            nodes={
+                "variadic-kwargs-as-dict": Task(
+                    variadic_kwargs_as_dict.func,
+                    inputs={
+                        "a": FromParam("v1"),
+                        "b": FromParam("v2"),
+                    },
+                    outputs={
+                        "return_value": FromReturnValue(),
+                    },
+                ),
+            },
+        ),
+    )
+
+
 def test__build__using_sub_outputs():
     @dsl.task()
     def generate_complex_structure() -> dict:

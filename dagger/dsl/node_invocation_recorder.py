@@ -103,9 +103,16 @@ class NodeInvocationRecorder:
                 f"You have invoked the task '{self._func.__name__}' with the following arguments: args={args} kwargs={kwargs}. However, the signature of the function is '{sig}'. The following error was raised as a result of this mismatch: {e}"
             ) from e
 
-        return {
-            k: self._sanitize_argument(k, v) for k, v in bound_args.arguments.items()
-        }
+        if "kwargs" in bound_args.arguments:
+            arguments = {
+                **bound_args.arguments,
+                **bound_args.arguments.get("kwargs", {}),
+            }
+            del arguments["kwargs"]
+        else:
+            arguments = bound_args.arguments
+
+        return {k: self._sanitize_argument(k, v) for k, v in arguments.items()}
 
     def _sanitize_argument(self, name: str, arg: Any) -> Any:
         # Case 1: Fan-in of multiple outputs from a partitioned node
