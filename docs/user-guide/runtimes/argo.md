@@ -106,7 +106,13 @@ Nevertheless, ___Dagger_ allows you to set all of these settings together with t
     --8<-- "docs/code_snippets/argo_runtime/extra_container_options.py"
     ```
 
-=== "Template options"
+=== "Task options"
+
+    ```python
+    --8<-- "docs/code_snippets/argo_runtime/extra_task_options.py"
+    ```
+
+=== "Task Template options"
 
     ```python
     --8<-- "docs/code_snippets/argo_runtime/extra_template_options.py"
