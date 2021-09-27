@@ -17,6 +17,11 @@ from dagger.dsl.node_output_reference import NodeOutputReference
 from dagger.dsl.node_output_serializer import NodeOutputSerializer
 from dagger.dsl.node_output_usage import NodeOutputUsage
 
+INVALID_PARAM_TYPES = [
+    inspect.Parameter.POSITIONAL_ONLY,
+    inspect.Parameter.VAR_POSITIONAL,
+]
+
 
 class NodeInvocationRecorder:
     """
@@ -33,6 +38,8 @@ class NodeInvocationRecorder:
         runtime_options: Mapping[str, Any] = None,
         override_id: Optional[str] = None,
     ):
+        _validate_func(func)
+
         self._func = func
         self._node_type = node_type
         self._serializer = serializer
@@ -98,14 +105,24 @@ class NodeInvocationRecorder:
 
         try:
             bound_args = sig.bind(*args, **kwargs)
+            arguments = {**bound_args.arguments}
         except TypeError as e:
             raise TypeError(
                 f"You have invoked the task '{self._func.__name__}' with the following arguments: args={args} kwargs={kwargs}. However, the signature of the function is '{sig}'. The following error was raised as a result of this mismatch: {e}"
             ) from e
 
-        return {
-            k: self._sanitize_argument(k, v) for k, v in bound_args.arguments.items()
-        }
+        # If there are arguments which have been bound to variadic keyword parameters,
+        # pass them at the same level as the other parameters.
+        kwarg_parameters = [
+            name
+            for name, param in sig.parameters.items()
+            if param.kind == inspect.Parameter.VAR_KEYWORD
+        ]
+        for kwarg_param_name in kwarg_parameters:
+            arguments = {**arguments, **arguments[kwarg_param_name]}
+            del arguments[kwarg_param_name]
+
+        return {k: self._sanitize_argument(k, v) for k, v in arguments.items()}
 
     def _sanitize_argument(self, name: str, arg: Any) -> Any:
         # Case 1: Fan-in of multiple outputs from a partitioned node
@@ -207,4 +224,15 @@ class NodeInvocationRecorder:
             and self._overridden_id == obj._overridden_id
             and self._serializer == obj._serializer
             and self._runtime_options == obj._runtime_options
+        )
+
+
+def _validate_func(func: Callable):
+    sig = inspect.signature(func)
+    params_with_invalid_types = [
+        p for p in sig.parameters.values() if p.kind in INVALID_PARAM_TYPES
+    ]
+    if params_with_invalid_types:
+        raise ValueError(
+            f"You have decorated a function with the signature '{str(sig)}'. However, the DSL only accepts parameters that can be injected via keyword arguments. Therefore, the parameters '{params_with_invalid_types}' are invalid."
         )

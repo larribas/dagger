@@ -184,6 +184,22 @@ def test__task_invocation__with_a_partitioned_input():
     }
 
 
+def test__task_invocation__function_with_variadic_positional_parameters():
+    def with_positional_args(x, y, /, z, *args):
+        pass
+
+    with pytest.raises(ValueError) as e:
+        NodeInvocationRecorder(
+            func=with_positional_args,
+            node_type=NodeType.TASK,
+        )
+
+    assert (
+        str(e.value)
+        == 'You have decorated a function with the signature \'(x, y, /, z, *args)\'. However, the DSL only accepts parameters that can be injected via keyword arguments. Therefore, the parameters \'[<Parameter "x">, <Parameter "y">, <Parameter "*args">]\' are invalid.'
+    )
+
+
 def test__representation():
     def my_func(x, y):
         return x + y
