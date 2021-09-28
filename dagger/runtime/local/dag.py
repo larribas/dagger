@@ -101,11 +101,6 @@ def _node_param_partitions(
             params=params,
             outputs=outputs,
         )
-        if not isinstance(input_value, Iterable):
-            raise TypeError(
-                f"This node is supposed to be partitioned by input '{node.partition_by_input}'. When a node is partitioned, the value of the input that determines the partition should be an iterable. Instead, we found a value of type '{type(input_value).__name__}'."
-            )
-
         return [{node.partition_by_input: p, **fixed_params} for p in input_value]
     else:
         return [fixed_params]

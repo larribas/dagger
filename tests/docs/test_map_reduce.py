@@ -76,7 +76,7 @@ def test_single_mapping_node():
 
     assert (
         str(e.value)
-        == "Error validating input 'partition' of node 'do-something-else-with': This node is partitioned by an input that comes from the output of another partitioned node. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+        == "Node 'do-something-else-with' is partitioned by an input that comes from the output of another node, 'do-something-with'. Node 'do-something-with' is also partitioned. In Dagger, a node cannot be partitioned by the output of another partitioned node. Check the documentation to better understand how partitioning works: https://larribas.me/dagger/user-guide/partitioning/"
     )
 
     dag = dsl.build(valid.dag)  # no error

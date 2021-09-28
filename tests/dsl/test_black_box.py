@@ -842,7 +842,7 @@ def test__build__multiple_map_operations():
 
     assert (
         str(e.value)
-        == "Error validating input 'n' of node 'double-2': This node is partitioned by an input that comes from the output of another partitioned node. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+        == "Node 'double-2' is partitioned by an input that comes from the output of another node, 'double-1'. Node 'double-1' is also partitioned. In Dagger, a node cannot be partitioned by the output of another partitioned node. Check the documentation to better understand how partitioning works: https://larribas.me/dagger/user-guide/partitioning/"
     )
 
 
@@ -865,5 +865,5 @@ def test__build__nested_for_loops():
 
     assert (
         str(e.value)
-        == "Partitioned nodes may not generate partitioned outputs. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+        == "This node is partitioned. In Dagger, partitioned nodes may not generate partitioned outputs. Check the documentation to better understand how partitioning works: https://larribas.me/dagger/user-guide/partitioning/"
     )

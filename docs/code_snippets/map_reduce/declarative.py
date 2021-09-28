@@ -35,7 +35,7 @@ dag = DAG(
         "generate-training-combinations": Task(
             generate_training_combinations,
             outputs={
-                "combinations": FromReturnValue(),
+                "combinations": FromReturnValue(is_partitioned=True),
             },
         ),
         "train-model": Task(
