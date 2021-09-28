@@ -257,12 +257,12 @@ def test__build_dag_outputs__when_multiple_outputs_are_returned():
             "id-2": "name-2",
         },
     ) == {
-        "x": FromNodeOutput(
+        "key_x": FromNodeOutput(
             "name-1",
             "output",
             serializer=AsPickle(),
         ),
-        "y": FromNodeOutput(
+        "key_y": FromNodeOutput(
             "name-2",
             "return_value",
             serializer=AsJSON(indent=1),
