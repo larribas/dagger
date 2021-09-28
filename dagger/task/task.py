@@ -158,7 +158,7 @@ def _validate_partitioned_input(
 
     if isinstance(inputs[partition_by_input], FromParam):
         raise ValueError(
-            "This node is partitioned by input '{partition_by_input}', which comes from a parameters. In Dagger, nodes may not be partitioned by an input that comes from a parameter. Check the documentation to better understand how partitioning works: https://larribas.me/dagger/user-guide/partitioning/"
+            "This node is partitioned by input '{partition_by_input}', which comes from a parameter. In Dagger, nodes may not be partitioned by an input that comes from a parameter. Check the documentation to better understand how partitioning works: https://larribas.me/dagger/user-guide/partitioning/"
         )
 
 
