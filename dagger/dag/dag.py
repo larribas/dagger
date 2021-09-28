@@ -379,7 +379,9 @@ def _validate_node_partitioning(
 
         p = node.inputs[node.partition_by_input]
         if not isinstance(p, FromNodeOutput):
-            continue
+            raise ValueError(
+                f"Node '{node_name}' is partitioned by its input '{node.partition_by_input}'. However, '{node.partition_by_input}' does not come from the output of another node. In Dagger, nodes can only be partitioned by the output of another sibling node. Check the documentation to better understand how partitioning works: https://larribas.me/dagger/user-guide/partitioning/"
+            )
 
         if nodes[p.node].partition_by_input:
             raise ValueError(

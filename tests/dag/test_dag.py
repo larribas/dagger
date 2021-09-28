@@ -384,6 +384,64 @@ def test__init__with_node_partitioned_by_non_partitioned_output():
     )
 
 
+def test__init__with_node_partitioned_by_parameter():
+    with pytest.raises(ValueError) as e:
+        DAG(
+            inputs={
+                "x": FromParam(),
+            },
+            nodes={
+                "map": DAG(
+                    inputs={
+                        "n": FromParam("x"),
+                    },
+                    nodes={
+                        "n": Task(lambda: 1),
+                    },
+                    partition_by_input="n",
+                ),
+            },
+        )
+
+    assert (
+        str(e.value)
+        == "Node 'map' is partitioned by its input 'n'. However, 'n' does not come from the output of another node. In Dagger, nodes can only be partitioned by the output of another sibling node. Check the documentation to better understand how partitioning works: https://larribas.me/dagger/user-guide/partitioning/"
+    )
+
+
+def test__init__with_dag_partitioned_by_dag_output():
+    with pytest.raises(ValueError) as e:
+        DAG(
+            nodes={
+                "dag-returning-output": DAG(
+                    outputs={
+                        "x": FromNodeOutput("n", "o"),
+                    },
+                    nodes={
+                        "n": Task(
+                            lambda: 1,
+                            outputs={
+                                "o": FromReturnValue(),
+                            },
+                        ),
+                    },
+                ),
+                "map": Task(
+                    lambda n: n,
+                    inputs={
+                        "n": FromNodeOutput("dag-returning-output", "x"),
+                    },
+                    partition_by_input="n",
+                ),
+            }
+        )
+
+    assert (
+        str(e.value)
+        == "Node 'map' is partitioned by its input 'n', which comes from the output 'x' of node 'dag-returning-output'. However, this output is not partitioned. Dagger only allows you to partition by inputs that come from a partitioned output. Check the documentation to better understand how partitioning works: https://larribas.me/dagger/user-guide/partitioning/"
+    )
+
+
 #
 # Node execution order
 #
