@@ -210,7 +210,7 @@ def test__invoke_dag__with_partitions_but_invalid_outputs():
         nodes={
             "generate-single-number": Task(
                 lambda: 1,
-                outputs={"n": FromReturnValue()},
+                outputs={"n": FromReturnValue(is_partitioned=True)},
             ),
             "poorly-partitioned-task": Task(
                 lambda x: x,
@@ -226,5 +226,5 @@ def test__invoke_dag__with_partitions_but_invalid_outputs():
 
     assert (
         str(e.value)
-        == "Error when invoking node 'poorly-partitioned-task'. This node is supposed to be partitioned by input 'x'. When a node is partitioned, the value of the input that determines the partition should be an iterable. Instead, we found a value of type 'int'."
+        == "Error when invoking node 'generate-single-number'. We encountered the following error while attempting to serialize the results of this task: Output 'n' was declared as a partitioned output, but the return value was not an iterable (instead, it was of type 'int'). Partitioned outputs should be iterables of values (e.g. lists or sets). Each value in the iterable must be serializable with the serializer defined in the output."
     )

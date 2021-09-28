@@ -117,11 +117,8 @@ class DAG:
 
         _validate_node_input_dependencies(nodes, inputs)
         _validate_outputs(nodes, outputs)
-
-        if partition_by_input and partition_by_input not in inputs:
-            raise ValueError(
-                f"This node is partitioned by '{partition_by_input}'. However, '{partition_by_input}' is not an input of the node. The available inputs are {sorted(list(inputs))}."
-            )
+        _validate_dag_partitioning(partition_by_input, inputs)
+        _validate_node_partitioning(nodes)
 
         self._nodes = nodes
         self._inputs = inputs
@@ -254,7 +251,7 @@ def _validate_outputs(
 
         if referenced_node.partition_by_input:
             raise ValueError(
-                f"Output '{output_name}' comes from node '{output_type.node}', which is partitioned. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+                f"Output '{output_name}' comes from an output of node '{output_type.node}'. Node '{output_type.node}' is partitioned. In Dagger, DAG outputs may not come from partitioned nodes. Check the documentation to better understand the motivation behind this limitation and how to overcome it: https://larribas.me/dagger/user-guide/map-reduce/#you-cannot-return-the-output-of-a-partitioned-node-from-a-dag."
             )
 
         if len(set(dag_outputs.values())) != len(dag_outputs):
@@ -349,14 +346,6 @@ def _validate_input_from_node_output(
             f"This input is serialized {input_type.serializer}. However, the output it references is serialized {referenced_node_outputs[input_type.output].serializer}."
         )
 
-    if (
-        dag_nodes[node_name].partition_by_input
-        and dag_nodes[input_type.node].partition_by_input
-    ):
-        raise ValueError(
-            "This node is partitioned by an input that comes from the output of another partitioned node. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
-        )
-
 
 def _validate_input_is_supported(input_name: str, input):
     if not _is_type_supported(input, SupportedInputs):
@@ -369,3 +358,36 @@ def _is_type_supported(obj, union):
     return any(
         [isinstance(obj, supported_type) for supported_type in get_type_args(union)]
     )
+
+
+def _validate_dag_partitioning(
+    partition_by_input: Optional[str],
+    inputs: Mapping[str, SupportedInputs],
+):
+    if partition_by_input and partition_by_input not in inputs:
+        raise ValueError(
+            f"This node is partitioned by '{partition_by_input}'. However, '{partition_by_input}' is not an input of the node. The available inputs are {sorted(list(inputs))}."
+        )
+
+
+def _validate_node_partitioning(
+    nodes: Mapping[str, Node],
+):
+    for node_name, node in nodes.items():
+        if not node.partition_by_input:
+            continue
+
+        p = node.inputs[node.partition_by_input]
+        if not isinstance(p, FromNodeOutput):
+            continue
+
+        if nodes[p.node].partition_by_input:
+            raise ValueError(
+                f"Node '{node_name}' is partitioned by an input that comes from the output of another node, '{p.node}'. Node '{p.node}' is also partitioned. In Dagger, a node cannot be partitioned by the output of another partitioned node. Check the documentation to better understand how partitioning works: https://larribas.me/dagger/user-guide/partitioning/"
+            )
+
+        o = nodes[p.node].outputs[p.output]
+        if isinstance(o, FromNodeOutput) or not o.is_partitioned:
+            raise ValueError(
+                f"Node '{node_name}' is partitioned by its input '{node.partition_by_input}', which comes from the output '{p.output}' of node '{p.node}'. However, this output is not partitioned. Dagger only allows you to partition by inputs that come from a partitioned output. Check the documentation to better understand how partitioning works: https://larribas.me/dagger/user-guide/partitioning/"
+            )

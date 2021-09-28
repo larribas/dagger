@@ -329,7 +329,7 @@ def test__init__with_dag_output_from_a_partitioned_node():
 
     assert (
         str(e.value)
-        == "Output 'r' comes from node 'map', which is partitioned. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+        == "Output 'r' comes from an output of node 'map'. Node 'map' is partitioned. In Dagger, DAG outputs may not come from partitioned nodes. Check the documentation to better understand the motivation behind this limitation and how to overcome it: https://larribas.me/dagger/user-guide/map-reduce/#you-cannot-return-the-output-of-a-partitioned-node-from-a-dag."
     )
 
 
@@ -358,7 +358,29 @@ def test__init__partitioned_by_output_of_partitioned_node():
 
     assert (
         str(e.value)
-        == "Error validating input 'n' of node 'map-2': This node is partitioned by an input that comes from the output of another partitioned node. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+        == "Node 'map-2' is partitioned by an input that comes from the output of another node, 'map-1'. Node 'map-1' is also partitioned. In Dagger, a node cannot be partitioned by the output of another partitioned node. Check the documentation to better understand how partitioning works: https://larribas.me/dagger/user-guide/partitioning/"
+    )
+
+
+def test__init__with_node_partitioned_by_non_partitioned_output():
+    with pytest.raises(ValueError) as e:
+        DAG(
+            {
+                "non-partitioned-fan-out": Task(
+                    lambda: [1, 2],
+                    outputs={"numbers": FromReturnValue()},
+                ),
+                "map": Task(
+                    lambda n: n,
+                    inputs={"n": FromNodeOutput("non-partitioned-fan-out", "numbers")},
+                    partition_by_input="n",
+                ),
+            }
+        )
+
+    assert (
+        str(e.value)
+        == "Node 'map' is partitioned by its input 'n', which comes from the output 'numbers' of node 'non-partitioned-fan-out'. However, this output is not partitioned. Dagger only allows you to partition by inputs that come from a partitioned output. Check the documentation to better understand how partitioning works: https://larribas.me/dagger/user-guide/partitioning/"
     )
 
 

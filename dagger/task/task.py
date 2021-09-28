@@ -158,7 +158,7 @@ def _validate_partitioned_input(
 
     if isinstance(inputs[partition_by_input], FromParam):
         raise ValueError(
-            "Nodes may not be partitioned by an input that comes from a parameter. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+            "This node is partitioned by input '{partition_by_input}', which comes from a parameters. In Dagger, nodes may not be partitioned by an input that comes from a parameter. Check the documentation to better understand how partitioning works: https://larribas.me/dagger/user-guide/partitioning/"
         )
 
 
@@ -166,7 +166,7 @@ def _validate_there_are_no_partitioned_outputs(outputs: Mapping[str, SupportedOu
     for output_name, output_type in outputs.items():
         if output_type.is_partitioned:
             raise ValueError(
-                "Partitioned nodes may not generate partitioned outputs. This is not a valid map-reduce pattern in dagger. Please check the 'Map Reduce' section in the documentation for an explanation of why this is not possible and suggestions of other valid map-reduce patterns."
+                "This node is partitioned. In Dagger, partitioned nodes may not generate partitioned outputs. Check the documentation to better understand how partitioning works: https://larribas.me/dagger/user-guide/partitioning/"
             )
 
 
