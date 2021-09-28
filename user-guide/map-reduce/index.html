@@ -1160,7 +1160,7 @@
         <span class="s2">&quot;generate-training-combinations&quot;</span><span class="p">:</span> <span class="n">Task</span><span class="p">(</span>
             <span class="n">generate_training_combinations</span><span class="p">,</span>
             <span class="n">outputs</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">&quot;combinations&quot;</span><span class="p">:</span> <span class="n">FromReturnValue</span><span class="p">(),</span>
+                <span class="s2">&quot;combinations&quot;</span><span class="p">:</span> <span class="n">FromReturnValue</span><span class="p">(</span><span class="n">is_partitioned</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
             <span class="p">},</span>
         <span class="p">),</span>
         <span class="s2">&quot;train-model&quot;</span><span class="p">:</span> <span class="n">Task</span><span class="p">(</span>
