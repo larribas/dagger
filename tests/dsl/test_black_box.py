@@ -376,28 +376,39 @@ def test__build__multiple_dag_outputs():
         return 1
 
     @dsl.DAG()
-    def dag():
+    def inner_dag():
         return {
             "a": generate_number(),
             "b": generate_number(),
         }
 
+    @dsl.DAG()
+    def outer_dag():
+        return inner_dag()["a"]
+
     verify_dags_are_equivalent(
-        dsl.build(dag),
+        dsl.build(outer_dag),
         DAG(
             nodes={
-                "generate-number-1": Task(
-                    generate_number.func,
-                    outputs={"return_value": FromReturnValue()},
-                ),
-                "generate-number-2": Task(
-                    generate_number.func,
-                    outputs={"return_value": FromReturnValue()},
+                "inner-dag": DAG(
+                    nodes={
+                        "generate-number-1": Task(
+                            generate_number.func,
+                            outputs={"return_value": FromReturnValue()},
+                        ),
+                        "generate-number-2": Task(
+                            generate_number.func,
+                            outputs={"return_value": FromReturnValue()},
+                        ),
+                    },
+                    outputs={
+                        "key_a": FromNodeOutput("generate-number-1", "return_value"),
+                        "key_b": FromNodeOutput("generate-number-2", "return_value"),
+                    },
                 ),
             },
             outputs={
-                "a": FromNodeOutput("generate-number-1", "return_value"),
-                "b": FromNodeOutput("generate-number-2", "return_value"),
+                "return_value": FromNodeOutput("inner-dag", "key_a"),
             },
         ),
     )

@@ -154,7 +154,7 @@ def _build_dag_outputs(
     if isinstance(dag_output, NodeOutputReference):
         outputs_by_name = {"return_value": dag_output}
     elif isinstance(dag_output, Mapping):
-        outputs_by_name = dag_output
+        outputs_by_name = {f"key_{key}": value for key, value in dag_output.items()}
     elif dag_output is not None:
         raise TypeError(
             f"This DAG returned a value of type {type(dag_output).__name__}. Functions decorated with `dsl.DAG` may only return two types of values: The output of another node or a mapping of [str, the output of another node]"
