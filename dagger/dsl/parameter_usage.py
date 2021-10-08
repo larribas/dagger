@@ -23,7 +23,7 @@ class ParameterUsage:
     def __iter__(self):
         """Attempt to iterate on a parameter. At the moment, this is not valid in Dagger."""
         raise ValueError(
-            "Iterating over the value of a parameter is not a valid parallelization pattern in Dagger. You need to convert the parameter into the output of a node. Read this section in the documentation to find out more: https://larribas.me/dagger/user-guide/dags/map-reduce"
+            "Iterating over the value of a parameter is not a valid parallelization pattern in Dagger. You need to convert the parameter into the output of a node. Read this section in the documentation to find out more: https://larribas.me/dagger/user-guide/map-reduce/"
         )
 
     def __repr__(self) -> str:
