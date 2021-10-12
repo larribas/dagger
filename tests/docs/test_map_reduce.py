@@ -43,7 +43,7 @@ def test_for_based_on_param():
 
     assert (
         str(e.value)
-        == "Iterating over the value of a parameter is not a valid parallelization pattern in Dagger. You need to convert the parameter into the output of a node. Read this section in the documentation to find out more: https://larribas.me/dagger/user-guide/dags/map-reduce"
+        == "Iterating over the value of a parameter is not a valid parallelization pattern in Dagger. You need to convert the parameter into the output of a node. Read this section in the documentation to find out more: https://larribas.me/dagger/user-guide/map-reduce/"
     )
 
     invoke(
