@@ -16,6 +16,7 @@ class AsJSON:
         self,
         indent: Optional[int] = None,
         allow_nan: bool = False,
+        cls=None,
     ):
         """
         Initialize a JSON serializer.
@@ -29,9 +30,14 @@ class AsJSON:
         allow_nan: bool
             Whether or not to allow NaN values.
             See the official json library in Python for more details about the expected behavior.
+
+        cls:
+            To use a custom ``JSONEncoder`` subclass (e.g. one that overrides the ``.default()`` method to serialize
+            additional types), specify it with the ``cls`` kwarg; otherwise ``JSONEncoder`` is used.
         """
         self._indent = indent
         self._allow_nan = allow_nan
+        self.cls = cls
 
     def serialize(self, value: Any, writer: BinaryIO):
         """
@@ -47,6 +53,7 @@ class AsJSON:
                 io.TextIOWrapper(writer, encoding="utf-8"),
                 indent=self._indent,
                 allow_nan=self._allow_nan,
+                cls=self.cls,
             )
         except (TypeError, ValueError) as e:
             raise SerializationError(e)

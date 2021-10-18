@@ -1,4 +1,5 @@
 import io
+import json
 import os
 import sys
 import tempfile
@@ -88,3 +89,51 @@ def test_deserialization__with_invalid_values():
     for value in invalid_values:
         with pytest.raises(DeserializationError):
             serializer.deserialize(io.BytesIO(value))
+
+
+def test_serialization__with_custom_values_not_json_serializable():
+    serializer = AsJSON()
+
+    class MyInt:
+        def __init__(self, v):
+            self._v = v
+
+    d = {
+        'b': 123,
+        'a': MyInt(123)
+    }
+
+    with tempfile.TemporaryDirectory() as tmp:
+        filename = os.path.join(tmp, "value.json")
+        with open(filename, "wb") as writer:
+            with pytest.raises(SerializationError):
+                serializer.serialize(d, writer)
+
+
+def test_serialization__with_custom_values_not_json_serializable_with_cls():
+    class MyInt:
+        def __init__(self, v):
+            self._v = v
+
+        @property
+        def value(self):
+            return self._v
+
+    class CustomJsonSerializer(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, MyInt):
+                return int(obj.value)
+
+            return super(CustomJsonSerializer, self).default(obj)
+
+    serializer = AsJSON(cls=CustomJsonSerializer)
+
+    my_dict = {
+        'b': 321,
+        'a': MyInt(321)
+    }
+
+    with tempfile.TemporaryDirectory() as tmp:
+        filename = os.path.join(tmp, "value.json")
+        with open(filename, "wb") as writer:
+            serializer.serialize(my_dict, writer)
