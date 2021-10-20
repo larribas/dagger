@@ -155,16 +155,17 @@ def test_deserialization__with_custom_values_not_json_serializable():
 
 
 def test_deserialization__with_custom_values_not_json_deserializable():
-
     class CustomJsonDecoder(json.JSONDecoder):
         def __init__(self, *args, **kwargs):
-            json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
+            json.JSONDecoder.__init__(
+                self, object_hook=self.object_hook, *args, **kwargs
+            )
 
         def object_hook(self, obj):
             if "_class" not in obj:
                 return obj
 
-            val_type = obj['_class']
+            val_type = obj["_class"]
             if val_type != "MyInt":
                 return obj
 
