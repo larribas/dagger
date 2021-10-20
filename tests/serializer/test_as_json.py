@@ -98,10 +98,7 @@ def test_serialization__with_custom_values_not_json_serializable():
         def __init__(self, v):
             self._v = v
 
-    d = {
-        'b': 123,
-        'a': MyInt(123)
-    }
+    d = {"b": 123, "a": MyInt(123)}
 
     with tempfile.TemporaryDirectory() as tmp:
         filename = os.path.join(tmp, "value.json")
@@ -119,21 +116,79 @@ def test_serialization__with_custom_values_not_json_serializable_with_cls():
         def value(self):
             return self._v
 
-    class CustomJsonSerializer(json.JSONEncoder):
+    class CustomJsonEncoder(json.JSONEncoder):
         def default(self, obj):
             if isinstance(obj, MyInt):
                 return int(obj.value)
 
-            return super(CustomJsonSerializer, self).default(obj)
+            return super(CustomJsonEncoder, self).default(obj)
 
-    serializer = AsJSON(cls=CustomJsonSerializer)
+    serializer = AsJSON(encoder=CustomJsonEncoder)
 
-    my_dict = {
-        'b': 321,
-        'a': MyInt(321)
-    }
+    my_dict = {"b": 321, "a": MyInt(321)}
 
     with tempfile.TemporaryDirectory() as tmp:
         filename = os.path.join(tmp, "value.json")
         with open(filename, "wb") as writer:
             serializer.serialize(my_dict, writer)
+
+
+def test_deserialization__with_custom_values_not_json_serializable():
+    serializer = AsJSON()
+
+    class MyInt:
+        def __init__(self, v):
+            self._v = v
+
+    d = {"b": "asd", "a": 123}
+
+    with tempfile.TemporaryDirectory() as tmp:
+        filename = os.path.join(tmp, "value.json")
+
+        with open(filename, "wb") as writer:
+            serializer.serialize(d, writer)
+
+        with open(filename, "rb") as reader:
+            deserialized_value = serializer.deserialize(reader)
+
+    assert type(deserialized_value["a"]) == int
+
+
+def test_deserialization__with_custom_values_not_json_deserializable():
+
+    class CustomJsonDecoder(json.JSONDecoder):
+        def __init__(self, *args, **kwargs):
+            json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
+
+        def object_hook(self, obj):
+            if "_class" not in obj:
+                return obj
+
+            val_type = obj['_class']
+            if val_type != "MyInt":
+                return obj
+
+            return MyInt(obj["value"])
+
+    serializer = AsJSON(decoder=CustomJsonDecoder)
+
+    class MyInt:
+        def __init__(self, v):
+            self._v = v
+
+        @property
+        def value(self):
+            return self._v
+
+    d = {"value": 123, "_class": "MyInt"}
+
+    with tempfile.TemporaryDirectory() as tmp:
+        filename = os.path.join(tmp, "value.json")
+
+        with open(filename, "wb") as writer:
+            serializer.serialize(d, writer)
+
+        with open(filename, "rb") as reader:
+            deserialized_value = serializer.deserialize(reader)
+
+    assert deserialized_value.value == d["value"]

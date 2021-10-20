@@ -1,8 +1,9 @@
 """Serialization strategy based on JSON."""
 
 import io
-from json.decoder import JSONDecodeError
-from typing import Any, BinaryIO, Optional
+from json import JSONEncoder
+from json.decoder import JSONDecodeError, JSONDecoder
+from typing import Any, BinaryIO, Optional, Type
 
 from dagger.serializer.errors import DeserializationError, SerializationError
 
@@ -16,8 +17,8 @@ class AsJSON:
         self,
         indent: Optional[int] = None,
         allow_nan: bool = False,
-        cls_encoder=None,
-        cls_decoder=None,
+        encoder: Optional[Type[JSONEncoder]] = None,
+        decoder: Optional[Type[JSONDecoder]] = None,
     ):
         """
         Initialize a JSON serializer.
@@ -32,17 +33,17 @@ class AsJSON:
             Whether or not to allow NaN values.
             See the official json library in Python for more details about the expected behavior.
 
-        cls_encoder:
+        encoder:
             To use a custom ``JSONEncoder`` subclass (e.g. one that overrides the ``.default()`` method to serialize
-            additional types), specify it with the ``cls`` kwarg; otherwise ``JSONEncoder`` is used.
-        cls_decoder:
-            To use a custom ``JSONDecoder`` subclass, specify it with the ``cls`` kwarg;
+            additional types), specify it with the ``encoder`` kwarg; otherwise ``JSONEncoder`` is used.
+        decoder:
+            To use a custom ``JSONDecoder`` subclass, specify it with the ``decoder`` kwarg;
             otherwise ``JSONDecoder`` is used.
         """
         self._indent = indent
         self._allow_nan = allow_nan
-        self.cls_encoder = cls_encoder
-        self.cls_decoder = cls_decoder
+        self.encoder = encoder
+        self.decoder = decoder
 
     def serialize(self, value: Any, writer: BinaryIO):
         """
@@ -58,7 +59,7 @@ class AsJSON:
                 io.TextIOWrapper(writer, encoding="utf-8"),
                 indent=self._indent,
                 allow_nan=self._allow_nan,
-                cls=self.cls_encoder,
+                cls=self.encoder,
             )
         except (TypeError, ValueError) as e:
             raise SerializationError(e)
@@ -68,7 +69,7 @@ class AsJSON:
         import json
 
         try:
-            return json.load(reader, cls=self.cls_decoder)
+            return json.load(reader, cls=self.decoder)
         except (TypeError, JSONDecodeError) as e:
             raise DeserializationError(e)
 
