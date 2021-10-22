@@ -15,7 +15,7 @@ from dagger.runtime.argo import Cron, Metadata, Workflow, cron_workflow_manifest
 from examples.map_reduce_imperative import map_reduce_pipeline
 
 if __name__ == "__main__":
-    """Defines an Argo interface for the imported DAG, using the Argo runtime. Check
+    """Define an Argo interface for the imported DAG, using the Argo runtime. Check
     the documentation to understand why this is relevant or necessary."""
     dag = dsl.build(map_reduce_pipeline)
 

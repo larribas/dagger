@@ -41,14 +41,14 @@ def generate_numbers(parallel_steps: int) -> List[int]:
 
 
 def multiply_by(multiplier: int, number: int) -> int:
-    """Multiply 'number' by 'multiplier'."""
+    """ Multiply 'number' by 'multiplier'."""
     result = number * multiplier
     print(f"Result: {result}")
     return result
 
 
 def sum_results(numbers: List[int]) -> int:
-    """Given a list of integers, return their sum."""
+    """ Sum a list of integers and return the result."""
     print(f"The results of all parallel steps, in order, were: {numbers}")
     return sum(numbers)
 

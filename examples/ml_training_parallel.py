@@ -25,25 +25,25 @@ def prepare_datasets():
 
 @dsl.task()
 def get_models():
-    """ Mocks definition of models to be trained and compared """
+    """ Mock definition of models to be trained and compared """
     return {"neural_network": ["..."], "boosted_tree": ["..."]}
 
 
 @dsl.task()
 def train_model(training_dataset, model):
-    """ Mocks training of a model in a training dataset """
+    """ Mock training of a model in a training dataset """
     return "trained model"
 
 
 @dsl.task()
 def choose_best_model(alternative_models, test_dataset):
-    """ Mocks evaluation of model on a test dataset """
+    """ Mock evaluation of model on a test dataset """
     return "best_model"
 
 
 @dsl.DAG()
 def training_workflow():
-    """Defines the dependencies in between the tasks, in particular defines the
+    """Define the dependencies in between the tasks, in particular defines the
     map-reduce operation in a single line with a python list comprehension operation."""
     data = prepare_datasets()
     trained_models = [train_model(data["training"], model) for model in get_models()]
@@ -51,7 +51,7 @@ def training_workflow():
 
 
 if __name__ == "__main__":
-    """Defines a local interface for this DAG, using the local runtime. Check the
+    """Define a local interface for this DAG, using the local runtime. Check the
     documentation to understand why this is relevant or necessary."""
     from dagger.runtime.local import invoke
 

@@ -45,7 +45,7 @@ def sum_numbers(numbers):
 
 @dsl.DAG()
 def map_reduce_pipeline(exponent):
-    """Defines the DAG, i.e. the dependencies among the tasks, in particular the
+    """Define the DAG, i.e. the dependencies among the tasks, in particular the
     fan-out fan-in operation."""
     print("\n\n Generating the DAG Data Structures")
     print("-" * 36)
@@ -53,7 +53,7 @@ def map_reduce_pipeline(exponent):
 
 
 if __name__ == "__main__":
-    """Defines a local interface for this DAG, using the local runtime. Check the
+    """Define a local interface for this DAG, using the local runtime. Check the
     documentation to understand why this is relevant or necessary."""
     from dagger.runtime.local import invoke
 
