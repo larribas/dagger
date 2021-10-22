@@ -8,13 +8,15 @@ Then we save this file as a YAML in the examples folder.
 
 """
 
+import yaml
+
 from dagger import dsl
 from dagger.runtime.argo import Cron, Metadata, Workflow, cron_workflow_manifest
 from examples.map_reduce_imperative import map_reduce_pipeline
-import yaml
-
 
 if __name__ == "__main__":
+    """Defines an Argo interface for the imported DAG, using the Argo runtime. Check
+    the documentation to understand why this is relevant or necessary."""
     dag = dsl.build(map_reduce_pipeline)
 
     manifest = cron_workflow_manifest(
