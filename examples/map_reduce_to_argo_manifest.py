@@ -1,6 +1,16 @@
+"""
+# Map-Reduce to Argo Manifest.
+
+In this task, we import the example from map_reduce_imperative, build a DAG with the DSL
+and produce an Argo manifest with the function cron_workflow_manifest.
+
+Then we save this file as a YAML in the examples folder.
+
+"""
+
 from dagger import dsl
 from dagger.runtime.argo import Cron, Metadata, Workflow, cron_workflow_manifest
-from examples.dummy_map_reduce import map_reduce_pipeline
+from examples.map_reduce_imperative import map_reduce_pipeline
 import yaml
 
 

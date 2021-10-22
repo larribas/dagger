@@ -1,3 +1,20 @@
+"""
+# Map-Reduce Imperative.
+
+This DAG shows how to create a dynamic fan-out and fan-in operation with an imperative syntax.
+
+The DAG has an input parameter called exponent.
+
+There three tasks:
+
+* generate_numbers: generate a list sequential integer number from 0 to n, where n is a randomly generated integer from 3 to 20.
+
+* raise_number: fan-out operation that raise each number in the list to exponent.
+
+* sum_numbers: fan-in operation that sums all raise numbers and return the result.
+
+"""
+
 import random
 
 from dagger import dsl

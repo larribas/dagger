@@ -1,3 +1,10 @@
+"""
+# ML Training Sequential.
+
+This pipeline mocks a sequential ML model training composed of three simple tasks:
+
+prepare_datasets -> train_model -> measure_model_performance
+"""
 
 from dagger import dsl
 

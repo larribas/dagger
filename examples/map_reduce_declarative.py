@@ -1,7 +1,7 @@
 """
-# Map-Reduce.
+# Map-Reduce Declarative.
 
-This DAG shows how to create a dynamic fan-out and fan-in operation.
+This DAG shows how to create a dynamic fan-out and fan-in operation with a declarative syntax.
 
 We use dagger's output and node partitioning capabilities to achieve that.
 

@@ -1,3 +1,19 @@
+"""
+# ML Training Parallel.
+
+This pipeline mocks a parallel ML model training composed of four tasks:
+
+* prepare_datasets: gets a train and a test dataset.
+
+* get_models: gets a dictionary with a mapping from model_name to model_specification.
+
+* train_models: map task that trains each model in the dictionary.
+
+* choose_best_model: reduce task that evaluates each model and selects the best on the
+    testing dataset.
+
+"""
+
 from dagger import dsl
 
 
