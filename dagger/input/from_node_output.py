@@ -1,6 +1,9 @@
 """Input retrieved from the output of another node."""
+from typing import TypeVar
 
 from dagger.serializer import DefaultSerializer, Serializer
+
+T = TypeVar("T")
 
 
 class FromNodeOutput:
@@ -10,6 +13,7 @@ class FromNodeOutput:
         self,
         node: str,
         output: str,
+        default_value: T,
         serializer: Serializer = DefaultSerializer,
     ):
         """
@@ -23,6 +27,9 @@ class FromNodeOutput:
         output
             The name of the output declared by 'node'
 
+        default_value
+            The default value, if any, of the input
+
         serializer
             The Serializer implementation to use to deserialize the input.
 
@@ -33,6 +40,7 @@ class FromNodeOutput:
         """
         self._node_name = node
         self._node_output_name = output
+        self._default_value = default_value
         self._serializer = serializer
 
     @property
@@ -44,6 +52,11 @@ class FromNodeOutput:
     def output(self) -> str:
         """Get the name of the output the input should be retrieved from."""
         return self._node_output_name
+
+    @property
+    def default_value(self) -> T:
+        """Get the default value of the input."""
+        return self._default_value
 
     @property
     def serializer(self) -> Serializer:

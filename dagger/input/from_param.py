@@ -1,8 +1,11 @@
 """Input retrieved from the parameters passed to the parent node."""
 
-from typing import Optional
+from typing import Optional, TypeVar
 
+from dagger.dsl.parameter_usage import EmptyDefaultValue
 from dagger.serializer import DefaultSerializer, Serializer
+
+T = TypeVar("T")
 
 
 class FromParam:
@@ -11,6 +14,7 @@ class FromParam:
     def __init__(
         self,
         name: Optional[str] = None,
+        default_value: T = EmptyDefaultValue,
         serializer: Serializer = DefaultSerializer,
     ):
         """
@@ -31,6 +35,7 @@ class FromParam:
         """
         self._serializer = serializer
         self._name = name
+        self._default_value = default_value
 
     @property
     def serializer(self) -> Serializer:
@@ -42,9 +47,14 @@ class FromParam:
         """Get the name the input references, if any."""
         return self._name
 
+    @property
+    def default_value(self) -> T:
+        """Get the default value of the input references, if any."""
+        return self._default_value
+
     def __repr__(self) -> str:
         """Get a human-readable string representation of the input."""
-        return f"FromParam(name={self._name}, serializer={self._serializer})"
+        return f"FromParam(name={self._name}, default_value={self._default_value}, serializer={self._serializer})"
 
     def __eq__(self, obj):
         """Return true if both inputs are equivalent."""

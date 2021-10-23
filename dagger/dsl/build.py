@@ -15,7 +15,7 @@ from dagger.dsl.node_output_partition_usage import NodeOutputPartitionUsage
 from dagger.dsl.node_output_property_usage import NodeOutputPropertyUsage
 from dagger.dsl.node_output_reference import NodeOutputReference
 from dagger.dsl.node_output_usage import NodeOutputUsage
-from dagger.dsl.parameter_usage import ParameterUsage
+from dagger.dsl.parameter_usage import ParameterUsage, EmptyDefaultValue
 from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromKey, FromProperty, FromReturnValue
 from dagger.serializer import DefaultSerializer
@@ -82,9 +82,12 @@ def _build(
     parameters = {
         param_name: ParameterUsage(
             name=param_name,
+            default_value=EmptyDefaultValue()
+            if param_value.default is inspect.Parameter.empty
+            else param_value.default,
             serializer=_parent_serializer_or_default(inputs_from_parent, param_name),
         )
-        for param_name in inspect.signature(build_func).parameters
+        for param_name, param_value in inspect.signature(build_func).parameters.items()
     }
 
     ctx = copy_context()
@@ -249,12 +252,14 @@ def _build_node_input(
     if isinstance(input_type, ParameterUsage):
         return FromParam(
             name=input_type.name,
+            default_value=input_type.default_value,
             serializer=input_type.serializer,
         )
     else:
         return FromNodeOutput(
             node=node_names_by_id[input_type.invocation_id],
             output=input_type.output_name,
+            default_value=input_type.default_value,
             serializer=input_type.serializer,
         )
 

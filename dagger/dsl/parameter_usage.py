@@ -1,19 +1,41 @@
 """Data structures that represent how parameters are used throughout a DAG defined ."""
+from typing import Any, TypeVar, Optional
 
 from dagger.serializer import DefaultSerializer, Serializer
+
+T = TypeVar("T")
+
+
+class EmptyDefaultValue:
+    """ Marker object for that represents a parameter without default value. """
+
+    def __repr__(self) -> str:
+        """Get a human-readable string representation of an empty default value."""
+        return "'None'"
 
 
 class ParameterUsage:
     """Represents the use of a parameters supplied to the DAG."""
 
-    def __init__(self, name: str, serializer: Serializer = DefaultSerializer):
+    def __init__(
+        self,
+        name: str,
+        default_value: Optional[T] = EmptyDefaultValue,
+        serializer: Optional[Serializer] = DefaultSerializer,
+    ):
         self._name = name
+        self._default_value = default_value
         self._serializer = serializer
 
     @property
     def name(self) -> str:
         """Return the name of the parameter."""
         return self._name
+
+    @property
+    def default_value(self) -> T:
+        """Return the default value of the parameter."""
+        return self._default_value
 
     @property
     def serializer(self) -> Serializer:
@@ -28,7 +50,7 @@ class ParameterUsage:
 
     def __repr__(self) -> str:
         """Get a human-readable string representation of this parameter usage."""
-        return f"ParameterUsage(name={self._name}, serializer={self._serializer})"
+        return f"ParameterUsage(name={self._name}, default_value={self._default_value}, serializer={self._serializer})"
 
     def __eq__(self, obj) -> bool:
         """Return true if both objects are equivalent."""
