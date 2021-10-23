@@ -1,5 +1,5 @@
 """Data structures that represent how parameters are used throughout a DAG defined ."""
-from typing import Any, TypeVar, Optional
+from typing import TypeVar, Union
 
 from dagger.serializer import DefaultSerializer, Serializer
 
@@ -20,8 +20,8 @@ class ParameterUsage:
     def __init__(
         self,
         name: str,
-        default_value: Optional[T] = EmptyDefaultValue,
-        serializer: Optional[Serializer] = DefaultSerializer,
+        default_value: Union[EmptyDefaultValue, T],
+        serializer: Serializer = DefaultSerializer,
     ):
         self._name = name
         self._default_value = default_value
