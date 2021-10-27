@@ -151,6 +151,13 @@ def test_deserialization__with_custom_values_not_json_serializable():
 
 
 def test_deserialization__with_custom_decoder():
+    class CustomJsonEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, MyInt):
+                return {"value": int(obj.value), "_class": "MyInt"}
+
+            return super(CustomJsonEncoder, self).default(obj)
+
     class CustomJsonDecoder(json.JSONDecoder):
         def __init__(self, *args, **kwargs):
             json.JSONDecoder.__init__(
@@ -167,25 +174,27 @@ def test_deserialization__with_custom_decoder():
 
             return MyInt(obj["value"])
 
-    serializer = AsJSON(decoder=CustomJsonDecoder)
-
     class MyInt:
         def __init__(self, v):
             self._v = v
+            self._class = "MyInt"
 
         @property
         def value(self):
             return self._v
 
-    d = {"value": 123, "_class": "MyInt"}
+    serializer = AsJSON(encoder=CustomJsonEncoder, decoder=CustomJsonDecoder)
+    data = MyInt(123)
 
     with tempfile.TemporaryDirectory() as tmp:
         filename = os.path.join(tmp, "value.json")
 
         with open(filename, "wb") as writer:
-            serializer.serialize(d, writer)
+            serializer.serialize(data, writer)
 
         with open(filename, "rb") as reader:
             deserialized_value = serializer.deserialize(reader)
 
-    assert deserialized_value.value == d["value"]
+        assert type(deserialized_value) == type(data)
+        assert isinstance(deserialized_value.value, type(data.value))
+        assert deserialized_value.value == data.value
