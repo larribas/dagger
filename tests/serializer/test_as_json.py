@@ -107,7 +107,7 @@ def test_serialization__with_custom_values_not_json_serializable():
                 serializer.serialize(d, writer)
 
 
-def test_serialization__with_custom_values_not_json_serializable_with_cls():
+def test_serialization__with_custom_values_and_encoder():
     class MyInt:
         def __init__(self, v):
             self._v = v
@@ -136,10 +136,6 @@ def test_serialization__with_custom_values_not_json_serializable_with_cls():
 def test_deserialization__with_custom_values_not_json_serializable():
     serializer = AsJSON()
 
-    class MyInt:
-        def __init__(self, v):
-            self._v = v
-
     d = {"b": "asd", "a": 123}
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -154,7 +150,7 @@ def test_deserialization__with_custom_values_not_json_serializable():
     assert type(deserialized_value["a"]) == int
 
 
-def test_deserialization__with_custom_values_not_json_deserializable():
+def test_deserialization__with_custom_decoder():
     class CustomJsonDecoder(json.JSONDecoder):
         def __init__(self, *args, **kwargs):
             json.JSONDecoder.__init__(

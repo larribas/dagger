@@ -42,8 +42,8 @@ class AsJSON:
         """
         self._indent = indent
         self._allow_nan = allow_nan
-        self.encoder = encoder
-        self.decoder = decoder
+        self._encoder = encoder
+        self._decoder = decoder
 
     def serialize(self, value: Any, writer: BinaryIO):
         """
@@ -59,7 +59,7 @@ class AsJSON:
                 io.TextIOWrapper(writer, encoding="utf-8"),
                 indent=self._indent,
                 allow_nan=self._allow_nan,
-                cls=self.encoder,
+                cls=self._encoder,
             )
         except (TypeError, ValueError) as e:
             raise SerializationError(e)
@@ -69,7 +69,7 @@ class AsJSON:
         import json
 
         try:
-            return json.load(reader, cls=self.decoder)
+            return json.load(reader, cls=self._decoder)
         except (TypeError, JSONDecodeError) as e:
             raise DeserializationError(e)
 
