@@ -36,6 +36,7 @@ class AsJSON:
         encoder:
             To use a custom ``JSONEncoder`` subclass (e.g. one that overrides the ``.default()`` method to serialize
             additional types), specify it with the ``encoder`` kwarg; otherwise ``JSONEncoder`` is used.
+            
         decoder:
             To use a custom ``JSONDecoder`` subclass, specify it with the ``decoder`` kwarg;
             otherwise ``JSONDecoder`` is used.
