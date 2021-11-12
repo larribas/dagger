@@ -74,6 +74,7 @@ class NodeInvocationRecorder:
         )
 
         invocations = node_invocations.get([])
+        # TODO do not pass default value of param to nodes where it's used
         invocations.append(
             NodeInvocation(
                 id=invocation_id,
@@ -157,7 +158,9 @@ class NodeInvocationRecorder:
 
     def _func_with_preset_params(self, arguments: Mapping[str, Any]) -> Callable:
         """
-        Return the function where all the arguments that come from a literal value (instead of a reference built by the DSL) are preset and don't need to be injected as a parameter anymore.
+        Return the function where all the arguments that come from a literal value
+        (instead of a reference built by the DSL) are preset and don't need to be
+        injected as a parameter anymore.
 
         For instance, given:
 

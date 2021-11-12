@@ -68,4 +68,6 @@ def test__dag__with_default_value():
     def d(x=3):
         return f(x)
 
-    assert invoke(build(d)) == 5
+    dag = build(d)
+
+    assert invoke(dag) == 5

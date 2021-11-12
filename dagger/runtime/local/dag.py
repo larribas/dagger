@@ -113,7 +113,7 @@ def _node_param(
     outputs: Mapping[str, NodeOutputs],
 ) -> Any:
     if isinstance(input_type, FromParam):
-        return params[input_type.name or input_name]
+        return params.get(input_type.name or input_name)
     elif isinstance(outputs[input_type.node], PartitionedOutput):
         return [
             _node_param_from_output(

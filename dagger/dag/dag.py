@@ -8,6 +8,7 @@ from dagger.dag.topological_sort import topological_sort
 from dagger.data_structures import FrozenMapping
 from dagger.input import FromNodeOutput, FromParam
 from dagger.input import validate_name as validate_input_name
+from dagger.input.empty_default_value import EmptyDefaultValue
 from dagger.output import validate_name as validate_output_name
 from dagger.task import SupportedInputs as SupportedTaskInputs
 from dagger.task import Task
@@ -205,13 +206,19 @@ def validate_parameters(
     ValueError
         If the set of parameters does not contain all the required inputs.
     """
-    missing_params = inputs.keys() - params.keys()
+    required_inputs = {
+        name
+        for name, input_ in inputs.items()
+        if not isinstance(input_, FromParam)
+        or input_.default_value == EmptyDefaultValue()
+    }
+    missing_params = required_inputs - params.keys()
     if missing_params:
         raise ValueError(
-            f"The parameters supplied to this DAG were supposed to contain the following parameters: {sorted(list(inputs))}. However, only the following parameters were actually supplied: {sorted(list(params))}. We are missing: {sorted(list(missing_params))}."
+            f"The parameters supplied to this DAG were supposed to contain the following parameters: {sorted(list(required_inputs))}. However, only the following parameters were actually supplied: {sorted(list(params))}. We are missing: {sorted(list(missing_params))}."
         )
 
-    superfluous_params = params.keys() - inputs.keys()
+    superfluous_params = params.keys() - required_inputs
     if superfluous_params:
         warnings.warn(
             f"The following parameters were supplied to this DAG, but are not necessary: {sorted(list(superfluous_params))}"

@@ -32,4 +32,4 @@ def test__parameter_usage__is_not_iterable():
 def test__parameter_usage__representation():
     serializer = AsPickle()
     param = ParameterUsage(name="my-name", serializer=serializer)
-    assert repr(param) == f"ParameterUsage(name=my-name, serializer={serializer})"
+    assert repr(param) == f"ParameterUsage(name=my-name, default_value='None', serializer={serializer})"

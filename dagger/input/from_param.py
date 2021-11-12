@@ -2,7 +2,7 @@
 
 from typing import Optional, TypeVar
 
-from dagger.dsl.parameter_usage import EmptyDefaultValue
+from dagger.input.empty_default_value import EmptyDefaultValue
 from dagger.serializer import DefaultSerializer, Serializer
 
 T = TypeVar("T")
@@ -14,7 +14,7 @@ class FromParam:
     def __init__(
         self,
         name: Optional[str] = None,
-        default_value: T = EmptyDefaultValue,
+        default_value: T = EmptyDefaultValue(),
         serializer: Serializer = DefaultSerializer,
     ):
         """
@@ -22,12 +22,15 @@ class FromParam:
 
         Parameters
         ----------
-        serializer
-            The Serializer implementation to use to deserialize the input.
-
         name
             The name of the parameter in the parent node.
             If omitted, it's assumed to be equal to the name given to this input.
+
+        default_value
+            The default value, if any, of the input
+
+        serializer
+            The Serializer implementation to use to deserialize the input.
 
         Returns
         -------
@@ -62,4 +65,5 @@ class FromParam:
             isinstance(obj, FromParam)
             and self._name == obj._name
             and self._serializer == obj._serializer
+            and self._default_value == obj._default_value
         )

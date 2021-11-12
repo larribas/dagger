@@ -14,6 +14,7 @@ import dagger.dsl as dsl
 from dagger.dag import DAG
 from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromKey, FromReturnValue
+from dagger.runtime.local import invoke
 from dagger.serializer import AsJSON, AsPickle
 from dagger.task import Task
 from tests.dsl.verification import verify_dags_are_equivalent
@@ -878,3 +879,31 @@ def test__build__nested_for_loops():
         str(e.value)
         == "This node is partitioned. In Dagger, partitioned nodes may not generate partitioned outputs. Check the documentation to better understand how partitioning works: https://larribas.me/dagger/user-guide/partitioning/"
     )
+
+
+def test__dag__with_default_value():
+    @dsl.task()
+    def f(a, b=2):
+        return a + b
+
+    @dsl.DAG()
+    def d(x=3):
+        return f(x)
+
+    dag = dsl.build(d)
+
+    verify_dags_are_equivalent(
+        dag,
+        DAG(
+            inputs={"x": FromParam("x", 3)},
+            outputs={"return_value": FromNodeOutput("f", "return_value")},
+            nodes={
+                "f": Task(
+                    f.func,
+                    inputs={"a": FromParam("x", default_value=3)},
+                    outputs={"return_value": FromReturnValue()},
+                )
+            },
+        ),
+    )
+    invoke(dag)

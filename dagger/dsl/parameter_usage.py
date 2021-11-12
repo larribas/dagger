@@ -1,17 +1,10 @@
 """Data structures that represent how parameters are used throughout a DAG defined ."""
 from typing import TypeVar, Union
 
+from dagger.input.empty_default_value import EmptyDefaultValue
 from dagger.serializer import DefaultSerializer, Serializer
 
 T = TypeVar("T")
-
-
-class EmptyDefaultValue:
-    """ Marker object for that represents a parameter without default value. """
-
-    def __repr__(self) -> str:
-        """Get a human-readable string representation of an empty default value."""
-        return "'None'"
 
 
 class ParameterUsage:
@@ -20,7 +13,7 @@ class ParameterUsage:
     def __init__(
         self,
         name: str,
-        default_value: Union[EmptyDefaultValue, T],
+        default_value: Union[EmptyDefaultValue, T] = EmptyDefaultValue(),
         serializer: Serializer = DefaultSerializer,
     ):
         self._name = name

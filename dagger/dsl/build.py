@@ -259,7 +259,6 @@ def _build_node_input(
         return FromNodeOutput(
             node=node_names_by_id[input_type.invocation_id],
             output=input_type.output_name,
-            default_value=input_type.default_value,
             serializer=input_type.serializer,
         )
 
