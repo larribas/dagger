@@ -1,6 +1,6 @@
 """Input retrieved from the parameters passed to the parent node."""
 
-from typing import Optional, TypeVar
+from typing import Optional, TypeVar, Union
 
 from dagger.input.empty_default_value import EmptyDefaultValue
 from dagger.serializer import DefaultSerializer, Serializer
@@ -14,7 +14,7 @@ class FromParam:
     def __init__(
         self,
         name: Optional[str] = None,
-        default_value: T = EmptyDefaultValue(),
+        default_value: Union[EmptyDefaultValue, T] = EmptyDefaultValue(),
         serializer: Serializer = DefaultSerializer,
     ):
         """
