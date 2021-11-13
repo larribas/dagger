@@ -51,7 +51,7 @@ class FromParam:
         return self._name
 
     @property
-    def default_value(self) -> T:
+    def default_value(self) -> Union[EmptyDefaultValue, T]:
         """Get the default value of the input references, if any."""
         return self._default_value
 

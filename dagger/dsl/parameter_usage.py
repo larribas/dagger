@@ -26,7 +26,7 @@ class ParameterUsage:
         return self._name
 
     @property
-    def default_value(self) -> T:
+    def default_value(self) -> Union[EmptyDefaultValue, T]:
         """Return the default value of the parameter."""
         return self._default_value
 
