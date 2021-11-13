@@ -906,4 +906,4 @@ def test__dag__with_default_value():
             },
         ),
     )
-    invoke(dag)
+    assert invoke(dag)["return_value"] == 5
