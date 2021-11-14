@@ -157,7 +157,8 @@ class NodeInvocationRecorder:
                 arg.consume()
 
     def _func_with_preset_params(self, arguments: Mapping[str, Any]) -> Callable:
-        """
+        """Return function with all arguments preset.
+
         Return the function where all the arguments that come from a literal value
         (instead of a reference built by the DSL) are preset and don't need to be
         injected as a parameter anymore.
