@@ -42,7 +42,10 @@ def _validate_and_filter_inputs(
             f"The following parameters were supplied to the task, but are not necessary: {sorted(list(superfluous_params))}"
         )
 
-    return {input_name: params[input_name] or input_value.default_value for input_name, input_value in inputs.items()}
+    return {
+        input_name: params[input_name] or input_value.default_value
+        for input_name, input_value in inputs.items()
+    }
 
 
 def _serialize_outputs(
