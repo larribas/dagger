@@ -650,7 +650,7 @@ def test__validate_parameters__when_input_is_missing():
 
     assert (
         str(e.value)
-        == "The parameters supplied to this DAG were supposed to contain the following parameters: ['a', 'b', 'c']. However, only the following parameters were actually supplied: ['a', 'c']. We are missing: ['b']."
+        == "The parameters supplied to this node were supposed to contain the following parameters: ['a', 'b', 'c']. However, only the following parameters were actually supplied: ['a', 'c']. We are missing: ['b']."
     )
 
 
@@ -671,5 +671,5 @@ def test__validate_parameters__when_param_is_superfluous():
         assert len(w) == 1
         assert (
             str(w[0].message)
-            == "The following parameters were supplied to this DAG, but are not necessary: ['y', 'z']"
+            == "The following parameters were supplied to this node, but are not necessary: ['y', 'z']"
         )

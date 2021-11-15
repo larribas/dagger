@@ -3,6 +3,7 @@ import os
 import warnings
 from typing import Any, Dict, Iterable, Mapping
 
+from dagger.dag import validate_parameters
 from dagger.runtime.local.output import dump
 from dagger.runtime.local.types import NodeOutput, NodeOutputs, PartitionedOutput
 from dagger.serializer import SerializationError
@@ -15,7 +16,8 @@ def invoke_task(
     output_path: str,
 ) -> NodeOutputs:
     """Invoke a task locally with the specified parameters and dump the serialized outputs on the path provided."""
-    inputs = _validate_and_filter_inputs(inputs=task.inputs, params=params)
+    validate_parameters(task.inputs, params)
+    inputs = _filter_inputs(inputs=task.inputs, params=params)
 
     return_value = task.func(**inputs)
 
@@ -26,24 +28,15 @@ def invoke_task(
     )
 
 
-def _validate_and_filter_inputs(
+def _filter_inputs(
     inputs: Mapping[str, SupportedInputs],
     params: Mapping[str, Any],
 ) -> Mapping[str, Any]:
-    missing_params = inputs.keys() - params.keys()
-    if missing_params:
-        raise ValueError(
-            f"The following parameters are required by the task but were not supplied: {sorted(list(missing_params))}"
-        )
-
-    superfluous_params = params.keys() - inputs.keys()
-    if superfluous_params:
-        warnings.warn(
-            f"The following parameters were supplied to the task, but are not necessary: {sorted(list(superfluous_params))}"
-        )
 
     return {
-        input_name: params[input_name] or input_value.default_value
+        input_name: params[input_name]
+        if input_name in params
+        else input_value.default_value
         for input_name, input_value in inputs.items()
     }
 

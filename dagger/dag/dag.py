@@ -215,13 +215,13 @@ def validate_parameters(
     missing_params = required_inputs - params.keys()
     if missing_params:
         raise ValueError(
-            f"The parameters supplied to this DAG were supposed to contain the following parameters: {sorted(list(required_inputs))}. However, only the following parameters were actually supplied: {sorted(list(params))}. We are missing: {sorted(list(missing_params))}."
+            f"The parameters supplied to this node were supposed to contain the following parameters: {sorted(list(required_inputs))}. However, only the following parameters were actually supplied: {sorted(list(params))}. We are missing: {sorted(list(missing_params))}."
         )
 
     superfluous_params = params.keys() - required_inputs
     if superfluous_params:
         warnings.warn(
-            f"The following parameters were supplied to this DAG, but are not necessary: {sorted(list(superfluous_params))}"
+            f"The following parameters were supplied to this node, but are not necessary: {sorted(list(superfluous_params))}"
         )
 
 

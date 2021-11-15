@@ -7,7 +7,7 @@ import pytest
 from dagger.input import FromParam
 from dagger.output import FromKey, FromReturnValue
 from dagger.runtime.local.output import deserialized_outputs
-from dagger.runtime.local.task import invoke_task
+from dagger.runtime.local.task import invoke_task, _filter_inputs
 from dagger.serializer import AsPickle, SerializationError
 from dagger.task import Task
 
@@ -79,7 +79,7 @@ def test__invoke_task__with_missing_input_parameter():
 
     assert (
         str(e.value)
-        == "The following parameters are required by the task but were not supplied: ['a', 'b']"
+        == "The parameters supplied to this node were supposed to contain the following parameters: ['a', 'b']. However, only the following parameters were actually supplied: []. We are missing: ['a', 'b']."
     )
 
 
@@ -142,7 +142,7 @@ def test__invoke_task__with_superfluous_parameters():
         assert len(w) == 1
         assert (
             str(w[0].message)
-            == "The following parameters were supplied to the task, but are not necessary: ['a', 'b']"
+            == "The following parameters were supplied to this node, but are not necessary: ['a', 'b']"
         )
 
 
@@ -196,3 +196,74 @@ def test__invoke_task__with_partitioned_output_that_cannot_be_partitioned():
         str(e.value)
         == "We encountered the following error while attempting to serialize the results of this task: Output 'not_partitioned' was declared as a partitioned output, but the return value was not an iterable (instead, it was of type 'int'). Partitioned outputs should be iterables of values (e.g. lists or sets). Each value in the iterable must be serializable with the serializer defined in the output."
     )
+
+
+def test__invoke_task__with_default_value():
+    task = Task(
+        lambda x: x,
+        inputs={"x": FromParam(default_value=2)},
+        outputs={
+            "x": FromReturnValue(),
+        },
+    )
+
+    with tempfile.TemporaryDirectory() as tmp:
+        output = invoke_task(task, params={}, output_path=tmp)
+        assert deserialized_outputs(output) == {"x": 2}
+
+
+def test__invoke_task__overriding_default_value():
+    task = Task(
+        lambda x: x,
+        inputs={"x": FromParam(default_value=2)},
+        outputs={
+            "x": FromReturnValue(),
+        },
+    )
+
+    with tempfile.TemporaryDirectory() as tmp:
+        output = invoke_task(task, params={"x": 3}, output_path=tmp)
+        assert deserialized_outputs(output) == {"x": 3}
+
+
+#
+# _filter_inputs
+#
+
+
+def test__filter_inputs__with_truthy_params():
+    filtered_inputs = _filter_inputs(
+        inputs={"x": FromParam(name=None)}, params={"x": 3}
+    )
+    assert filtered_inputs == {"x": 3}
+
+
+def test__filter_inputs__with_superfluous_params():
+    filtered_inputs = _filter_inputs(
+        inputs={"x": FromParam(name=None)}, params={"x": 3, "y": 4}
+    )
+    assert filtered_inputs == {"x": 3}
+
+
+def test__filter_inputs__with_falsy_params():
+    cases = [None, [], False, {}, ""]
+    for case in cases:
+        filtered_inputs = _filter_inputs(
+            inputs={"x": FromParam(name=None, default_value=10)},
+            params={"x": case, "y": 4},
+        )
+        assert filtered_inputs == {"x": case}
+
+
+def test__filter_inputs__overriding_default_value():
+    filtered_inputs = _filter_inputs(
+        inputs={"x": FromParam(name=None, default_value=3)}, params={"x": 5}
+    )
+    assert filtered_inputs == {"x": 5}
+
+
+def test__filter_inputs__using_default_value():
+    filtered_inputs = _filter_inputs(
+        inputs={"x": FromParam(name=None, default_value=3)}, params={}
+    )
+    assert filtered_inputs == {"x": 3}
