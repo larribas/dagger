@@ -230,7 +230,53 @@ def test__invoke_dag__with_partitions_but_invalid_outputs():
     )
 
 
-# test using default value
+def test__invoke_dag__using_default_value():
+    dag = DAG(
+        inputs={"x": FromParam("x", 3)},
+        outputs={"return_value": FromNodeOutput("f", "return_value")},
+        nodes={
+            "f": Task(
+                lambda a: a,
+                inputs={"a": FromParam("x", 3)},
+                outputs={"return_value": FromReturnValue()},
+            )
+        },
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        res = invoke_dag(dag, params={}, output_path=tmp)
+        assert deserialized_outputs(res) == {'return_value': 3}
 
-# test using value instead of default
+
+def test__invoke_dag__using_a_value_instead_of_default_value():
+    dag = DAG(
+        inputs={"x": FromParam("x", 3)},
+        outputs={"return_value": FromNodeOutput("f", "return_value")},
+        nodes={
+            "f": Task(
+                lambda a: a,
+                inputs={"a": FromParam("x", 3)},
+                outputs={"return_value": FromReturnValue()},
+            )
+        },
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        res = invoke_dag(dag, params={"x": 5}, output_path=tmp)
+        assert deserialized_outputs(res) == {'return_value': 5}
+
+
+def test__invoke_dag__using_none_instead_of_default_value():
+    dag = DAG(
+        inputs={"x": FromParam("x", 3)},
+        outputs={"return_value": FromNodeOutput("f", "return_value")},
+        nodes={
+            "f": Task(
+                lambda a: 0 if a is None else a,
+                inputs={"a": FromParam("x", 3)},
+                outputs={"return_value": FromReturnValue()},
+            )
+        },
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        res = invoke_dag(dag, params={"x": None}, output_path=tmp)
+        assert deserialized_outputs(res) == {'return_value': 0}
 
