@@ -33,4 +33,7 @@ def test__with_overridden_name():
 def test__representation():
     serializer = CustomSerializer()
     input_ = FromParam("my-param", serializer=serializer)
-    assert repr(input_) == f"FromParam(name=my-param, default_value='None', serializer={repr(serializer)})"
+    assert (
+        repr(input_)
+        == f"FromParam(name=my-param, default_value='None', serializer={repr(serializer)})"
+    )

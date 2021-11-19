@@ -14,7 +14,6 @@ import dagger.dsl as dsl
 from dagger.dag import DAG
 from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromKey, FromReturnValue
-from dagger.runtime.local import invoke
 from dagger.serializer import AsJSON, AsPickle
 from dagger.task import Task
 from tests.dsl.verification import verify_dags_are_equivalent

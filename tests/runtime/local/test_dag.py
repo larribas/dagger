@@ -244,7 +244,7 @@ def test__invoke_dag__using_default_value():
     )
     with tempfile.TemporaryDirectory() as tmp:
         res = invoke_dag(dag, params={}, output_path=tmp)
-        assert deserialized_outputs(res) == {'return_value': 3}
+        assert deserialized_outputs(res) == {"return_value": 3}
 
 
 def test__invoke_dag__using_a_value_instead_of_default_value():
@@ -261,7 +261,7 @@ def test__invoke_dag__using_a_value_instead_of_default_value():
     )
     with tempfile.TemporaryDirectory() as tmp:
         res = invoke_dag(dag, params={"x": 5}, output_path=tmp)
-        assert deserialized_outputs(res) == {'return_value': 5}
+        assert deserialized_outputs(res) == {"return_value": 5}
 
 
 def test__invoke_dag__using_none_instead_of_default_value():
@@ -278,5 +278,4 @@ def test__invoke_dag__using_none_instead_of_default_value():
     )
     with tempfile.TemporaryDirectory() as tmp:
         res = invoke_dag(dag, params={"x": None}, output_path=tmp)
-        assert deserialized_outputs(res) == {'return_value': 0}
-
+        assert deserialized_outputs(res) == {"return_value": 0}
