@@ -7,7 +7,7 @@ import pytest
 from dagger.input import FromParam
 from dagger.output import FromKey, FromReturnValue
 from dagger.runtime.local.output import deserialized_outputs
-from dagger.runtime.local.task import invoke_task, _filter_inputs
+from dagger.runtime.local.task import _filter_inputs, invoke_task
 from dagger.serializer import AsPickle, SerializationError
 from dagger.task import Task
 

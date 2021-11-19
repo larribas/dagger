@@ -15,7 +15,7 @@ from dagger.dsl.node_output_partition_usage import NodeOutputPartitionUsage
 from dagger.dsl.node_output_property_usage import NodeOutputPropertyUsage
 from dagger.dsl.node_output_reference import NodeOutputReference
 from dagger.dsl.node_output_usage import NodeOutputUsage
-from dagger.dsl.parameter_usage import ParameterUsage, EmptyDefaultValue
+from dagger.dsl.parameter_usage import EmptyDefaultValue, ParameterUsage
 from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromKey, FromProperty, FromReturnValue
 from dagger.serializer import DefaultSerializer
