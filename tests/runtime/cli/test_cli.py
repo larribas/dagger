@@ -62,6 +62,71 @@ def test__invoke__whole_dag():
             assert f.read() == b"64"
 
 
+def test__invoke_dag__with_default_values():
+    dag = DAG(
+        nodes=dict(
+            square=Task(
+                lambda x: x ** 3,
+                inputs=dict(x=FromParam("x", 3)),
+                outputs=dict(x_squared=FromReturnValue()),
+            ),
+        ),
+        inputs=dict(x=FromParam("x", 3)),
+        outputs=dict(x_squared=FromNodeOutput("square", "x_squared")),
+    )
+
+    with tempfile.TemporaryDirectory() as tmp:
+        x_input = os.path.join(tmp, "x_input")
+        x_output = os.path.join(tmp, "x_output")
+
+        with open(x_input, "wb") as f:
+            f.write(b"2")
+
+        invoke(
+            dag,
+            argv=itertools.chain(
+                *[
+                    ["--input", "x", x_input],
+                    ["--node-name", "square"],
+                    ["--output", "x_squared", x_output],
+                ]
+            ),
+        )
+
+        with open(x_output, "rb") as f:
+            assert f.read() == b"8"
+
+
+def test__invoke_dag__using_non_default_when_default_is_defined():
+    dag = DAG(
+        nodes=dict(
+            square=Task(
+                lambda x: x ** 2,
+                inputs=dict(x=FromParam("x", 3)),
+                outputs=dict(x_squared=FromReturnValue()),
+            ),
+        ),
+        inputs=dict(x=FromParam("x", 3)),
+        outputs=dict(x_squared=FromNodeOutput("square", "x_squared")),
+    )
+
+    with tempfile.TemporaryDirectory() as tmp:
+        x_output = os.path.join(tmp, "x_output")
+
+        invoke(
+            dag,
+            argv=itertools.chain(
+                *[
+                    ["--node-name", "square"],
+                    ["--output", "x_squared", x_output],
+                ]
+            ),
+        )
+
+        with open(x_output, "rb") as f:
+            assert f.read() == b"9"
+
+
 def test__invoke__selecting_a_node_that_does_not_exist():
     dag = DAG(
         {

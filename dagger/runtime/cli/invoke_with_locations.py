@@ -4,6 +4,7 @@ from typing import Any, Iterable, List, Mapping
 
 import dagger.runtime.local as local
 from dagger.dag import DAG
+from dagger.input.empty_default_value import EmptyDefaultValue
 from dagger.runtime.cli.locations import (
     retrieve_input_from_location,
     store_output_in_location,
@@ -54,7 +55,7 @@ def invoke_with_locations(
     output_locations = output_locations or {}
     nested_node = find_nested_node(dag, node_address or [])
 
-    _validate_inputs(nested_node.node.inputs.keys(), input_locations.keys())
+    _validate_inputs(nested_node.node.inputs, input_locations.keys())
     _validate_outputs(nested_node.node.outputs.keys(), output_locations.keys())
 
     params = _deserialized_params(nested_node, input_locations)
@@ -83,8 +84,11 @@ def _validate_inputs(
     input_locations: Iterable[str],
 ):
     """Validate all the input locations supplied against the inputs the node is expecting."""
-    for input_name in input_names:
-        if input_name not in input_locations:
+    for input_name, input_value in input_names.items():
+        if (
+            input_name not in input_locations
+            and input_value.default_value == EmptyDefaultValue()
+        ):
             raise ValueError(
                 f"This node is supposed to receive a pointer to an input named '{input_name}'. However, only the following input pointers were supplied: {sorted(input_locations)}"
             )

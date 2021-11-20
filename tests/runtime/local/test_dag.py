@@ -253,7 +253,7 @@ def test__invoke_dag__using_a_value_instead_of_default_value():
         outputs={"return_value": FromNodeOutput("f", "return_value")},
         nodes={
             "f": Task(
-                lambda a: a,
+                lambda a: a + 1,
                 inputs={"a": FromParam("x", 3)},
                 outputs={"return_value": FromReturnValue()},
             )
@@ -261,7 +261,7 @@ def test__invoke_dag__using_a_value_instead_of_default_value():
     )
     with tempfile.TemporaryDirectory() as tmp:
         res = invoke_dag(dag, params={"x": 5}, output_path=tmp)
-        assert deserialized_outputs(res) == {"return_value": 5}
+        assert deserialized_outputs(res) == {"return_value": 6}
 
 
 def test__invoke_dag__using_none_instead_of_default_value():
@@ -279,3 +279,44 @@ def test__invoke_dag__using_none_instead_of_default_value():
     with tempfile.TemporaryDirectory() as tmp:
         res = invoke_dag(dag, params={"x": None}, output_path=tmp)
         assert deserialized_outputs(res) == {"return_value": 0}
+
+
+def test__invoke_dag__with_two_default_values(multiply_function):
+    dag = DAG(
+        inputs={"x": FromParam("x", 3), "y": FromParam("y", 5)},
+        outputs={"return_value": FromNodeOutput("f", "return_value")},
+        nodes={
+            "f": Task(
+                multiply_function,
+                inputs={"x": FromParam("x", 3), "y": FromParam("y", 5)},
+                outputs={"return_value": FromReturnValue()},
+            )
+        },
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        res = invoke_dag(dag, params={}, output_path=tmp)
+        assert deserialized_outputs(res) == {"return_value": 15}
+
+
+def test__invoke_dag__with_two_default_values_one_using_other_value(multiply_function):
+    dag = DAG(
+        inputs={"x": FromParam("x", 3), "y": FromParam("y", 10)},
+        outputs={"return_value": FromNodeOutput("f", "return_value")},
+        nodes={
+            "f": Task(
+                multiply_function,
+                inputs={"x": FromParam("x", 3), "y": FromParam("y", 10)},
+                outputs={"return_value": FromReturnValue()},
+            )
+        },
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        res = invoke_dag(dag, params={"y": 2}, output_path=tmp)
+        assert deserialized_outputs(res) == {"return_value": 6}
+
+
+@pytest.fixture()
+def multiply_function():
+    def f(x, y):
+        return x * y
+    return f
