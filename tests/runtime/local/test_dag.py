@@ -319,4 +319,5 @@ def test__invoke_dag__with_two_default_values_one_using_other_value(multiply_fun
 def multiply_function():
     def f(x, y):
         return x * y
+
     return f
