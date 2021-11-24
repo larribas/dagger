@@ -218,7 +218,7 @@ def validate_parameters(
             f"The parameters supplied to this node were supposed to contain the following parameters: {sorted(list(required_inputs))}. However, only the following parameters were actually supplied: {sorted(list(params))}. We are missing: {sorted(list(missing_params))}."
         )
 
-    superfluous_params = params.keys() - required_inputs
+    superfluous_params = params.keys() - inputs.keys()
     if superfluous_params:
         warnings.warn(
             f"The following parameters were supplied to this node, but are not necessary: {sorted(list(superfluous_params))}"

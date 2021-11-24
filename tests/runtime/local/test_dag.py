@@ -1,8 +1,9 @@
 import tempfile
+import warnings
 
 import pytest
 
-from dagger.dag import DAG
+from dagger.dag import DAG, validate_parameters
 from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromKey, FromReturnValue
 from dagger.runtime.local.dag import invoke_dag
@@ -313,6 +314,38 @@ def test__invoke_dag__with_two_default_values_one_using_other_value(multiply_fun
     with tempfile.TemporaryDirectory() as tmp:
         res = invoke_dag(dag, params={"y": 2}, output_path=tmp)
         assert deserialized_outputs(res) == {"return_value": 6}
+
+
+#
+# validate_parameters
+#
+
+def test__validate_parameters__if_superfluous_params_warns():
+    # given
+    inputs = {"a": FromParam("a")}
+    params = {"a": 1, "b": 2}
+    # when
+    with pytest.warns(Warning) as record:
+        validate_parameters(inputs, params)
+        if not record:
+            pytest.fail("Expected a warning!")
+    # then
+    # check that only one warning was raised
+    assert len(record) == 1
+    # check that the message matches
+    assert record[0].message.args[0] == "The following parameters were supplied to this node, but are not necessary: ['b']"
+
+
+def test__validate_parameters__no_superfluous_params_does_not_warn():
+    # given
+    inputs = {"a": FromParam("a"), "b": FromParam("b", 2), "c": FromParam("c", 3)}
+    params = {"a": 1, "b": 4}
+    # when
+    with pytest.warns(None) as record:
+        validate_parameters(inputs, params)
+
+    # check no warning was raised
+    assert len(record) == 0
 
 
 @pytest.fixture()
