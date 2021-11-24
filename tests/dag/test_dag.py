@@ -1,9 +1,8 @@
-import warnings
 from itertools import combinations
 
 import pytest
 
-from dagger.dag import DAG, CyclicDependencyError, validate_parameters
+from dagger.dag import DAG, CyclicDependencyError
 from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromReturnValue
 from dagger.serializer import AsPickle, DefaultSerializer
@@ -613,63 +612,3 @@ def test__representation():
         repr(dag)
         == f"DAG(inputs={{'a': {input_a}}}, outputs={{'b': {output_b}}}, runtime_options={{'my': 'options'}}, partition_by_input=a, nodes={{'t': {task}}})"
     )
-
-
-#
-# validate_parameters
-#
-
-
-def test__validate_parameters__when_params_match_inputs():
-    validate_parameters(
-        inputs={
-            "a": FromParam(),
-            "b": FromNodeOutput("n", "o"),
-        },
-        params={
-            "a": 1,
-            "b": "2",
-        },
-    )
-    # We are testing there are no exceptions raised as a result of calling the validator
-
-
-def test__validate_parameters__when_input_is_missing():
-    with pytest.raises(ValueError) as e:
-        validate_parameters(
-            inputs={
-                "c": FromParam(),
-                "a": FromParam(),
-                "b": FromNodeOutput("n", "o"),
-            },
-            params={
-                "c": 1,
-                "a": 1,
-            },
-        )
-
-    assert (
-        str(e.value)
-        == "The parameters supplied to this node were supposed to contain the following parameters: ['a', 'b', 'c']. However, only the following parameters were actually supplied: ['a', 'c']. We are missing: ['b']."
-    )
-
-
-def test__validate_parameters__when_param_is_superfluous():
-    with warnings.catch_warnings(record=True) as w:
-        validate_parameters(
-            inputs={
-                "c": FromParam(),
-                "a": FromParam(),
-            },
-            params={
-                "z": 1,
-                "a": 1,
-                "c": 1,
-                "y": 1,
-            },
-        )
-        assert len(w) == 1
-        assert (
-            str(w[0].message)
-            == "The following parameters were supplied to this node, but are not necessary: ['y', 'z']"
-        )

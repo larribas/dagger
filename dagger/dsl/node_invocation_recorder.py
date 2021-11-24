@@ -74,7 +74,6 @@ class NodeInvocationRecorder:
         )
 
         invocations = node_invocations.get([])
-        # TODO do not pass default value of param to nodes where it's used
         invocations.append(
             NodeInvocation(
                 id=invocation_id,

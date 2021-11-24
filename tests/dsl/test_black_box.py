@@ -882,8 +882,8 @@ def test__build__nested_for_loops():
 
 def test__dag__with_default_value():
     @dsl.task()
-    def f(a, b=2):
-        return a + b
+    def f(a):
+        return a
 
     @dsl.DAG()
     def d(x=3):
@@ -905,3 +905,25 @@ def test__dag__with_default_value():
             },
         ),
     )
+
+
+def test__dag__dag_composition_with_default():
+    @dsl.task()
+    def identity(x):
+        return x
+
+    @dsl.DAG()
+    def my_sub_dag(a, b=2, c=3):
+        return {
+            "a": identity(a),
+            "b": identity(b),
+            "c": identity(c),
+        }
+
+    @dsl.DAG()
+    def my_dag(c=10):
+        return my_sub_dag(a=10, c=20)
+
+    dag = dsl.build(my_dag)
+    pass
+

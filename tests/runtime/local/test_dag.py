@@ -248,21 +248,21 @@ def test__invoke_dag__using_default_value():
         assert deserialized_outputs(res) == {"return_value": 3}
 
 
-def test__invoke_dag__using_a_value_instead_of_default_value():
+def test__invoke_dag__with_two_default_values(multiply_function):
     dag = DAG(
-        inputs={"x": FromParam("x", 3)},
+        inputs={"x": FromParam("x", 3), "y": FromParam("y", 5)},
         outputs={"return_value": FromNodeOutput("f", "return_value")},
         nodes={
             "f": Task(
-                lambda a: a + 1,
-                inputs={"a": FromParam("x", 3)},
+                multiply_function,
+                inputs={"x": FromParam("x", 3), "y": FromParam("y", 5)},
                 outputs={"return_value": FromReturnValue()},
             )
         },
     )
     with tempfile.TemporaryDirectory() as tmp:
-        res = invoke_dag(dag, params={"x": 5}, output_path=tmp)
-        assert deserialized_outputs(res) == {"return_value": 6}
+        res = invoke_dag(dag, params={}, output_path=tmp)
+        assert deserialized_outputs(res) == {"return_value": 15}
 
 
 def test__invoke_dag__using_none_instead_of_default_value():
@@ -282,23 +282,6 @@ def test__invoke_dag__using_none_instead_of_default_value():
         assert deserialized_outputs(res) == {"return_value": 0}
 
 
-def test__invoke_dag__with_two_default_values(multiply_function):
-    dag = DAG(
-        inputs={"x": FromParam("x", 3), "y": FromParam("y", 5)},
-        outputs={"return_value": FromNodeOutput("f", "return_value")},
-        nodes={
-            "f": Task(
-                multiply_function,
-                inputs={"x": FromParam("x", 3), "y": FromParam("y", 5)},
-                outputs={"return_value": FromReturnValue()},
-            )
-        },
-    )
-    with tempfile.TemporaryDirectory() as tmp:
-        res = invoke_dag(dag, params={}, output_path=tmp)
-        assert deserialized_outputs(res) == {"return_value": 15}
-
-
 def test__invoke_dag__with_two_default_values_one_using_other_value(multiply_function):
     dag = DAG(
         inputs={"x": FromParam("x", 3), "y": FromParam("y", 10)},
@@ -314,42 +297,6 @@ def test__invoke_dag__with_two_default_values_one_using_other_value(multiply_fun
     with tempfile.TemporaryDirectory() as tmp:
         res = invoke_dag(dag, params={"y": 2}, output_path=tmp)
         assert deserialized_outputs(res) == {"return_value": 6}
-
-
-#
-# validate_parameters
-#
-
-
-def test__validate_parameters__if_superfluous_params_warns():
-    # given
-    inputs = {"a": FromParam("a")}
-    params = {"a": 1, "b": 2}
-    # when
-    with pytest.warns(Warning) as record:
-        validate_parameters(inputs, params)
-        if not record:
-            pytest.fail("Expected a warning!")
-    # then
-    # check that only one warning was raised
-    assert len(record) == 1
-    # check that the message matches
-    assert (
-        record[0].message.args[0]
-        == "The following parameters were supplied to this node, but are not necessary: ['b']"
-    )
-
-
-def test__validate_parameters__no_superfluous_params_does_not_warn():
-    # given
-    inputs = {"a": FromParam("a"), "b": FromParam("b", 2), "c": FromParam("c", 3)}
-    params = {"a": 1, "b": 4}
-    # when
-    with pytest.warns(None) as record:
-        validate_parameters(inputs, params)
-
-    # check no warning was raised
-    assert len(record) == 0
 
 
 #
