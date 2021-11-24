@@ -320,6 +320,7 @@ def test__invoke_dag__with_two_default_values_one_using_other_value(multiply_fun
 # validate_parameters
 #
 
+
 def test__validate_parameters__if_superfluous_params_warns():
     # given
     inputs = {"a": FromParam("a")}
@@ -333,7 +334,10 @@ def test__validate_parameters__if_superfluous_params_warns():
     # check that only one warning was raised
     assert len(record) == 1
     # check that the message matches
-    assert record[0].message.args[0] == "The following parameters were supplied to this node, but are not necessary: ['b']"
+    assert (
+        record[0].message.args[0]
+        == "The following parameters were supplied to this node, but are not necessary: ['b']"
+    )
 
 
 def test__validate_parameters__no_superfluous_params_does_not_warn():
@@ -346,6 +350,11 @@ def test__validate_parameters__no_superfluous_params_does_not_warn():
 
     # check no warning was raised
     assert len(record) == 0
+
+
+#
+# fixtures
+#
 
 
 @pytest.fixture()
