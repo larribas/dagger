@@ -232,15 +232,17 @@ def test__invoke_task__overriding_default_value():
 
 
 def test__filter_inputs__with_truthy_params():
-    filtered_inputs = _filter_inputs(
-        inputs={"x": FromParam(name=None)}, params={"x": 3}
-    )
-    assert filtered_inputs == {"x": 3}
+    cases = [True, 1, [1, 2], {1, 2}, {"a": 1, "b": 2}]
+    for case in cases:
+        filtered_inputs = _filter_inputs(
+            inputs={"x": FromParam()}, params={"x": case}
+        )
+        assert filtered_inputs == {"x": case}
 
 
 def test__filter_inputs__with_superfluous_params():
     filtered_inputs = _filter_inputs(
-        inputs={"x": FromParam(name=None)}, params={"x": 3, "y": 4}
+        inputs={"x": FromParam()}, params={"x": 3, "y": 4}
     )
     assert filtered_inputs == {"x": 3}
 
@@ -249,21 +251,22 @@ def test__filter_inputs__with_falsy_params():
     cases = [None, [], False, {}, ""]
     for case in cases:
         filtered_inputs = _filter_inputs(
-            inputs={"x": FromParam(name=None, default_value=10)},
+            inputs={"x": FromParam(default_value=10)},
             params={"x": case, "y": 4},
         )
         assert filtered_inputs == {"x": case}
 
 
 def test__filter_inputs__overriding_default_value():
+
     filtered_inputs = _filter_inputs(
-        inputs={"x": FromParam(name=None, default_value=3)}, params={"x": 5}
+        inputs={"x": FromParam(default_value=3)}, params={"x": 5}
     )
     assert filtered_inputs == {"x": 5}
 
 
 def test__filter_inputs__using_default_value():
     filtered_inputs = _filter_inputs(
-        inputs={"x": FromParam(name=None, default_value=3)}, params={}
+        inputs={"x": FromParam(default_value=3)}, params={}
     )
     assert filtered_inputs == {"x": 3}

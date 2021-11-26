@@ -9,7 +9,7 @@ class EmptyDefaultValue:
 
     def __repr__(self) -> str:
         """Get a human-readable string representation of an empty default value."""
-        return "'None'"
+        return "'EmptyDefaultValue'"
 
     def __eq__(self, obj):
         """Return true if both inputs are equivalent."""

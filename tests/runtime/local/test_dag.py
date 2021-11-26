@@ -1,9 +1,8 @@
 import tempfile
-import warnings
 
 import pytest
 
-from dagger.dag import DAG, validate_parameters
+from dagger.dag import DAG
 from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromKey, FromReturnValue
 from dagger.runtime.local.dag import invoke_dag

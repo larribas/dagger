@@ -3,8 +3,8 @@ import itertools
 import os
 from typing import Any, Dict, Iterable, Mapping, Union
 
-from dagger.dag import DAG, Node, validate_parameters
-from dagger.input import FromNodeOutput, FromParam
+from dagger.dag import DAG, Node
+from dagger.input import FromNodeOutput, FromParam, validate_parameters
 from dagger.runtime.local.output import load
 from dagger.runtime.local.task import invoke_task
 from dagger.runtime.local.types import (

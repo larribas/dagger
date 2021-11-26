@@ -926,4 +926,3 @@ def test__dag__dag_composition_with_default():
 
     dag = dsl.build(my_dag)
     pass
-

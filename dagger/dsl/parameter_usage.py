@@ -1,7 +1,7 @@
 """Data structures that represent how parameters are used throughout a DAG defined ."""
 from typing import TypeVar, Union
 
-from dagger.input.empty_default_value import EmptyDefaultValue
+from dagger.input import EmptyDefaultValue
 from dagger.serializer import DefaultSerializer, Serializer
 
 T = TypeVar("T")
@@ -51,4 +51,5 @@ class ParameterUsage:
             isinstance(obj, ParameterUsage)
             and self._name == obj._name
             and self._serializer == obj._serializer
+            and self._default_value == obj._default_value
         )

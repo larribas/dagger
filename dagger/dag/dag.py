@@ -1,6 +1,5 @@
 """Define the data structure for a DAG and validate all its components upon initialization."""
 import re
-import warnings
 from typing import Any, List, Mapping, Optional, Set, Union
 from typing import get_args as get_type_args
 
@@ -8,7 +7,6 @@ from dagger.dag.topological_sort import topological_sort
 from dagger.data_structures import FrozenMapping
 from dagger.input import FromNodeOutput, FromParam
 from dagger.input import validate_name as validate_input_name
-from dagger.input.empty_default_value import EmptyDefaultValue
 from dagger.output import validate_name as validate_output_name
 from dagger.task import SupportedInputs as SupportedTaskInputs
 from dagger.task import Task
@@ -182,46 +180,6 @@ class DAG:
             and self._inputs == obj._inputs
             and self._outputs == obj._outputs
             and self._runtime_options == obj._runtime_options
-        )
-
-
-def validate_parameters(
-    inputs: Mapping[str, SupportedInputs],
-    params: Mapping[str, Any],
-):
-    """
-    Validate a series of parameters against the inputs of a DAG.
-
-    Parameters
-    ----------
-    inputs
-        A mapping of input names to inputs.
-
-    params
-        A mapping of input names to parameters or input values.
-        Input values must be passed in their serialized representation.
-
-    Raises
-    ------
-    ValueError
-        If the set of parameters does not contain all the required inputs.
-    """
-    required_inputs = {
-        name
-        for name, input_ in inputs.items()
-        if not isinstance(input_, FromParam)
-        or input_.default_value == EmptyDefaultValue()
-    }
-    missing_params = required_inputs - params.keys()
-    if missing_params:
-        raise ValueError(
-            f"The parameters supplied to this node were supposed to contain the following parameters: {sorted(list(required_inputs))}. However, only the following parameters were actually supplied: {sorted(list(params))}. We are missing: {sorted(list(missing_params))}."
-        )
-
-    superfluous_params = params.keys() - inputs.keys()
-    if superfluous_params:
-        warnings.warn(
-            f"The following parameters were supplied to this node, but are not necessary: {sorted(list(superfluous_params))}"
         )
 
 

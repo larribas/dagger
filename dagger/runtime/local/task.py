@@ -2,7 +2,7 @@
 import os
 from typing import Any, Dict, Iterable, Mapping
 
-from dagger.dag import validate_parameters
+from dagger.input import validate_parameters
 from dagger.runtime.local.output import dump
 from dagger.runtime.local.types import NodeOutput, NodeOutputs, PartitionedOutput
 from dagger.serializer import SerializationError

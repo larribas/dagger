@@ -4,8 +4,7 @@ from typing import Any, Dict, List, Mapping, Sequence, Union
 
 from dagger.dag import DAG, Node
 from dagger.dag import SupportedInputs as SupportedDAGInputs
-from dagger.dag import validate_parameters
-from dagger.input import FromNodeOutput, FromParam
+from dagger.input import FromNodeOutput, FromParam, validate_parameters
 from dagger.runtime.argo.extra_spec_options import with_extra_spec_options
 from dagger.runtime.argo.workflow import Workflow
 from dagger.serializer import Serializer
