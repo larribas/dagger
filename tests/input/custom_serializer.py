@@ -1,7 +1,8 @@
 # noqa
+from dagger import Serializer
 
 
-class CustomSerializer:
+class CustomSerializer(Serializer):
     """Custom serializer implementation to test the injection of different serialization strategies to an input."""
 
     @property

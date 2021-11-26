@@ -36,3 +36,8 @@ def test__parameter_usage__representation():
         repr(param)
         == f"ParameterUsage(name=my-name, default_value='EmptyDefaultValue', serializer={serializer})"
     )
+
+
+def test__parameter_usage__default_value():
+    param = ParameterUsage(name="my-name", default_value=10)
+    assert param.default_value == 10

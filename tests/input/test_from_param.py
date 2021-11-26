@@ -37,3 +37,8 @@ def test__representation():
         repr(input_)
         == f"FromParam(name=my-param, default_value='EmptyDefaultValue', serializer={repr(serializer)})"
     )
+
+
+def test__with_default_value():
+    input_ = FromParam(default_value=10)
+    assert input_.default_value == 10
