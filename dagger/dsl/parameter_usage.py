@@ -1,5 +1,5 @@
 """Data structures that represent how parameters are used throughout a DAG defined ."""
-from typing import TypeVar, Union
+from typing import Union
 
 from dagger.input import EmptyDefaultValue
 from dagger.serializer import DefaultSerializer, JSONSerializableType, Serializer

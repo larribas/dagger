@@ -68,7 +68,7 @@ def validate_parameters(
 def filter_not_required_inputs(
     inputs: Mapping[str, Union[FromParam, FromNodeOutput]]
 ) -> Set[str]:
-    """Filters all inputs which have a default value."""
+    """Filter all inputs which have a default value."""
     return {
         name
         for name, input_ in inputs.items()

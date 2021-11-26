@@ -1,6 +1,6 @@
 """Input retrieved from the parameters passed to the parent node."""
 
-from typing import Optional, TypeVar, Union
+from typing import Optional, Union
 
 from dagger.input.empty_default_value import EmptyDefaultValue
 from dagger.serializer import DefaultSerializer, JSONSerializableType, Serializer

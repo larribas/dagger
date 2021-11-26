@@ -18,7 +18,7 @@
 
 ## validate_parameters
 
-![mkapi](dagger.dag.validate_parameters)
+![mkapi](dagger.input.validate_parameters)
 
 ## CyclicDependencyError
 
