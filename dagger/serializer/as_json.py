@@ -2,10 +2,9 @@
 
 import io
 from json.decoder import JSONDecodeError
-from typing import Any, BinaryIO, Optional, Union, List, Dict
+from typing import Any, BinaryIO, Dict, List, Optional, Union
 
 from dagger.serializer.errors import DeserializationError, SerializationError
-
 
 JSONSerializableType = Union[
     None,

@@ -3,8 +3,7 @@
 from typing import Optional, TypeVar, Union
 
 from dagger.input.empty_default_value import EmptyDefaultValue
-from dagger.serializer import DefaultSerializer, Serializer
-from dagger.serializer import JSONSerializableType
+from dagger.serializer import DefaultSerializer, JSONSerializableType, Serializer
 
 
 class FromParam:
