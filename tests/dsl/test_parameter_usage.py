@@ -34,5 +34,5 @@ def test__parameter_usage__representation():
     param = ParameterUsage(name="my-name", serializer=serializer)
     assert (
         repr(param)
-        == f"ParameterUsage(name=my-name, default_value='None', serializer={serializer})"
+        == f"ParameterUsage(name=my-name, default_value='EmptyDefaultValue', serializer={serializer})"
     )

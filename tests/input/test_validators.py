@@ -2,7 +2,13 @@ import warnings
 
 import pytest
 
-from dagger.input import FromNodeOutput, FromParam, validate_name, validate_parameters
+from dagger.input import (
+    FromNodeOutput,
+    FromParam,
+    filter_not_required_inputs,
+    validate_name,
+    validate_parameters,
+)
 
 #
 # validate_parameters
@@ -133,3 +139,17 @@ def test__validate_parameters__no_superfluous_params_does_not_warn():
 
     # check no warning was raised
     assert len(record) == 0
+
+
+#
+# filter_not_required_inputs
+#
+
+
+def test__filter_not_required_inputs__only_required_input_is_returned():
+    # given
+    inputs = {"a": FromParam("a"), "b": FromParam("b", 2), "c": FromParam("c", 3)}
+    # when
+    required_inputs = filter_not_required_inputs(inputs)
+    # then
+    assert required_inputs == {"a"}

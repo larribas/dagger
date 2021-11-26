@@ -1,7 +1,7 @@
 """Validators applicable to all types of inputs."""
 import re
 import warnings
-from typing import Any, Mapping, Union
+from typing import Any, Mapping, Set, Union
 
 from dagger.input import FromNodeOutput, FromParam
 from dagger.input.empty_default_value import EmptyDefaultValue
@@ -47,12 +47,7 @@ def validate_parameters(
     ValueError
         If the set of parameters does not contain all the required inputs.
     """
-    required_inputs = {
-        name
-        for name, input_ in inputs.items()
-        if not isinstance(input_, FromParam)
-        or input_.default_value == EmptyDefaultValue()
-    }
+    required_inputs = filter_not_required_inputs(inputs)
     missing_params = required_inputs - params.keys()
     if missing_params:
         raise ValueError(
@@ -68,3 +63,15 @@ def validate_parameters(
             f"The following parameters were supplied to this node, but are not "
             f"necessary: {sorted(list(superfluous_params))}"
         )
+
+
+def filter_not_required_inputs(
+    inputs: Mapping[str, Union[FromParam, FromNodeOutput]]
+) -> Set[str]:
+    """Filters all inputs which have a default value."""
+    return {
+        name
+        for name, input_ in inputs.items()
+        if not isinstance(input_, FromParam)
+        or input_.default_value == EmptyDefaultValue()
+    }

@@ -35,5 +35,5 @@ def test__representation():
     input_ = FromParam("my-param", serializer=serializer)
     assert (
         repr(input_)
-        == f"FromParam(name=my-param, default_value='None', serializer={repr(serializer)})"
+        == f"FromParam(name=my-param, default_value='EmptyDefaultValue', serializer={repr(serializer)})"
     )
