@@ -6,7 +6,6 @@ import dagger.runtime.local as local
 from dagger import FromNodeOutput, FromParam
 from dagger.dag import DAG
 from dagger.input import filter_not_required_inputs
-from dagger.input.empty_default_value import EmptyDefaultValue
 from dagger.runtime.cli.locations import (
     retrieve_input_from_location,
     store_output_in_location,
