@@ -4,8 +4,7 @@ from typing import Optional, TypeVar, Union
 
 from dagger.input.empty_default_value import EmptyDefaultValue
 from dagger.serializer import DefaultSerializer, Serializer
-
-T = TypeVar("T")
+from dagger.serializer import JSONSerializableType
 
 
 class FromParam:
@@ -14,7 +13,9 @@ class FromParam:
     def __init__(
         self,
         name: Optional[str] = None,
-        default_value: Union[EmptyDefaultValue, T] = EmptyDefaultValue(),
+        default_value: Union[
+            EmptyDefaultValue, JSONSerializableType
+        ] = EmptyDefaultValue(),
         serializer: Serializer = DefaultSerializer,
     ):
         """
@@ -51,7 +52,7 @@ class FromParam:
         return self._name
 
     @property
-    def default_value(self) -> Union[EmptyDefaultValue, T]:
+    def default_value(self) -> Union[EmptyDefaultValue, JSONSerializableType]:
         """Get the default value of the input references, if any."""
         return self._default_value
 

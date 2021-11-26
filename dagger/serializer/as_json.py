@@ -2,9 +2,20 @@
 
 import io
 from json.decoder import JSONDecodeError
-from typing import Any, BinaryIO, Optional
+from typing import Any, BinaryIO, Optional, Union, List, Dict
 
 from dagger.serializer.errors import DeserializationError, SerializationError
+
+
+JSONSerializableType = Union[
+    None,
+    bool,
+    int,
+    float,
+    str,
+    List["JSONSerializableType"],
+    Dict[str, "JSONSerializableType"],
+]
 
 
 class AsJSON:
