@@ -234,16 +234,12 @@ def test__invoke_task__overriding_default_value():
 def test__filter_inputs__with_truthy_params():
     cases = [True, 1, [1, 2], {1, 2}, {"a": 1, "b": 2}]
     for case in cases:
-        filtered_inputs = _filter_inputs(
-            inputs={"x": FromParam()}, params={"x": case}
-        )
+        filtered_inputs = _filter_inputs(inputs={"x": FromParam()}, params={"x": case})
         assert filtered_inputs == {"x": case}
 
 
 def test__filter_inputs__with_superfluous_params():
-    filtered_inputs = _filter_inputs(
-        inputs={"x": FromParam()}, params={"x": 3, "y": 4}
-    )
+    filtered_inputs = _filter_inputs(inputs={"x": FromParam()}, params={"x": 3, "y": 4})
     assert filtered_inputs == {"x": 3}
 
 
