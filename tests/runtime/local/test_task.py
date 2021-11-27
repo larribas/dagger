@@ -239,8 +239,11 @@ def test__filter_inputs__with_truthy_params():
 
 
 def test__filter_inputs__with_superfluous_params():
-    filtered_inputs = _filter_inputs(inputs={"x": FromParam()}, params={"x": 3, "y": 4})
-    assert filtered_inputs == {"x": 3}
+    filtered_inputs = _filter_inputs(
+        inputs={"x": FromParam(), "y": FromParam(default_value=2)},
+        params={"x": 3, "z": 10},
+    )
+    assert filtered_inputs == {"x": 3, "y": 2}
 
 
 def test__filter_inputs__with_falsy_params():
