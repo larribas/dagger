@@ -108,7 +108,10 @@ class NodeInvocationRecorder:
             arguments = {**bound_args.arguments}
         except TypeError as e:
             raise TypeError(
-                f"You have invoked the task '{self._func.__name__}' with the following arguments: args={args} kwargs={kwargs}. However, the signature of the function is '{sig}'. The following error was raised as a result of this mismatch: {e}"
+                f"You have invoked the task '{self._func.__name__}' with the following "
+                f"arguments: args={args} kwargs={kwargs}. However, the signature of the"
+                f" function is '{sig}'. The following error was raised as a result of "
+                f"this mismatch: {e}"
             ) from e
 
         # If there are arguments which have been bound to variadic keyword parameters,
@@ -182,6 +185,7 @@ class NodeInvocationRecorder:
                 preset_params[argument_name] = argument_value
 
         if preset_params:
+            # TODO @lorenzo can we review this? no test coverage and maybe has a bug
             return lambda *args, **kwargs: self._func(
                 *args, **{**kwargs, **preset_params}
             )

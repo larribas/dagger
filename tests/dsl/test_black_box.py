@@ -755,8 +755,10 @@ def test__build__nested_map_reduce():
             ]
         )
 
+    build_dag = dsl.build(dag)
+
     verify_dags_are_equivalent(
-        dsl.build(dag),
+        build_dag,
         DAG(
             inputs={
                 "exponent": FromParam("exponent"),
@@ -908,6 +910,27 @@ def test__dag__with_default_value():
 
 
 def test__dag__dag_composition_with_default():
+    @dsl.task()
+    def identity(x):
+        return x
+
+    @dsl.DAG()
+    def my_sub_dag(a, b=2, c=3):
+        return {
+            "a": identity(a),
+            "b": identity(b),
+            "c": identity(c),
+        }
+
+    @dsl.DAG()
+    def my_dag(a=10):
+        return my_sub_dag(a, c=20)
+
+    dag = dsl.build(my_dag)
+    pass
+
+
+def test__dag__dag_composition_with_pathological_default():
     @dsl.task()
     def identity(x):
         return x
