@@ -223,7 +223,7 @@ def test__workflow_spec__with_invalid_parameters():
 
     assert (
         str(e.value)
-        == "The parameters supplied to this node were supposed to contain the following parameters: ['x']. However, only the following parameters were actually supplied: []. We are missing: ['x']."
+        == "The following inputs are required for this workflow: ['x']. However, only the following parameters were actually supplied: []. We are missing: ['x']."
     )
 
 

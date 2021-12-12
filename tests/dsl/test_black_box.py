@@ -138,11 +138,11 @@ def test__build__input_from_param():
     )
 
 
-def test__build__input_from_literal_value():
+def test__build__input_from_hardcoded_value():
     class ArbitraryObject:
         pass
 
-    literal_values = [
+    hardcoded_values = [
         "string literal",
         2,
         5.5,
@@ -155,15 +155,36 @@ def test__build__input_from_literal_value():
     def inspect(hello, value):
         return f"{hello} {value} of type {type(value).__name__}"
 
-    @dsl.DAG()
-    def dag(hello):
-        for value in literal_values:
-            inspect(hello="hello...", value=value)
+    for hardcoded_value in hardcoded_values:
 
-    for i, value in enumerate(literal_values):
-        assert (
-            dsl.build(dag).nodes[f"inspect-{i + 1}"].func()
-            == f"hello... {value} of type {type(value).__name__}"
+        @dsl.DAG()
+        def dag(hello):
+            return inspect(hello=hello, value=hardcoded_value)
+
+        verify_dags_are_equivalent(
+            dsl.build(dag),
+            DAG(
+                inputs={
+                    "hello": FromParam("hello"),
+                },
+                outputs={
+                    "return_value": FromNodeOutput("inspect", "return_value"),
+                },
+                nodes={
+                    "inspect": Task(
+                        inspect.func,
+                        inputs={
+                            "hello": FromParam("hello"),
+                            "value": FromParam(
+                                "_hardcoded_value", default_value=hardcoded_value
+                            ),
+                        },
+                        outputs={
+                            "return_value": FromReturnValue(),
+                        },
+                    ),
+                },
+            ),
         )
 
 
@@ -888,20 +909,18 @@ def test__dag__with_default_value():
         return a
 
     @dsl.DAG()
-    def d(x=3):
+    def dag(x=3):
         return f(x)
 
-    dag = dsl.build(d)
-
     verify_dags_are_equivalent(
-        dag,
+        dsl.build(dag),
         DAG(
-            inputs={"x": FromParam("x", 3)},
+            inputs={"x": FromParam("x", default_value=3)},
             outputs={"return_value": FromNodeOutput("f", "return_value")},
             nodes={
                 "f": Task(
                     f.func,
-                    inputs={"a": FromParam("x", 3)},
+                    inputs={"a": FromParam("x")},
                     outputs={"return_value": FromReturnValue()},
                 )
             },
@@ -909,43 +928,52 @@ def test__dag__with_default_value():
     )
 
 
-def test__dag__dag_composition_with_default():
+def test__dag__with_default_values_for_nested_dags():
     @dsl.task()
-    def identity(x):
-        return x
+    def add(x, y, z):
+        return f"{x}-{y}-{z}"
 
     @dsl.DAG()
-    def my_sub_dag(a, b=2, c=3):
-        return {
-            "a": identity(a),
-            "b": identity(b),
-            "c": identity(c),
-        }
+    def nested_dag(a, b=2, c=3):
+        return add(a, b, c)
 
     @dsl.DAG()
-    def my_dag(a=10):
-        return my_sub_dag(a, c=20)
+    def dag(a=10):
+        return nested_dag(a, c=20)
 
-    dag = dsl.build(my_dag)
-    pass
-
-
-def test__dag__dag_composition_with_pathological_default():
-    @dsl.task()
-    def identity(x):
-        return x
-
-    @dsl.DAG()
-    def my_sub_dag(a, b=2, c=3):
-        return {
-            "a": identity(a),
-            "b": identity(b),
-            "c": identity(c),
-        }
-
-    @dsl.DAG()
-    def my_dag(c=10):
-        return my_sub_dag(a=10, c=20)
-
-    dag = dsl.build(my_dag)
-    pass
+    verify_dags_are_equivalent(
+        dsl.build(dag),
+        DAG(
+            inputs={
+                "a": FromParam("a", default_value=10),
+            },
+            outputs={
+                "return_value": FromNodeOutput("nested-dag", "return_value"),
+            },
+            nodes={
+                "nested-dag": DAG(
+                    inputs={
+                        "a": FromParam("a"),
+                        "b": FromParam("_default_value", default_value=2),
+                        "c": FromParam("_hardcoded_value", default_value=20),
+                    },
+                    outputs={
+                        "return_value": FromNodeOutput("add", "return_value"),
+                    },
+                    nodes={
+                        "add": Task(
+                            add.func,
+                            inputs={
+                                "x": FromParam("a"),
+                                "y": FromParam("b"),
+                                "z": FromParam("c"),
+                            },
+                            outputs={
+                                "return_value": FromReturnValue(),
+                            },
+                        ),
+                    },
+                ),
+            },
+        ),
+    )

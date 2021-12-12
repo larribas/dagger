@@ -29,6 +29,7 @@ def build(dag: NodeInvocationRecorder) -> DAG:
     """Build a DAG data structure it defines."""
     return _build(
         build_func=dag.func,
+        has_a_parent=False,
         inputs_from_parent={},
         parent_node_names_by_id={},
         runtime_options=dag.runtime_options,
@@ -38,6 +39,7 @@ def build(dag: NodeInvocationRecorder) -> DAG:
 
 def _build(
     build_func: Callable,
+    has_a_parent: bool,
     inputs_from_parent: Mapping[str, NodeInputReference],
     parent_node_names_by_id: Mapping[str, str],
     runtime_options: Mapping[str, Any],
@@ -82,12 +84,9 @@ def _build(
     parameters = {
         param_name: ParameterUsage(
             name=param_name,
-            default_value=EmptyDefaultValue()
-            if param_value.default is inspect.Parameter.empty
-            else param_value.default,
             serializer=_parent_serializer_or_default(inputs_from_parent, param_name),
         )
-        for param_name, param_value in inspect.signature(build_func).parameters.items()
+        for param_name in inspect.signature(build_func).parameters
     }
 
     ctx = copy_context()
@@ -98,14 +97,12 @@ def _build(
         invocations_in_context
     )
 
-    inputs = inputs_from_parent or parameters
-    dag_inputs = {
-        input_name: _build_node_input(
-            input_type,
-            node_names_by_id=parent_node_names_by_id,
-        )
-        for input_name, input_type in inputs.items()
-    }
+    dag_inputs = _build_dag_inputs(
+        build_func,
+        has_a_parent=has_a_parent,
+        inputs_from_parent=inputs_from_parent,
+        node_names_by_id=parent_node_names_by_id,
+    )
 
     dag_outputs = _build_dag_outputs(
         dag_output,
@@ -136,6 +133,30 @@ def _parent_serializer_or_default(
         return DefaultSerializer
 
     return inputs_from_parent[param_name].serializer
+
+
+def _build_dag_inputs(
+    build_func: Callable,
+    has_a_parent: bool,
+    inputs_from_parent: Mapping[str, NodeInputReference],
+    node_names_by_id: Mapping[str, str],
+):
+    inputs = {}
+    for param_name, param_value in inspect.signature(build_func).parameters.items():
+        if param_name in inputs_from_parent:
+            inputs[param_name] = _build_node_input(
+                inputs_from_parent[param_name],
+                node_names_by_id,
+            )
+        else:
+            inputs[param_name] = FromParam(
+                name="_default_value" if has_a_parent else param_name,
+                default_value=EmptyDefaultValue()
+                if param_value.default is inspect.Parameter.empty
+                else param_value.default,
+            )
+
+    return inputs
 
 
 def _build_dag_outputs(
@@ -335,6 +356,7 @@ def _build_from_parent(
 
     return _build(
         build_func=invocation.func,
+        has_a_parent=True,
         inputs_from_parent=invocation.inputs,
         parent_node_names_by_id=parent_node_names_by_id,
         runtime_options=invocation.runtime_options or {},

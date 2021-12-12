@@ -4,8 +4,9 @@ import os
 from typing import Any, Dict, Iterable, Mapping, Union
 
 from dagger.dag import DAG, Node
-from dagger.input import FromNodeOutput, FromParam, validate_parameters
+from dagger.input import FromNodeOutput, FromParam
 from dagger.runtime.local.output import load
+from dagger.runtime.local.parameters import validate_and_clean_parameters
 from dagger.runtime.local.task import invoke_task
 from dagger.runtime.local.types import (
     NodeExecutions,
@@ -36,8 +37,7 @@ def invoke_dag(
     output_path: str,
 ) -> NodeOutputs:
     """Invoke a DAG locally with the specified parameters and dump the serialized outputs on the path provided."""
-    validate_parameters(dag.inputs, params)
-
+    params = validate_and_clean_parameters(dag.inputs, params)
     outputs: Dict[str, NodeExecutions] = {}
 
     sequential_node_order = itertools.chain(*dag.node_execution_order)

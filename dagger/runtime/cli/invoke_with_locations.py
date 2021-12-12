@@ -5,7 +5,7 @@ from typing import Any, Iterable, List, Mapping, Union
 import dagger.runtime.local as local
 from dagger import FromNodeOutput, FromParam
 from dagger.dag import DAG
-from dagger.input import filter_not_required_inputs
+from dagger.input import split_required_and_optional_inputs
 from dagger.runtime.cli.locations import (
     retrieve_input_from_location,
     store_output_in_location,
@@ -85,7 +85,7 @@ def _validate_inputs(
     input_locations: Iterable[str],
 ):
     """Validate all the input locations supplied against the inputs the node is expecting."""
-    required_inputs = filter_not_required_inputs(inputs)
+    required_inputs, _ = split_required_and_optional_inputs(inputs)
     for input_name in required_inputs:
         if input_name not in input_locations:
             raise ValueError(

@@ -279,12 +279,13 @@ def _validate_input_from_param(
     # If the param name has not been overridden, we assume it has the same name as the input
     name = input_type.name or input_name
 
-    if name not in dag_inputs:
+    # TODO: Test the changes and possibly simplify code
+    if not input_type.has_default_value() and name not in dag_inputs:
         raise ValueError(
             f"This input depends on a parameter named '{name}' being injected into the DAG. However, the DAG does not have any parameter with such a name. These are the parameters the DAG receives: {sorted(list(dag_inputs))}"
         )
 
-    if input_type.serializer != dag_inputs[name].serializer:
+    if not input_type.has_default_value() and input_type.serializer != dag_inputs[name].serializer:
         raise ValueError(
             f"This input is serialized {input_type.serializer}. However, the input it references is serialized {dag_inputs[name].serializer}."
         )

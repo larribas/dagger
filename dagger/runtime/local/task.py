@@ -2,11 +2,11 @@
 import os
 from typing import Any, Dict, Iterable, Mapping
 
-from dagger.input import validate_parameters
 from dagger.runtime.local.output import dump
+from dagger.runtime.local.parameters import validate_and_clean_parameters
 from dagger.runtime.local.types import NodeOutput, NodeOutputs, PartitionedOutput
 from dagger.serializer import SerializationError
-from dagger.task import SupportedInputs, SupportedOutputs, Task
+from dagger.task import SupportedOutputs, Task
 
 
 def invoke_task(
@@ -15,29 +15,15 @@ def invoke_task(
     output_path: str,
 ) -> NodeOutputs:
     """Invoke a task locally with the specified parameters and dump the serialized outputs on the path provided."""
-    validate_parameters(task.inputs, params)
-    inputs = _filter_inputs(inputs=task.inputs, params=params)
+    params = validate_and_clean_parameters(task.inputs, params)
 
-    return_value = task.func(**inputs)
+    return_value = task.func(**params)
 
     return _serialize_outputs(
         path=output_path,
         outputs=task.outputs,
         return_value=return_value,
     )
-
-
-def _filter_inputs(
-    inputs: Mapping[str, SupportedInputs],
-    params: Mapping[str, Any],
-) -> Mapping[str, Any]:
-
-    return {
-        input_name: params[input_name]
-        if input_name in params
-        else input_value.default_value
-        for input_name, input_value in inputs.items()
-    }
 
 
 def _serialize_outputs(
