@@ -4,9 +4,8 @@ import os
 from typing import Any, Dict, Iterable, Mapping, Union
 
 from dagger.dag import DAG, Node
-from dagger.input import FromNodeOutput, FromParam
+from dagger.input import FromNodeOutput, FromParam, validate_and_clean_parameters
 from dagger.runtime.local.output import load
-from dagger.runtime.local.parameters import validate_and_clean_parameters
 from dagger.runtime.local.task import invoke_task
 from dagger.runtime.local.types import (
     NodeExecutions,

@@ -2,8 +2,8 @@
 import os
 from typing import Any, Dict, Iterable, Mapping
 
+from dagger.input import validate_and_clean_parameters
 from dagger.runtime.local.output import dump
-from dagger.runtime.local.parameters import validate_and_clean_parameters
 from dagger.runtime.local.types import NodeOutput, NodeOutputs, PartitionedOutput
 from dagger.serializer import SerializationError
 from dagger.task import SupportedOutputs, Task
