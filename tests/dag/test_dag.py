@@ -231,6 +231,18 @@ def test__init__with_mismatched_inputs_from_param():
     )
 
 
+def test__init__with_unretrievable_node_inputs_that_have_a_default_value():
+    DAG(
+        nodes={
+            "my-node": Task(
+                lambda x: 1,
+                inputs=dict(x=FromParam("x", default_value=2)),
+            ),
+        },
+    )
+    # We are testing that no validation exceptions are raised
+
+
 def test__init__with_a_node_that_references_an_existing_dag_input_explicitly():
     DAG(
         nodes={
