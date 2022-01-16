@@ -168,7 +168,7 @@ class NodeInvocationRecorder:
                 inputs[argument_name] = argument_value
             else:
                 inputs[argument_name] = ParameterUsage(
-                    name="_hardcoded_value",
+                    name=f"_hardcoded_value_{argument_name}",
                     default_value=argument_value,
                 )
 

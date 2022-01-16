@@ -267,8 +267,8 @@ def test__invoke_dag__with_nested_dags_with_default_values():
             "nested-dag": DAG(
                 inputs={
                     "a": FromParam("a"),
-                    "b": FromParam("_default_value", default_value=2),
-                    "c": FromParam("_hardcoded_value", default_value=20),
+                    "b": FromParam("_b", default_value=2),
+                    "c": FromParam("_c", default_value=20),
                 },
                 outputs={
                     "return_value": FromNodeOutput("add", "return_value"),

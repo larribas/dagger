@@ -152,14 +152,14 @@ def test__build__input_from_hardcoded_value():
     ]
 
     @dsl.task()
-    def inspect(hello, value):
-        return f"{hello} {value} of type {type(value).__name__}"
+    def inspect(hello, subject):
+        return f"{hello} {subject} of type {type(subject).__name__}"
 
     for hardcoded_value in hardcoded_values:
 
         @dsl.DAG()
         def dag(hello):
-            return inspect(hello=hello, value=hardcoded_value)
+            return inspect(hello=hello, subject=hardcoded_value)
 
         verify_dags_are_equivalent(
             dsl.build(dag),
@@ -175,8 +175,9 @@ def test__build__input_from_hardcoded_value():
                         inspect.func,
                         inputs={
                             "hello": FromParam("hello"),
-                            "value": FromParam(
-                                "_hardcoded_value", default_value=hardcoded_value
+                            "subject": FromParam(
+                                "_hardcoded_value_subject",
+                                default_value=hardcoded_value,
                             ),
                         },
                         outputs={
@@ -954,8 +955,8 @@ def test__dag__with_default_values_for_nested_dags():
                 "nested-dag": DAG(
                     inputs={
                         "a": FromParam("a"),
-                        "b": FromParam("_default_value", default_value=2),
-                        "c": FromParam("_hardcoded_value", default_value=20),
+                        "b": FromParam("_default_value_b", default_value=2),
+                        "c": FromParam("_hardcoded_value_c", default_value=20),
                     },
                     outputs={
                         "return_value": FromNodeOutput("add", "return_value"),
