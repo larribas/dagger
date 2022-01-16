@@ -1,6 +1,6 @@
 """Data structures that hold information about certain elements being invoked or used throughout the definition of a DAG using the imperative DSL."""
 
-from enum import Enum
+from enum import Enum, unique
 from typing import Any, Callable, Mapping, NamedTuple, Optional, Union, get_args
 
 from dagger.dsl.node_output_reference import NodeOutputReference
@@ -10,6 +10,7 @@ from dagger.dsl.parameter_usage import ParameterUsage
 NodeInputReference = Union[ParameterUsage, NodeOutputReference]
 
 
+@unique
 class NodeType(Enum):
     """Define the type of a node invocation."""
 
