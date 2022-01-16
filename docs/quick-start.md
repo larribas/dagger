@@ -25,7 +25,7 @@ The following piece of code demonstrates how to build a DAG that performs a map-
 Let's take it step by step. First, we use the `dagger.dsl.task` decorator to define different tasks. Tasks in _Dagger_ are just Python functions. In this case, we have 3 tasks:
 
 - `generate_numbers()` returns a list of numbers. The length of the list varies dynamically.
-- `raise_number(n, exponent)` receives a number and an exponent, and returns `n^exponent`.
+- `raise_number(n, exponent)` receives a number and an exponent, which has a default value, 2, and returns `n^exponent`.
 - `sum_numbers(numbers)` receives a list of numbers and returns the sum of all of them.
 
 Next, we use the `dagger.dsl.DAG` decorator on another function that __invokes all the tasks we've defined and connects their inputs/outputs__.
@@ -65,7 +65,16 @@ result = invoke(dag, params={"seed": 1, "exponent": 2})
 print(f"The final result was {result}")
 ```
 
-After this, you should see the results of the DAG printed to your screen.
+After this, you should see the results of the DAG printed to your screen. 
+
+Equivalently, because the parameter `exponent` has a default value of 2, you can omit passing the value 2 when invoking the DAG:
+
+```python
+from dagger.runtime.local import invoke
+
+result = invoke(dag, params={"seed": 1})
+print(f"The final result was {result}")
+```
 
 
 ### Other Runtimes

@@ -13,7 +13,7 @@ def generate_numbers(seed):
 
 
 @dsl.task()
-def raise_number(n, exponent):
+def raise_number(n, exponent=2):
     print(f"Raising {n} to a power of {exponent}")
     return n ** exponent
 
