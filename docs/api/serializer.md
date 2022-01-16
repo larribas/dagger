@@ -16,10 +16,6 @@
 
 ![mkapi](dagger.serializer.AsJSON)
 
-### JSONSerializableType
-
-![mkapi](dagger.serializer.JSONSerializableType)
-
 
 ### Initialization
 
