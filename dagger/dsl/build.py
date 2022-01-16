@@ -3,13 +3,14 @@
 import inspect
 from contextvars import copy_context
 from itertools import groupby
-from typing import Any, Callable, List, Mapping, NamedTuple, Optional, Union
+from typing import Any, Callable, List, Mapping, Optional, Union
 
 from dagger.dag import DAG, Node
 from dagger.dag import SupportedOutputs as SupportedDAGOutputs
 from dagger.dsl.context import node_invocations
+from dagger.dsl.dag_parent import DAGParent
 from dagger.dsl.node_invocation_recorder import NodeInvocationRecorder
-from dagger.dsl.node_invocations import NodeInputReference, NodeInvocation, NodeType
+from dagger.dsl.node_invocations import NodeInvocation, NodeType
 from dagger.dsl.node_output_key_usage import NodeOutputKeyUsage
 from dagger.dsl.node_output_partition_usage import NodeOutputPartitionUsage
 from dagger.dsl.node_output_property_usage import NodeOutputPropertyUsage
@@ -25,18 +26,11 @@ from dagger.task import Task
 POTENTIAL_BUG_MESSAGE = "If you are seeing this error, this is probably a bug in the library. Please check our GitHub repository to see whether the bug has already been reported/fixed. Otherwise, please create a ticket."
 
 
-class Parent(NamedTuple):
-    """Relevant information about the parent of a DAG."""
-
-    inputs: Mapping[str, NodeInputReference]
-
-
 def build(dag: NodeInvocationRecorder) -> DAG:
     """Build a DAG data structure it defines."""
     return _build(
         build_func=dag.func,
         parent=None,
-        parent_node_names_by_id={},
         runtime_options=dag.runtime_options,
         partition_by_input=None,
     )
@@ -44,8 +38,7 @@ def build(dag: NodeInvocationRecorder) -> DAG:
 
 def _build(
     build_func: Callable,
-    parent: Optional[Parent],
-    parent_node_names_by_id: Mapping[str, str],
+    parent: Optional[DAGParent],
     runtime_options: Mapping[str, Any],
     partition_by_input: Optional[str],
 ) -> DAG:
@@ -104,7 +97,6 @@ def _build(
     dag_inputs = _build_dag_inputs(
         build_func,
         parent=parent,
-        node_names_by_id=parent_node_names_by_id,
     )
 
     dag_outputs = _build_dag_outputs(
@@ -129,7 +121,7 @@ def _build(
 
 
 def _parent_serializer_or_default(
-    parent: Optional[Parent],
+    parent: Optional[DAGParent],
     param_name: str,
 ):
     if parent and param_name in parent.inputs:
@@ -140,15 +132,14 @@ def _parent_serializer_or_default(
 
 def _build_dag_inputs(
     build_func: Callable,
-    parent: Optional[Parent],
-    node_names_by_id: Mapping[str, str],
+    parent: Optional[DAGParent],
 ):
     inputs = {}
     for param_name, param_value in inspect.signature(build_func).parameters.items():
         if parent and param_name in parent.inputs:
             inputs[param_name] = _build_node_input(
                 parent.inputs[param_name],
-                node_names_by_id,
+                parent.node_names_by_id,
             )
         else:
             inputs[param_name] = FromParam(
@@ -358,8 +349,10 @@ def _build_from_parent(
 
     return _build(
         build_func=invocation.func,
-        parent=Parent(inputs=invocation.inputs),
-        parent_node_names_by_id=parent_node_names_by_id,
+        parent=DAGParent(
+            inputs=invocation.inputs,
+            node_names_by_id=parent_node_names_by_id,
+        ),
         runtime_options=invocation.runtime_options or {},
         partition_by_input=invocation.partition_by_input,
     )
