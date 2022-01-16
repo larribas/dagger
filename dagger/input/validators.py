@@ -58,7 +58,7 @@ def validate_and_clean_parameters(
     inputs: Mapping[str, Union[FromParam, FromNodeOutput]], params: Mapping[str, Any]
 ) -> Mapping[str, Any]:
     """
-    Validate the parameters supplied to a node and build an exhaustive map of inputs, exclusing any superfluous parameters, and adding any default values that haven't been overridden.
+    Validate the parameters supplied to a node and build an exhaustive map of inputs, excluding any superfluous parameters, and adding any default values that haven't been overridden.
 
     Parameters
     ----------

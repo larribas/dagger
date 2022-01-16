@@ -276,6 +276,9 @@ def _validate_input_from_param(
     input_type: FromParam,
     dag_inputs: Mapping[str, SupportedInputs],
 ):
+    # If the node's input has a default value and the parent doesn't declare a matching input,
+    # we can simply use the default value. Therefore, it wouldn't constitute a validation error.
+    # We take advantage of this behavior when building DAGs with hardcoded and default values.
     if input_type.has_default_value():
         return
 
