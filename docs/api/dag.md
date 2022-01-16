@@ -16,10 +16,6 @@
 ![mkapi](dagger.dag.DAG.__init__)
 
 
-## validate_parameters
-
-![mkapi](dagger.input.validate_parameters)
-
 ## CyclicDependencyError
 
 ![mkapi](dagger.dag.CyclicDependencyError)
