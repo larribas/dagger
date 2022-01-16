@@ -326,14 +326,10 @@ def _build_node(
             runtime_options=node_invocation.runtime_options,
             partition_by_input=node_invocation.partition_by_input,
         )
-    elif node_invocation.node_type == NodeType.DAG:
+    else:
         return _build_from_parent(
             invocation=node_invocation,
             parent_node_names_by_id=node_names_by_id,
-        )
-    else:
-        raise NotImplementedError(
-            f"The DSL is not compatible with node invocations of type '{node_invocation.node_type}'. {POTENTIAL_BUG_MESSAGE}"
         )
 
 

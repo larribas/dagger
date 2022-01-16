@@ -29,11 +29,3 @@ class DAGParent:
     def __repr__(self) -> str:
         """Get a human-readable string representation of this object."""
         return f"DAGParent(inputs={self._inputs}, node_names_by_id={self._node_names_by_id})"
-
-    def __eq__(self, obj) -> bool:
-        """Return true if both objects are equivalent."""
-        return (
-            isinstance(obj, DAGParent)
-            and self._inputs == obj._inputs
-            and self._node_names_by_id == obj._node_names_by_id
-        )
