@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Mapping, Sequence, Union
 
 from dagger.dag import DAG, Node
 from dagger.dag import SupportedInputs as SupportedDAGInputs
-from dagger.input import FromNodeOutput, FromParam, validate_parameters
+from dagger.input import FromNodeOutput, FromParam, validate_and_clean_parameters
 from dagger.runtime.argo.extra_spec_options import with_extra_spec_options
 from dagger.runtime.argo.workflow import Workflow
 from dagger.serializer import Serializer
@@ -38,7 +38,7 @@ def workflow_spec(
     ValueError
         If any of the extra_spec_options collides with a property used by the runtime.
     """
-    validate_parameters(inputs=dag.inputs, params=workflow.params)
+    params = validate_and_clean_parameters(dag.inputs, workflow.params)
 
     spec = {
         "entrypoint": BASE_DAG_NAME,
@@ -46,12 +46,12 @@ def workflow_spec(
             node=dag,
             container_image=workflow.container_image,
             container_command=workflow.container_entrypoint_to_dag_cli,
-            params=workflow.params,
+            params=params,
         ),
     }
 
     if workflow.params:
-        spec["arguments"] = _workflow_spec_arguments(workflow.params)
+        spec["arguments"] = _workflow_spec_arguments(params)
 
     spec = with_extra_spec_options(
         original=spec,
@@ -62,7 +62,9 @@ def workflow_spec(
     return spec
 
 
-def _workflow_spec_arguments(params: Mapping[str, Any]) -> Mapping[str, Any]:
+def _workflow_spec_arguments(
+    params: Mapping[str, Any],
+) -> Mapping[str, Any]:
     return {
         "parameters": [
             {"name": param_name, "value": params[param_name]} for param_name in params

@@ -55,6 +55,10 @@ class FromParam:
         """Get the default value of the input references, if any."""
         return self._default_value
 
+    def has_default_value(self) -> bool:
+        """Return true if the input has a non-empty default value."""
+        return not isinstance(self._default_value, EmptyDefaultValue)
+
     def __repr__(self) -> str:
         """Get a human-readable string representation of the input."""
         return f"FromParam(name={self._name}, default_value={self._default_value}, serializer={self._serializer})"

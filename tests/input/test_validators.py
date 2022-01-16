@@ -1,17 +1,17 @@
-import warnings
-
 import pytest
 
-from dagger.input import (
-    FromNodeOutput,
-    FromParam,
-    filter_not_required_inputs,
+from dagger.input.from_node_output import FromNodeOutput
+from dagger.input.from_param import FromParam
+from dagger.input.validators import (
+    _clean_parameters,
+    _validate_parameters,
+    split_required_and_optional_inputs,
+    validate_and_clean_parameters,
     validate_name,
-    validate_parameters,
 )
 
 #
-# validate_parameters
+# validate_name
 #
 
 
@@ -48,13 +48,89 @@ def test__validate_name__with_invalid_names():
 
 
 #
-# validate_parameters
+# split_required_and_optional_inputs
 #
 
 
-def test__validate_parameters__when_params_match_inputs():
-    validate_parameters(
+def test__split_required_and_optional_inputs():
+    required, optional = split_required_and_optional_inputs(
+        {
+            "req1": FromParam(),
+            "req2": FromNodeOutput("x", "y"),
+            "opt1": FromParam(default_value=2),
+            "opt2": FromParam(default_value=None),
+        }
+    )
+
+    assert required == {
+        "req1": FromParam(),
+        "req2": FromNodeOutput("x", "y"),
+    }
+    assert optional == {
+        "opt1": FromParam(default_value=2),
+        "opt2": FromParam(default_value=None),
+    }
+
+
+#
+# validate_and_clean_parameters
+#
+
+
+def test__validate_and_clean_parameters__when_we_provide_required_and_superfluous_params_but_no_optional_params():
+    clean_params = validate_and_clean_parameters(
         inputs={
+            "a": FromParam(),
+            "b": FromNodeOutput("n", "o"),
+            "c": FromParam(default_value=10),
+        },
+        params={
+            "a": 1,
+            "b": "2",
+            "d": 3,
+        },
+    )
+    assert clean_params == {"a": 1, "b": "2", "c": 10}
+
+
+def test__validate_and_clean_parameters__when_a_required_input_is_missing():
+    with pytest.raises(ValueError) as e:
+        validate_and_clean_parameters(
+            inputs={
+                "a": FromParam(),
+                "b": FromNodeOutput("n", "o"),
+                "c": FromParam(default_value=10),
+            },
+            params={
+                "a": 1,
+                "c": 1,
+            },
+        )
+
+    assert (
+        str(e.value)
+        == "The parameters supplied to this node were supposed to contain the "
+        "following parameters: ['a', 'b']. However, only the following "
+        "parameters were actually supplied: ['a', 'c']. We are missing: ['b']."
+    )
+
+
+#
+# _validate_parameters
+#
+
+
+def test__validate_parameters__when_there_are_no_required_inputs():
+    _validate_parameters(
+        required_inputs={},
+        params={},
+    )
+    # we are asserting that no validation errors are raised
+
+
+def test__validate_parameters__when_all_required_inputs_are_passed():
+    _validate_parameters(
+        required_inputs={
             "a": FromParam(),
             "b": FromNodeOutput("n", "o"),
         },
@@ -63,20 +139,33 @@ def test__validate_parameters__when_params_match_inputs():
             "b": "2",
         },
     )
-    # We are testing there are no exceptions raised as a result of calling the validator
+    # we are asserting that no validation errors are raised
 
 
-def test__validate_parameters__when_input_is_missing():
+def test__validate_parameters__when_we_are_passing_superfluous_params():
+    _validate_parameters(
+        required_inputs={
+            "a": FromParam(),
+        },
+        params={
+            "a": 1,
+            "b": 2,
+        },
+    )
+    # we are asserting that no validation errors are raised
+
+
+def test__validate_parameters__when_a_required_input_is_missing():
     with pytest.raises(ValueError) as e:
-        validate_parameters(
-            inputs={
-                "c": FromParam(),
+        _validate_parameters(
+            required_inputs={
                 "a": FromParam(),
                 "b": FromNodeOutput("n", "o"),
+                "c": FromParam(),
             },
             params={
-                "c": 1,
                 "a": 1,
+                "c": 1,
             },
         )
 
@@ -88,68 +177,58 @@ def test__validate_parameters__when_input_is_missing():
     )
 
 
-def test__validate_parameters__when_param_is_superfluous():
-    with warnings.catch_warnings(record=True) as w:
-        validate_parameters(
-            inputs={
-                "c": FromParam(),
-                "a": FromParam(),
+#
+# _clean_parameters
+#
+
+
+def test__clean_parameters__removes_superfluous_parameters():
+    clean_params = _clean_parameters(
+        required_inputs={
+            "a": FromParam(),
+        },
+        optional_inputs={},
+        params={
+            "a": 1,
+            "b": 1,
+        },
+    )
+    assert clean_params == {"a": 1}
+
+
+def test__clean_parameters__includes_default_values_that_were_not_passed_as_parameters():
+    clean_params = _clean_parameters(
+        required_inputs={
+            "a": FromParam(),
+        },
+        optional_inputs={
+            "b": FromParam(default_value=10),
+            "c": FromParam(default_value=20),
+        },
+        params={
+            "a": 1,
+            "c": 2,
+        },
+    )
+    assert clean_params == {"a": 1, "b": 10, "c": 2}
+
+
+def test__clean_parameters__overriding_a_default_with_falsey_value():
+    falsey_values = [
+        None,
+        [],
+        {},
+        False,
+    ]
+
+    for falsey_value in falsey_values:
+        clean_params = _clean_parameters(
+            required_inputs={},
+            optional_inputs={
+                "a": FromParam(default_value=10),
             },
             params={
-                "z": 1,
-                "a": 1,
-                "c": 1,
-                "y": 1,
+                "a": falsey_value,
             },
         )
-        assert len(w) == 1
-        assert (
-            str(w[0].message)
-            == "The following parameters were supplied to this node, but are not "
-            "necessary: ['y', 'z']"
-        )
-
-
-def test__validate_parameters__if_superfluous_params_warns():
-    # given
-    inputs = {"a": FromParam("a")}
-    params = {"a": 1, "b": 2}
-    # when
-    with pytest.warns(Warning) as record:
-        validate_parameters(inputs, params)
-        if not record:
-            pytest.fail("Expected a warning!")
-    # then
-    # check that only one warning was raised
-    assert len(record) == 1
-    # check that the message matches
-    assert (
-        record[0].message.args[0] == "The following parameters were supplied to this "
-        "node, but are not necessary: ['b']"
-    )
-
-
-def test__validate_parameters__no_superfluous_params_does_not_warn():
-    # given
-    inputs = {"a": FromParam("a"), "b": FromParam("b", 2), "c": FromParam("c", 3)}
-    params = {"a": 1, "b": 4}
-    # when
-    with pytest.warns(None) as record:
-        validate_parameters(inputs, params)
-
-    # check no warning was raised
-    assert len(record) == 0
-
-
-#
-# filter_not_required_inputs
-#
-
-
-def test__filter_not_required_inputs__only_required_input_is_returned():
-    # given
-    inputs = {"a": FromParam("a"), "b": FromParam("b", 2), "c": FromParam("c", 3)}
-    # when
-    required_inputs = filter_not_required_inputs(inputs)
-    # then
-    assert required_inputs == {"a"}
+        assert clean_params == {"a": falsey_value}

@@ -232,13 +232,21 @@ def test__invoke_dag__with_partitions_but_invalid_outputs():
 
 def test__invoke_dag__using_default_value():
     dag = DAG(
-        inputs={"x": FromParam("x", 3)},
-        outputs={"return_value": FromNodeOutput("f", "return_value")},
+        inputs={
+            "x": FromParam("x", 3),
+        },
+        outputs={
+            "return_value": FromNodeOutput("f", "return_value"),
+        },
         nodes={
             "f": Task(
                 lambda a: a,
-                inputs={"a": FromParam("x", 3)},
-                outputs={"return_value": FromReturnValue()},
+                inputs={
+                    "a": FromParam("x"),
+                },
+                outputs={
+                    "return_value": FromReturnValue(),
+                },
             )
         },
     )
@@ -247,65 +255,41 @@ def test__invoke_dag__using_default_value():
         assert deserialized_outputs(res) == {"return_value": 3}
 
 
-def test__invoke_dag__with_two_default_values(multiply_function):
+def test__invoke_dag__with_nested_dags_with_default_values():
     dag = DAG(
-        inputs={"x": FromParam("x", 3), "y": FromParam("y", 5)},
-        outputs={"return_value": FromNodeOutput("f", "return_value")},
+        inputs={
+            "a": FromParam("a", default_value=10),
+        },
+        outputs={
+            "return_value": FromNodeOutput("nested-dag", "return_value"),
+        },
         nodes={
-            "f": Task(
-                multiply_function,
-                inputs={"x": FromParam("x", 3), "y": FromParam("y", 5)},
-                outputs={"return_value": FromReturnValue()},
-            )
+            "nested-dag": DAG(
+                inputs={
+                    "a": FromParam("a"),
+                    "b": FromParam("_b", default_value=2),
+                    "c": FromParam("_c", default_value=20),
+                },
+                outputs={
+                    "return_value": FromNodeOutput("add", "return_value"),
+                },
+                nodes={
+                    "add": Task(
+                        lambda x, y, z: f"{x}-{y}-{z}",
+                        inputs={
+                            "x": FromParam("a"),
+                            "y": FromParam("b"),
+                            "z": FromParam("c"),
+                        },
+                        outputs={
+                            "return_value": FromReturnValue(),
+                        },
+                    ),
+                },
+            ),
         },
     )
+
     with tempfile.TemporaryDirectory() as tmp:
         res = invoke_dag(dag, params={}, output_path=tmp)
-        assert deserialized_outputs(res) == {"return_value": 15}
-
-
-def test__invoke_dag__using_none_instead_of_default_value():
-    dag = DAG(
-        inputs={"x": FromParam("x", 3)},
-        outputs={"return_value": FromNodeOutput("f", "return_value")},
-        nodes={
-            "f": Task(
-                lambda a: 0 if a is None else a,
-                inputs={"a": FromParam("x", 3)},
-                outputs={"return_value": FromReturnValue()},
-            )
-        },
-    )
-    with tempfile.TemporaryDirectory() as tmp:
-        res = invoke_dag(dag, params={"x": None}, output_path=tmp)
-        assert deserialized_outputs(res) == {"return_value": 0}
-
-
-def test__invoke_dag__with_two_default_values_one_using_other_value(multiply_function):
-    dag = DAG(
-        inputs={"x": FromParam("x", 3), "y": FromParam("y", 10)},
-        outputs={"return_value": FromNodeOutput("f", "return_value")},
-        nodes={
-            "f": Task(
-                multiply_function,
-                inputs={"x": FromParam("x", 3), "y": FromParam("y", 10)},
-                outputs={"return_value": FromReturnValue()},
-            )
-        },
-    )
-    with tempfile.TemporaryDirectory() as tmp:
-        res = invoke_dag(dag, params={"y": 2}, output_path=tmp)
-        assert deserialized_outputs(res) == {"return_value": 6}
-
-
-#
-# fixtures
-#
-
-
-@pytest.fixture()
-def multiply_function():
-    def f(x, y):
-        return x * y
-
-    return f
+        assert deserialized_outputs(res) == {"return_value": "10-2-20"}

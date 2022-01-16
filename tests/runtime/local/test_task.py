@@ -1,13 +1,12 @@
 import pickle
 import tempfile
-import warnings
 
 import pytest
 
 from dagger.input import FromParam
 from dagger.output import FromKey, FromReturnValue
 from dagger.runtime.local.output import deserialized_outputs
-from dagger.runtime.local.task import _filter_inputs, invoke_task
+from dagger.runtime.local.task import invoke_task
 from dagger.serializer import AsPickle, SerializationError
 from dagger.task import Task
 
@@ -133,17 +132,15 @@ def test__invoke_task__overriding_the_serializer():
 
 
 def test__invoke_task__with_superfluous_parameters():
-    task = Task(lambda: 1)
+    task = Task(
+        lambda: 1,
+        outputs={"x": FromReturnValue()},
+    )
 
-    with warnings.catch_warnings(record=True) as w:
-        with tempfile.TemporaryDirectory() as tmp:
-            invoke_task(task, params={"a": 1, "b": 2}, output_path=tmp)
+    with tempfile.TemporaryDirectory() as tmp:
+        outputs = invoke_task(task, params={"a": 1, "b": 2}, output_path=tmp)
 
-        assert len(w) == 1
-        assert (
-            str(w[0].message)
-            == "The following parameters were supplied to this node, but are not necessary: ['a', 'b']"
-        )
+        assert deserialized_outputs(outputs) == {"x": 1}
 
 
 def test__invoke_task__with_partitioned_output_from_iterator():
@@ -224,48 +221,3 @@ def test__invoke_task__overriding_default_value():
     with tempfile.TemporaryDirectory() as tmp:
         output = invoke_task(task, params={"x": 3}, output_path=tmp)
         assert deserialized_outputs(output) == {"x": 3}
-
-
-#
-# _filter_inputs
-#
-
-
-def test__filter_inputs__with_truthy_params():
-    cases = [True, 1, [1, 2], {1, 2}, {"a": 1, "b": 2}]
-    for case in cases:
-        filtered_inputs = _filter_inputs(inputs={"x": FromParam()}, params={"x": case})
-        assert filtered_inputs == {"x": case}
-
-
-def test__filter_inputs__with_superfluous_params():
-    filtered_inputs = _filter_inputs(
-        inputs={"x": FromParam(), "y": FromParam(default_value=2)},
-        params={"x": 3, "z": 10},
-    )
-    assert filtered_inputs == {"x": 3, "y": 2}
-
-
-def test__filter_inputs__with_falsy_params():
-    cases = [None, [], False, {}, ""]
-    for case in cases:
-        filtered_inputs = _filter_inputs(
-            inputs={"x": FromParam(default_value=10)},
-            params={"x": case, "y": 4},
-        )
-        assert filtered_inputs == {"x": case}
-
-
-def test__filter_inputs__overriding_default_value():
-
-    filtered_inputs = _filter_inputs(
-        inputs={"x": FromParam(default_value=3)}, params={"x": 5}
-    )
-    assert filtered_inputs == {"x": 5}
-
-
-def test__filter_inputs__using_default_value():
-    filtered_inputs = _filter_inputs(
-        inputs={"x": FromParam(default_value=3)}, params={}
-    )
-    assert filtered_inputs == {"x": 3}

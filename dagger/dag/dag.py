@@ -276,6 +276,9 @@ def _validate_input_from_param(
     input_type: FromParam,
     dag_inputs: Mapping[str, SupportedInputs],
 ):
+    if input_type.has_default_value():
+        return
+
     # If the param name has not been overridden, we assume it has the same name as the input
     name = input_type.name or input_name
 
