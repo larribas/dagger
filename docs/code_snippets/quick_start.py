@@ -13,7 +13,7 @@ def generate_numbers(seed):
 
 
 @dsl.task()
-def raise_number(n, exponent=2):
+def raise_number(n, exponent):
     print(f"Raising {n} to a power of {exponent}")
     return n ** exponent
 
@@ -25,7 +25,7 @@ def sum_numbers(numbers):
 
 
 @dsl.DAG()
-def map_reduce_pipeline(seed, exponent):
+def map_reduce_pipeline(seed, exponent=2):
     numbers = generate_numbers(seed)
 
     raised_numbers = []

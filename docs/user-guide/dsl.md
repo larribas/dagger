@@ -69,19 +69,19 @@ This may or may not be what you intended.
 
 ## Default Values and Hardcoded Values
 
-When defining DAGs and tasks, one can make use of python's default values. For example, the input of the DAG shown below has a default value, 1. The task `sum` has a default value, 2, for its second parameter, `b`. And this makes the DAG return 3 when invoked, if no arguments are passed.
+When defining DAGs and tasks, you can make use of python's default values. For example, the input of the DAG shown below has a default value, 1. The task `sum` has a default value, 2, for its second parameter, `b`. And this makes the DAG return 3 when invoked, if no arguments are passed.
 
 ```python
 --8<-- "docs/code_snippets/default_values/imperative.py"
 ```
 
-One can also use hardcoded values for tasks and DAGs. Modifying a bit the previous example, `b` has now a hardcoded value, 3, which is used in place of its default value, 2. This makes now return 3 when invoked, if no arguments are passed.
+You can also use hardcoded values for tasks and DAGs. Modifying a bit the previous example, `b` has now a hardcoded value, 3, which is used in place of its default value, 2. Now, this makes the DAG return 4 when invoked, if no arguments are passed.
 
 ```python
 --8<-- "docs/code_snippets/hardcoded_values/imperative.py"
 ```
 
-A more sophisticated example, a nested DAG with both default and hardcoded values, is shown below.
+A more sophisticated example, a nested DAG with both default and hardcoded values, is shown below. In this case, the dag return the string `"10-2-20"`.
 
 ```python
 --8<-- "docs/code_snippets/default_hardcoded_values/imperative.py"
@@ -104,7 +104,6 @@ Like with all domain-specific languages, __the number of things you can do insid
 - Add all the results of a partitioned node in a list and pass that list to a fan-in node.
 - Return multiple outputs from the DAG by returning a dictionary of `#!python str -> node_output`.
 - Parameter defaults for tasks, e.g. `#!python def my_task(a, b=2)` will use the default value `2` if `b` is not passed. The same is true for DAG parameters.
-- Pass hardcoded values to a DAG's task or another DAG, e.g. when a nested DAG has two parameters and one is hardcoded in the main DAG.
 
 
 ## ⛔ Limitations
