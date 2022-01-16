@@ -7,7 +7,7 @@ from typing import Any, BinaryIO, Dict, List, Optional, Union
 from dagger.serializer.errors import DeserializationError, SerializationError
 
 
-# mypy does not currently support recursive types. 
+# mypy does not currently support recursive types.
 # It's a known issue: https://github.com/python/mypy/issues/731
 JSONSerializableType = Union[  # type: ignore
     None,

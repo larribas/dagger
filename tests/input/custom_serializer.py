@@ -8,11 +8,11 @@ class CustomSerializer:
     @property
     def extension(self) -> str:  # noqa
         return "ext"
-    
+
     def serialize(self, value: Any, writer: BinaryIO):  # noqa
         raise NotImplementedError()
 
-    def deserialize(self, reader: BinaryIO) -> Any:   # noqa
+    def deserialize(self, reader: BinaryIO) -> Any:  # noqa
         raise NotImplementedError()
 
     def __repr__(self) -> str:  # noqa

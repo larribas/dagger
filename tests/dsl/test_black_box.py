@@ -777,7 +777,6 @@ def test__build__nested_map_reduce():
             ]
         )
 
-
     verify_dags_are_equivalent(
         dsl.build(dag),
         DAG(
