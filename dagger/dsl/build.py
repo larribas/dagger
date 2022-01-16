@@ -3,7 +3,7 @@
 import inspect
 from contextvars import copy_context
 from itertools import groupby
-from typing import Any, Callable, List, Mapping, Optional, Union
+from typing import Any, Callable, List, Mapping, NamedTuple, Optional, Union
 
 from dagger.dag import DAG, Node
 from dagger.dag import SupportedOutputs as SupportedDAGOutputs
@@ -25,11 +25,17 @@ from dagger.task import Task
 POTENTIAL_BUG_MESSAGE = "If you are seeing this error, this is probably a bug in the library. Please check our GitHub repository to see whether the bug has already been reported/fixed. Otherwise, please create a ticket."
 
 
+class Parent(NamedTuple):
+    """Relevant information about the parent of a DAG."""
+
+    inputs: Mapping[str, NodeInputReference]
+
+
 def build(dag: NodeInvocationRecorder) -> DAG:
     """Build a DAG data structure it defines."""
     return _build(
         build_func=dag.func,
-        inputs_from_parent=None,
+        parent=None,
         parent_node_names_by_id={},
         runtime_options=dag.runtime_options,
         partition_by_input=None,
@@ -38,7 +44,7 @@ def build(dag: NodeInvocationRecorder) -> DAG:
 
 def _build(
     build_func: Callable,
-    inputs_from_parent: Optional[Mapping[str, NodeInputReference]],
+    parent: Optional[Parent],
     parent_node_names_by_id: Mapping[str, str],
     runtime_options: Mapping[str, Any],
     partition_by_input: Optional[str],
@@ -82,7 +88,7 @@ def _build(
     parameters = {
         param_name: ParameterUsage(
             name=param_name,
-            serializer=_parent_serializer_or_default(inputs_from_parent, param_name),
+            serializer=_parent_serializer_or_default(parent, param_name),
         )
         for param_name in inspect.signature(build_func).parameters
     }
@@ -97,7 +103,7 @@ def _build(
 
     dag_inputs = _build_dag_inputs(
         build_func,
-        inputs_from_parent=inputs_from_parent,
+        parent=parent,
         node_names_by_id=parent_node_names_by_id,
     )
 
@@ -123,32 +129,30 @@ def _build(
 
 
 def _parent_serializer_or_default(
-    inputs_from_parent: Optional[Mapping[str, NodeInputReference]],
+    parent: Optional[Parent],
     param_name: str,
 ):
-    if inputs_from_parent and param_name in inputs_from_parent:
-        return inputs_from_parent[param_name].serializer
+    if parent and param_name in parent.inputs:
+        return parent.inputs[param_name].serializer
 
     return DefaultSerializer
 
 
 def _build_dag_inputs(
     build_func: Callable,
-    inputs_from_parent: Optional[Mapping[str, NodeInputReference]],
+    parent: Optional[Parent],
     node_names_by_id: Mapping[str, str],
 ):
     inputs = {}
     for param_name, param_value in inspect.signature(build_func).parameters.items():
-        if inputs_from_parent is not None and param_name in inputs_from_parent:
+        if parent and param_name in parent.inputs:
             inputs[param_name] = _build_node_input(
-                inputs_from_parent[param_name],
+                parent.inputs[param_name],
                 node_names_by_id,
             )
         else:
             inputs[param_name] = FromParam(
-                name=f"_default_value_{param_name}"
-                if inputs_from_parent is not None
-                else param_name,
+                name=f"_default_value_{param_name}" if parent else param_name,
                 default_value=EmptyDefaultValue()
                 if param_value.default is inspect.Parameter.empty
                 else param_value.default,
@@ -354,7 +358,7 @@ def _build_from_parent(
 
     return _build(
         build_func=invocation.func,
-        inputs_from_parent=invocation.inputs,
+        parent=Parent(inputs=invocation.inputs),
         parent_node_names_by_id=parent_node_names_by_id,
         runtime_options=invocation.runtime_options or {},
         partition_by_input=invocation.partition_by_input,

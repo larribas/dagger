@@ -58,7 +58,7 @@ def validate_and_clean_parameters(
     inputs: Mapping[str, Union[FromParam, FromNodeOutput]], params: Mapping[str, Any]
 ) -> Mapping[str, Any]:
     """
-    Build an exhaustive map of parameters for a node, removing superfluous parameters and adding any default values that haven't been overridden.
+    Validate the parameters supplied to a node and build an exhaustive map of inputs, exclusing any superfluous parameters, and adding any default values that haven't been overridden.
 
     Parameters
     ----------
@@ -72,13 +72,17 @@ def validate_and_clean_parameters(
     ------
     ValueError
         If any required inputs are missing.
-
-    Returns
-    -------
-    A mapping of input name to input value, with no
     """
     required_inputs, optional_inputs = split_required_and_optional_inputs(inputs)
 
+    _validate_parameters(required_inputs, params)
+    return _clean_parameters(required_inputs, optional_inputs, params)
+
+
+def _validate_parameters(
+    required_inputs: Mapping[str, Union[FromParam, FromNodeOutput]],
+    params: Mapping[str, Any],
+):
     missing_params = required_inputs.keys() - params.keys()
     if missing_params:
         raise ValueError(
@@ -88,6 +92,12 @@ def validate_and_clean_parameters(
             f"are missing: {sorted(list(missing_params))}."
         )
 
+
+def _clean_parameters(
+    required_inputs: Mapping[str, Union[FromParam, FromNodeOutput]],
+    optional_inputs: Mapping[str, FromParam],
+    params: Mapping[str, Any],
+) -> Mapping[str, Any]:
     required_params = {input_name: params[input_name] for input_name in required_inputs}
     optional_params = {
         input_name: params[input_name]
