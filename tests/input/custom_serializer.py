@@ -1,19 +1,19 @@
 # noqa
-from dagger import Serializer
+from typing import Any, BinaryIO
 
 
-class CustomSerializer(Serializer):
+class CustomSerializer:
     """Custom serializer implementation to test the injection of different serialization strategies to an input."""
 
     @property
     def extension(self) -> str:  # noqa
         return "ext"
+    
+    def serialize(self, value: Any, writer: BinaryIO):  # noqa
+        raise NotImplementedError()
 
-    def serialize(self, value: str) -> bytes:  # noqa
-        return b"serialized"
-
-    def deserialize(self, serialized_value: bytes) -> str:  # noqa
-        return "deserialized"
+    def deserialize(self, reader: BinaryIO) -> Any:   # noqa
+        raise NotImplementedError()
 
     def __repr__(self) -> str:  # noqa
         return "CustomSerializerInstance"

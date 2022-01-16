@@ -62,7 +62,7 @@ def test__invoke__whole_dag():
             assert f.read() == b"64"
 
 
-def test__invoke_dag__with_default_values():
+def test__invoke_dag__overriding_default_value():
     dag = DAG(
         nodes=dict(
             square=Task(
@@ -97,7 +97,7 @@ def test__invoke_dag__with_default_values():
             assert f.read() == b"8"
 
 
-def test__invoke_dag__using_non_default_when_default_is_defined():
+def test__invoke_dag__using_default():
     dag = DAG(
         nodes=dict(
             square=Task(

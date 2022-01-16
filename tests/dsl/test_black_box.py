@@ -777,10 +777,9 @@ def test__build__nested_map_reduce():
             ]
         )
 
-    build_dag = dsl.build(dag)
 
     verify_dags_are_equivalent(
-        build_dag,
+        dsl.build(dag),
         DAG(
             inputs={
                 "exponent": FromParam("exponent"),
