@@ -12,10 +12,9 @@ def test_invoke():
     dag = dsl.build(map_reduce_pipeline)
     result = invoke(dag, params={"seed": 1, "exponent": 2})
     assert result == {"return_value": 91}
-    
-    
+
+
 def test_invoke_with_default():
     dag = dsl.build(map_reduce_pipeline)
     result = invoke(dag, params={"seed": 1})
     assert result == {"return_value": 91}
-    
