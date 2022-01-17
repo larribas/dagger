@@ -1,6 +1,7 @@
 import random
 
 from dagger import dsl
+from dagger.runtime.local import invoke
 
 
 @dsl.task()
@@ -33,3 +34,7 @@ def map_reduce_pipeline(seed, exponent=2):
         raised_numbers.append(raise_number(n, exponent))
 
     return sum_numbers(raised_numbers)
+
+dag = dsl.build(map_reduce_pipeline)
+result = invoke(dag, params={"seed": 1})
+print(f"The final result was {result}")

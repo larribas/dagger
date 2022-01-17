@@ -19,7 +19,7 @@ pip install py-dagger
 The following piece of code demonstrates how to build a DAG that performs a map-reduce operation on a series of numbers:
 
 ```python
---8<-- "docs/code_snippets/quick_start.py"
+--8<-- "docs/code_snippets/quick_start/quick_start.py"
 ```
 
 Let's take it step by step. First, we use the `dagger.dsl.task` decorator to define different tasks. Tasks in _Dagger_ are just Python functions. In this case, we have 3 tasks:
@@ -72,7 +72,7 @@ Equivalently, because the parameter `exponent` has a default value of 2, you can
 ```python
 from dagger.runtime.local import invoke
 
-result = invoke(dag, params={"seed": 1})
+result = invoke(map_reduce_pipeline, params={"seed": 1})
 print(f"The final result was {result}")
 ```
 
