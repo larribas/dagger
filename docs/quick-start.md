@@ -46,7 +46,7 @@ def map_reduce_pipeline(exponent):
 After defining how our DAG should behave using a function decorated by `dagger.dsl.DAG`, we will need to use `dagger.dsl.build` to __transform it into a `dagger.DAG` data structure__, like this:
 
 ```python
-dag = dsl.build(map_reduce_pipeline)
+--8<-- "docs/code_snippets/quick_start/build_dag.py"
 ```
 
 The variable `dag` now contains our pipeline expressed as a collection of data structures. These data structures validate that our DAG has been built correctly, and allow us to run it using one of the available runtimes.
@@ -59,10 +59,7 @@ The final step will be to test our DAG locally using the `dagger.runtime.local`.
 Just do:
 
 ```python
-from dagger.runtime.local import invoke
-
-result = invoke(dag, params={"seed": 1, "exponent": 2})
-print(f"The final result was {result}")
+--8<-- "docs/code_snippets/quick_start/invoke_dag.py"
 ```
 
 After this, you should see the results of the DAG printed to your screen. 
@@ -70,10 +67,7 @@ After this, you should see the results of the DAG printed to your screen.
 Equivalently, because the parameter `exponent` has a default value of 2, you can omit passing the value 2 when invoking the DAG:
 
 ```python
-from dagger.runtime.local import invoke
-
-result = invoke(map_reduce_pipeline, params={"seed": 1})
-print(f"The final result was {result}")
+--8<-- "docs/code_snippets/quick_start/invoke_dag_with_defaults.py"
 ```
 
 
