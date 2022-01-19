@@ -1,4 +1,5 @@
 # noqa
+from typing import Any, BinaryIO
 
 
 class CustomSerializer:
@@ -8,11 +9,11 @@ class CustomSerializer:
     def extension(self) -> str:  # noqa
         return "ext"
 
-    def serialize(self, value: str) -> bytes:  # noqa
-        return b"serialized"
+    def serialize(self, value: Any, writer: BinaryIO):  # noqa
+        raise NotImplementedError()
 
-    def deserialize(self, serialized_value: bytes) -> str:  # noqa
-        return "deserialized"
+    def deserialize(self, reader: BinaryIO) -> Any:  # noqa
+        raise NotImplementedError()
 
     def __repr__(self) -> str:  # noqa
         return "CustomSerializerInstance"

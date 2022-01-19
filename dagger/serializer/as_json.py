@@ -2,9 +2,21 @@
 
 import io
 from json.decoder import JSONDecodeError
-from typing import Any, BinaryIO, Optional
+from typing import Any, BinaryIO, Dict, List, Optional, Union
 
 from dagger.serializer.errors import DeserializationError, SerializationError
+
+# mypy does not currently support recursive types.
+# It's a known issue: https://github.com/python/mypy/issues/731
+JSONSerializableType = Union[  # type: ignore
+    None,
+    bool,
+    int,
+    float,
+    str,
+    List["JSONSerializableType"],  # type: ignore
+    Dict[str, "JSONSerializableType"],  # type: ignore
+]
 
 
 class AsJSON:

@@ -1,9 +1,11 @@
 """Command-line Interface to run DAGs or Tasks taking their inputs from files and storing their outputs into files."""
 import tempfile
-from typing import Any, Iterable, List, Mapping
+from typing import Any, Iterable, List, Mapping, Union
 
 import dagger.runtime.local as local
+from dagger import FromNodeOutput, FromParam
 from dagger.dag import DAG
+from dagger.input import split_required_and_optional_inputs
 from dagger.runtime.cli.locations import (
     retrieve_input_from_location,
     store_output_in_location,
@@ -54,7 +56,7 @@ def invoke_with_locations(
     output_locations = output_locations or {}
     nested_node = find_nested_node(dag, node_address or [])
 
-    _validate_inputs(nested_node.node.inputs.keys(), input_locations.keys())
+    _validate_inputs(nested_node.node.inputs, input_locations)
     _validate_outputs(nested_node.node.outputs.keys(), output_locations.keys())
 
     params = _deserialized_params(nested_node, input_locations)
@@ -79,14 +81,17 @@ def invoke_with_locations(
 
 
 def _validate_inputs(
-    input_names: Iterable[str],
+    inputs: Mapping[str, Union[FromParam, FromNodeOutput]],
     input_locations: Iterable[str],
 ):
     """Validate all the input locations supplied against the inputs the node is expecting."""
-    for input_name in input_names:
+    required_inputs, _ = split_required_and_optional_inputs(inputs)
+    for input_name in required_inputs:
         if input_name not in input_locations:
             raise ValueError(
-                f"This node is supposed to receive a pointer to an input named '{input_name}'. However, only the following input pointers were supplied: {sorted(input_locations)}"
+                f"This node is supposed to receive a pointer to an input named "
+                f"'{input_name}'. However, only the following input pointers were "
+                f"supplied: {sorted(input_locations)}"
             )
 
 
@@ -98,7 +103,9 @@ def _validate_outputs(
     for output_name in output_names:
         if output_name not in output_locations:
             raise ValueError(
-                f"This node is supposed to receive a pointer to an output named '{output_name}'. However, only the following output pointers were supplied: {sorted(output_locations)}"
+                f"This node is supposed to receive a pointer to an output named "
+                f"'{output_name}'. However, only the following output pointers were "
+                f"supplied: {sorted(output_locations)}"
             )
 
 
@@ -116,7 +123,8 @@ def _deserialized_params(
             )
         except (FileNotFoundError, PermissionError) as e:
             raise OSError(
-                f"When retrieving input '{input_name}' from the provided location, we got the following error: {str(e)}"
+                f"When retrieving input '{input_name}' from the provided location, we "
+                f"got the following error: {str(e)}"
             ) from e
 
     return params

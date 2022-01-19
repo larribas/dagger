@@ -1,6 +1,7 @@
 import random
 
 from dagger import dsl
+from dagger.runtime.local import invoke
 
 
 @dsl.task()
@@ -25,7 +26,7 @@ def sum_numbers(numbers):
 
 
 @dsl.DAG()
-def map_reduce_pipeline(seed, exponent):
+def map_reduce_pipeline(seed, exponent=2):
     numbers = generate_numbers(seed)
 
     raised_numbers = []

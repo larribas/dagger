@@ -205,6 +205,13 @@ def test__build_node__task():
     )
 
 
+def test__build_node__all_node_types_are_handled():
+    assert set(NodeType) == {
+        NodeType.DAG,
+        NodeType.TASK,
+    }, "The NodeType enumeration previously contained two possible values: DAG and TASK. For some reason, this has changed. Therefore, we need to make sure the `build_node` function this test is associated to is refactored to take the new values into account. When that's done, please update this test"
+
+
 #
 # build_dag_outputs
 #

@@ -1,6 +1,5 @@
 """Define the data structure for a DAG and validate all its components upon initialization."""
 import re
-import warnings
 from typing import Any, List, Mapping, Optional, Set, Union
 from typing import get_args as get_type_args
 
@@ -184,40 +183,6 @@ class DAG:
         )
 
 
-def validate_parameters(
-    inputs: Mapping[str, SupportedInputs],
-    params: Mapping[str, Any],
-):
-    """
-    Validate a series of parameters against the inputs of a DAG.
-
-    Parameters
-    ----------
-    inputs
-        A mapping of input names to inputs.
-
-    params
-        A mapping of input names to parameters or input values.
-        Input values must be passed in their serialized representation.
-
-    Raises
-    ------
-    ValueError
-        If the set of parameters does not contain all the required inputs.
-    """
-    missing_params = inputs.keys() - params.keys()
-    if missing_params:
-        raise ValueError(
-            f"The parameters supplied to this DAG were supposed to contain the following parameters: {sorted(list(inputs))}. However, only the following parameters were actually supplied: {sorted(list(params))}. We are missing: {sorted(list(missing_params))}."
-        )
-
-    superfluous_params = params.keys() - inputs.keys()
-    if superfluous_params:
-        warnings.warn(
-            f"The following parameters were supplied to this DAG, but are not necessary: {sorted(list(superfluous_params))}"
-        )
-
-
 def _validate_node_name(name: str):
     if not VALID_NAME.match(name):
         raise ValueError(
@@ -311,6 +276,12 @@ def _validate_input_from_param(
     input_type: FromParam,
     dag_inputs: Mapping[str, SupportedInputs],
 ):
+    # If the node's input has a default value and the parent doesn't declare a matching input,
+    # we can simply use the default value. Therefore, it wouldn't constitute a validation error.
+    # We take advantage of this behavior when building DAGs with hardcoded and default values.
+    if input_type.has_default_value():
+        return
+
     # If the param name has not been overridden, we assume it has the same name as the input
     name = input_type.name or input_name
 

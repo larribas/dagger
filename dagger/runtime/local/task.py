@@ -1,12 +1,12 @@
 """Run tasks in memory."""
 import os
-import warnings
 from typing import Any, Dict, Iterable, Mapping
 
+from dagger.input import validate_and_clean_parameters
 from dagger.runtime.local.output import dump
 from dagger.runtime.local.types import NodeOutput, NodeOutputs, PartitionedOutput
 from dagger.serializer import SerializationError
-from dagger.task import SupportedInputs, SupportedOutputs, Task
+from dagger.task import SupportedOutputs, Task
 
 
 def invoke_task(
@@ -15,34 +15,15 @@ def invoke_task(
     output_path: str,
 ) -> NodeOutputs:
     """Invoke a task locally with the specified parameters and dump the serialized outputs on the path provided."""
-    inputs = _validate_and_filter_inputs(inputs=task.inputs, params=params)
+    params = validate_and_clean_parameters(task.inputs, params)
 
-    return_value = task.func(**inputs)
+    return_value = task.func(**params)
 
     return _serialize_outputs(
         path=output_path,
         outputs=task.outputs,
         return_value=return_value,
     )
-
-
-def _validate_and_filter_inputs(
-    inputs: Mapping[str, SupportedInputs],
-    params: Mapping[str, Any],
-) -> Mapping[str, Any]:
-    missing_params = inputs.keys() - params.keys()
-    if missing_params:
-        raise ValueError(
-            f"The following parameters are required by the task but were not supplied: {sorted(list(missing_params))}"
-        )
-
-    superfluous_params = params.keys() - inputs.keys()
-    if superfluous_params:
-        warnings.warn(
-            f"The following parameters were supplied to the task, but are not necessary: {sorted(list(superfluous_params))}"
-        )
-
-    return {input_name: params[input_name] for input_name in inputs}
 
 
 def _serialize_outputs(

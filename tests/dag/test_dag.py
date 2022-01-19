@@ -1,9 +1,8 @@
-import warnings
 from itertools import combinations
 
 import pytest
 
-from dagger.dag import DAG, CyclicDependencyError, validate_parameters
+from dagger.dag import DAG, CyclicDependencyError
 from dagger.input import FromNodeOutput, FromParam
 from dagger.output import FromReturnValue
 from dagger.serializer import AsPickle, DefaultSerializer
@@ -230,6 +229,18 @@ def test__init__with_mismatched_inputs_from_param():
         str(e.value)
         == "Error validating input 'x' of node 'my-node': This input is serialized AsJSON(indent=None, allow_nan=False). However, the input it references is serialized AsPickle()."
     )
+
+
+def test__init__with_unretrievable_node_inputs_that_have_a_default_value():
+    DAG(
+        nodes={
+            "my-node": Task(
+                lambda x: 1,
+                inputs=dict(x=FromParam("x", default_value=2)),
+            ),
+        },
+    )
+    # We are testing that no validation exceptions are raised
 
 
 def test__init__with_a_node_that_references_an_existing_dag_input_explicitly():
@@ -613,63 +624,3 @@ def test__representation():
         repr(dag)
         == f"DAG(inputs={{'a': {input_a}}}, outputs={{'b': {output_b}}}, runtime_options={{'my': 'options'}}, partition_by_input=a, nodes={{'t': {task}}})"
     )
-
-
-#
-# validate_parameters
-#
-
-
-def test__validate_parameters__when_params_match_inputs():
-    validate_parameters(
-        inputs={
-            "a": FromParam(),
-            "b": FromNodeOutput("n", "o"),
-        },
-        params={
-            "a": 1,
-            "b": "2",
-        },
-    )
-    # We are testing there are no exceptions raised as a result of calling the validator
-
-
-def test__validate_parameters__when_input_is_missing():
-    with pytest.raises(ValueError) as e:
-        validate_parameters(
-            inputs={
-                "c": FromParam(),
-                "a": FromParam(),
-                "b": FromNodeOutput("n", "o"),
-            },
-            params={
-                "c": 1,
-                "a": 1,
-            },
-        )
-
-    assert (
-        str(e.value)
-        == "The parameters supplied to this DAG were supposed to contain the following parameters: ['a', 'b', 'c']. However, only the following parameters were actually supplied: ['a', 'c']. We are missing: ['b']."
-    )
-
-
-def test__validate_parameters__when_param_is_superfluous():
-    with warnings.catch_warnings(record=True) as w:
-        validate_parameters(
-            inputs={
-                "c": FromParam(),
-                "a": FromParam(),
-            },
-            params={
-                "z": 1,
-                "a": 1,
-                "c": 1,
-                "y": 1,
-            },
-        )
-        assert len(w) == 1
-        assert (
-            str(w[0].message)
-            == "The following parameters were supplied to this DAG, but are not necessary: ['y', 'z']"
-        )

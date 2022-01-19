@@ -20,7 +20,7 @@ def measure_model_performance(model, test_dataset):
 
 
 @dsl.DAG()
-def dag(sample_size):
-    datasets = prepare_datasets(sample_size)
+def dag():
+    datasets = prepare_datasets(10000)
     model = train_model(datasets["training"])
     return measure_model_performance(model, datasets["test"])

@@ -67,6 +67,29 @@ This may or may not be what you intended.
 !!! note
     Mixing decorated and undecorated functions may certainly be useful. __What's important is that you are able to distinguish between the things that will happen at build time and the things that will happen at runtime__.
 
+## Default Values and Hardcoded Values
+
+When defining DAGs and tasks, you can make use of python's default values. For example, the input of the DAG shown below has a default value, 1. The task `sum` has a default value, 2, for its second parameter, `b`. And this makes the DAG return 3 when invoked, if no arguments are passed.
+
+```python
+--8<-- "docs/code_snippets/default_values/imperative.py"
+```
+
+You can also use hardcoded values for tasks and DAGs. Modifying a bit the previous example, `b` has now a hardcoded value, 3, which is used in place of its default value, 2. Now, this makes the DAG return 4 when invoked, if no arguments are passed.
+
+```python
+--8<-- "docs/code_snippets/hardcoded_values/imperative.py"
+```
+
+A more sophisticated example, a nested DAG with both default and hardcoded values, is shown below. In this case, running the DAG returns the string `"10-2-20"`.
+
+```python
+--8<-- "docs/code_snippets/default_hardcoded_values/imperative.py"
+```
+
+
+
+
 
 ## Capabilities
 
@@ -80,6 +103,7 @@ Like with all domain-specific languages, __the number of things you can do insid
 - Iterate over the results of an invocation to parallelize the execution of a node.
 - Add all the results of a partitioned node in a list and pass that list to a fan-in node.
 - Return multiple outputs from the DAG by returning a dictionary of `#!python str -> node_output`.
+- Parameter defaults for tasks, e.g. `#!python def my_task(a, b=2)` will use the default value `2` if `b` is not passed. The same is true for DAG parameters.
 
 
 ## ⛔ Limitations
@@ -89,7 +113,6 @@ Technically speaking, anything that hasn't been listed as a capability in the pr
 That said, there are some extra limitations to keep in mind when using the DSL:
 
 - As far as we know, Python is not able to inspect the name of the local variable that holds a value. Therefore, when you assign the output of a task to a variable `#!python my_var = my_task()` and use it from `#!python another_task(my_var, my_var["my-key"], my_var.my_attr)`, the DAG you build from the DSL will name the outputs of `my_task`: `"return_value"`, `"key_my-key"` and `"property_my_attr"`.
-- __Parameter defaults are ignored by the DSL__. A task with the signature `#!python def my_task(a, b=2)` will still expect `b` to be passed as a parameter every time it's used. The same is true for DAG parameters. This may change in the future, if [this feature request](https://github.com/larribas/dagger/issues/35) is implemented.
 - __Only the outputs that are used by other tasks will be exported__. The rest will be omitted. If you assign the output of a task to a variable (`#!python output = my_task()`), but don't use the variable `output` again, _Dagger_ will assume you don't care about the output of that task. The task will still be executed, of course, but you may find the artifact not being saved in a runtime such as _Argo Workflows_.
 
 

@@ -8,15 +8,16 @@ from typing import Any, Callable, List, Mapping, Optional, Union
 from dagger.dag import DAG, Node
 from dagger.dag import SupportedOutputs as SupportedDAGOutputs
 from dagger.dsl.context import node_invocations
+from dagger.dsl.dag_parent import DAGParent
 from dagger.dsl.node_invocation_recorder import NodeInvocationRecorder
-from dagger.dsl.node_invocations import NodeInputReference, NodeInvocation, NodeType
+from dagger.dsl.node_invocations import NodeInvocation, NodeType
 from dagger.dsl.node_output_key_usage import NodeOutputKeyUsage
 from dagger.dsl.node_output_partition_usage import NodeOutputPartitionUsage
 from dagger.dsl.node_output_property_usage import NodeOutputPropertyUsage
 from dagger.dsl.node_output_reference import NodeOutputReference
 from dagger.dsl.node_output_usage import NodeOutputUsage
 from dagger.dsl.parameter_usage import ParameterUsage
-from dagger.input import FromNodeOutput, FromParam
+from dagger.input import EmptyDefaultValue, FromNodeOutput, FromParam
 from dagger.output import FromKey, FromProperty, FromReturnValue
 from dagger.serializer import DefaultSerializer
 from dagger.task import SupportedOutputs as SupportedTaskOutputs
@@ -29,8 +30,7 @@ def build(dag: NodeInvocationRecorder) -> DAG:
     """Build a DAG data structure it defines."""
     return _build(
         build_func=dag.func,
-        inputs_from_parent={},
-        parent_node_names_by_id={},
+        parent=None,
         runtime_options=dag.runtime_options,
         partition_by_input=None,
     )
@@ -38,8 +38,7 @@ def build(dag: NodeInvocationRecorder) -> DAG:
 
 def _build(
     build_func: Callable,
-    inputs_from_parent: Mapping[str, NodeInputReference],
-    parent_node_names_by_id: Mapping[str, str],
+    parent: Optional[DAGParent],
     runtime_options: Mapping[str, Any],
     partition_by_input: Optional[str],
 ) -> DAG:
@@ -82,7 +81,7 @@ def _build(
     parameters = {
         param_name: ParameterUsage(
             name=param_name,
-            serializer=_parent_serializer_or_default(inputs_from_parent, param_name),
+            serializer=_parent_serializer_or_default(parent, param_name),
         )
         for param_name in inspect.signature(build_func).parameters
     }
@@ -95,14 +94,10 @@ def _build(
         invocations_in_context
     )
 
-    inputs = inputs_from_parent or parameters
-    dag_inputs = {
-        input_name: _build_node_input(
-            input_type,
-            node_names_by_id=parent_node_names_by_id,
-        )
-        for input_name, input_type in inputs.items()
-    }
+    dag_inputs = _build_dag_inputs(
+        build_func,
+        parent=parent,
+    )
 
     dag_outputs = _build_dag_outputs(
         dag_output,
@@ -126,13 +121,35 @@ def _build(
 
 
 def _parent_serializer_or_default(
-    inputs_from_parent: Mapping[str, NodeInputReference],
+    parent: Optional[DAGParent],
     param_name: str,
 ):
-    if param_name not in inputs_from_parent:
-        return DefaultSerializer
+    if parent and param_name in parent.inputs:
+        return parent.inputs[param_name].serializer
 
-    return inputs_from_parent[param_name].serializer
+    return DefaultSerializer
+
+
+def _build_dag_inputs(
+    build_func: Callable,
+    parent: Optional[DAGParent],
+):
+    inputs = {}
+    for param_name, param_value in inspect.signature(build_func).parameters.items():
+        if parent and param_name in parent.inputs:
+            inputs[param_name] = _build_node_input(
+                parent.inputs[param_name],
+                parent.node_names_by_id,
+            )
+        else:
+            inputs[param_name] = FromParam(
+                name=f"_default_value_{param_name}" if parent else param_name,
+                default_value=EmptyDefaultValue()
+                if param_value.default is inspect.Parameter.empty
+                else param_value.default,
+            )
+
+    return inputs
 
 
 def _build_dag_outputs(
@@ -249,6 +266,7 @@ def _build_node_input(
     if isinstance(input_type, ParameterUsage):
         return FromParam(
             name=input_type.name,
+            default_value=input_type.default_value,
             serializer=input_type.serializer,
         )
     else:
@@ -308,14 +326,10 @@ def _build_node(
             runtime_options=node_invocation.runtime_options,
             partition_by_input=node_invocation.partition_by_input,
         )
-    elif node_invocation.node_type == NodeType.DAG:
+    else:
         return _build_from_parent(
             invocation=node_invocation,
             parent_node_names_by_id=node_names_by_id,
-        )
-    else:
-        raise NotImplementedError(
-            f"The DSL is not compatible with node invocations of type '{node_invocation.node_type}'. {POTENTIAL_BUG_MESSAGE}"
         )
 
 
@@ -331,8 +345,10 @@ def _build_from_parent(
 
     return _build(
         build_func=invocation.func,
-        inputs_from_parent=invocation.inputs,
-        parent_node_names_by_id=parent_node_names_by_id,
+        parent=DAGParent(
+            inputs=invocation.inputs,
+            node_names_by_id=parent_node_names_by_id,
+        ),
         runtime_options=invocation.runtime_options or {},
         partition_by_input=invocation.partition_by_input,
     )

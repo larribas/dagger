@@ -223,8 +223,31 @@ def test__workflow_spec__with_invalid_parameters():
 
     assert (
         str(e.value)
-        == "The parameters supplied to this DAG were supposed to contain the following parameters: ['x']. However, only the following parameters were actually supplied: []. We are missing: ['x']."
+        == "The parameters supplied to this node were supposed to contain the following parameters: ['x']. However, only the following parameters were actually supplied: []. We are missing: ['x']."
     )
+
+
+def test__workflow_spec__when_dag_has_default_inputs():
+    workflow = Workflow(
+        container_image="my-image",
+        container_entrypoint_to_dag_cli=["my", "dag", "entrypoint"],
+        params={"a": 0},
+    )
+
+    dag = DAG(
+        inputs=dict(
+            a=FromParam(),
+            b=FromParam(default_value=2),
+            c=FromParam(default_value=3),
+        ),
+        nodes=dict(f=Task(lambda: 1)),
+    )
+
+    spec = workflow_spec(dag, workflow)
+
+    assert {"name": "a", "value": 0} in spec["arguments"]["parameters"]
+    assert {"name": "b", "value": 2} in spec["arguments"]["parameters"]
+    assert {"name": "c", "value": 3} in spec["arguments"]["parameters"]
 
 
 def test__workflow_spec__with_template_overrides_that_affect_essential_attributes__fails():

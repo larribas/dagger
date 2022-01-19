@@ -16,6 +16,7 @@ from dagger.dsl.node_output_partition_usage import NodeOutputPartitionUsage
 from dagger.dsl.node_output_reference import NodeOutputReference
 from dagger.dsl.node_output_serializer import NodeOutputSerializer
 from dagger.dsl.node_output_usage import NodeOutputUsage
+from dagger.dsl.parameter_usage import ParameterUsage
 
 INVALID_PARAM_TYPES = [
     inspect.Parameter.POSITIONAL_ONLY,
@@ -79,7 +80,7 @@ class NodeInvocationRecorder:
                 id=invocation_id,
                 name=self._func.__name__.replace("_", "-"),
                 node_type=self._node_type,
-                func=self._func_with_preset_params(arguments),
+                func=self._func,
                 inputs=self._inputs(arguments),
                 output=output,
                 runtime_options=self._runtime_options,
@@ -108,7 +109,10 @@ class NodeInvocationRecorder:
             arguments = {**bound_args.arguments}
         except TypeError as e:
             raise TypeError(
-                f"You have invoked the task '{self._func.__name__}' with the following arguments: args={args} kwargs={kwargs}. However, the signature of the function is '{sig}'. The following error was raised as a result of this mismatch: {e}"
+                f"You have invoked the task '{self._func.__name__}' with the following "
+                f"arguments: args={args} kwargs={kwargs}. However, the signature of the"
+                f" function is '{sig}'. The following error was raised as a result of "
+                f"this mismatch: {e}"
             ) from e
 
         # If there are arguments which have been bound to variadic keyword parameters,
@@ -155,43 +159,20 @@ class NodeInvocationRecorder:
             if isinstance(arg, NodeOutputReference):
                 arg.consume()
 
-    def _func_with_preset_params(self, arguments: Mapping[str, Any]) -> Callable:
-        """
-        Return the function where all the arguments that come from a literal value (instead of a reference built by the DSL) are preset and don't need to be injected as a parameter anymore.
-
-        For instance, given:
-
-        ```
-        @dsl.task()
-        def f(a, b, c):
-            pass
-
-        @dsl.DAG()
-        def dsl(a):
-            f(a=a, b=2, c=3)
-        ```
-
-        This function would return a function f' so that f'(a) == f(a, 2, 3).
-        """
-        preset_params = {}
-        for argument_name, argument_value in arguments.items():
-            if not is_node_input_reference(argument_value):
-                preset_params[argument_name] = argument_value
-
-        if preset_params:
-            return lambda *args, **kwargs: self._func(
-                *args, **{**kwargs, **preset_params}
-            )
-
-        return self._func
-
     def _inputs(self, arguments: Mapping[str, Any]) -> Mapping[str, NodeInputReference]:
-        """Filter the node input references that come as arguments to the node invocation."""
-        return {
-            argument_name: argument_value
-            for argument_name, argument_value in arguments.items()
-            if is_node_input_reference(argument_value)
-        }
+        """Transform the node input references that come as arguments to the node invocation."""
+        inputs = {}
+
+        for argument_name, argument_value in arguments.items():
+            if is_node_input_reference(argument_value):
+                inputs[argument_name] = argument_value
+            else:
+                inputs[argument_name] = ParameterUsage(
+                    name=f"_hardcoded_value_{argument_name}",
+                    default_value=argument_value,
+                )
+
+        return inputs
 
     def _partition_by_input(self, arguments: Mapping[str, Any]) -> Optional[str]:
         partitioned_inputs = {

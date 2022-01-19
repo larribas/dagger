@@ -138,11 +138,11 @@ def test__build__input_from_param():
     )
 
 
-def test__build__input_from_literal_value():
+def test__build__input_from_hardcoded_value():
     class ArbitraryObject:
         pass
 
-    literal_values = [
+    hardcoded_values = [
         "string literal",
         2,
         5.5,
@@ -152,18 +152,40 @@ def test__build__input_from_literal_value():
     ]
 
     @dsl.task()
-    def inspect(hello, value):
-        return f"{hello} {value} of type {type(value).__name__}"
+    def inspect(hello, subject):
+        return f"{hello} {subject} of type {type(subject).__name__}"
 
-    @dsl.DAG()
-    def dag(hello):
-        for value in literal_values:
-            inspect(hello="hello...", value=value)
+    for hardcoded_value in hardcoded_values:
 
-    for i, value in enumerate(literal_values):
-        assert (
-            dsl.build(dag).nodes[f"inspect-{i + 1}"].func()
-            == f"hello... {value} of type {type(value).__name__}"
+        @dsl.DAG()
+        def dag(hello):
+            return inspect(hello=hello, subject=hardcoded_value)
+
+        verify_dags_are_equivalent(
+            dsl.build(dag),
+            DAG(
+                inputs={
+                    "hello": FromParam("hello"),
+                },
+                outputs={
+                    "return_value": FromNodeOutput("inspect", "return_value"),
+                },
+                nodes={
+                    "inspect": Task(
+                        inspect.func,
+                        inputs={
+                            "hello": FromParam("hello"),
+                            "subject": FromParam(
+                                "_hardcoded_value_subject",
+                                default_value=hardcoded_value,
+                            ),
+                        },
+                        outputs={
+                            "return_value": FromReturnValue(),
+                        },
+                    ),
+                },
+            ),
         )
 
 
@@ -877,4 +899,80 @@ def test__build__nested_for_loops():
     assert (
         str(e.value)
         == "This node is partitioned. In Dagger, partitioned nodes may not generate partitioned outputs. Check the documentation to better understand how partitioning works: https://larribas.me/dagger/user-guide/partitioning/"
+    )
+
+
+def test__dag__with_default_value():
+    @dsl.task()
+    def f(a):
+        return a
+
+    @dsl.DAG()
+    def dag(x=3):
+        return f(x)
+
+    verify_dags_are_equivalent(
+        dsl.build(dag),
+        DAG(
+            inputs={"x": FromParam("x", default_value=3)},
+            outputs={"return_value": FromNodeOutput("f", "return_value")},
+            nodes={
+                "f": Task(
+                    f.func,
+                    inputs={"a": FromParam("x")},
+                    outputs={"return_value": FromReturnValue()},
+                )
+            },
+        ),
+    )
+
+
+def test__dag__with_default_values_for_nested_dags():
+    @dsl.task()
+    def add(x, y, z):
+        return f"{x}-{y}-{z}"
+
+    @dsl.DAG()
+    def nested_dag(a, b=2, c=3):
+        return add(a, b, c)
+
+    @dsl.DAG()
+    def dag(a=10):
+        return nested_dag(a, c=20)
+
+    verify_dags_are_equivalent(
+        dsl.build(dag),
+        DAG(
+            inputs={
+                "a": FromParam("a", default_value=10),
+            },
+            outputs={
+                "return_value": FromNodeOutput("nested-dag", "return_value"),
+            },
+            nodes={
+                "nested-dag": DAG(
+                    inputs={
+                        "a": FromParam("a"),
+                        "b": FromParam("_default_value_b", default_value=2),
+                        "c": FromParam("_hardcoded_value_c", default_value=20),
+                    },
+                    outputs={
+                        "return_value": FromNodeOutput("add", "return_value"),
+                    },
+                    nodes={
+                        "add": Task(
+                            add.func,
+                            inputs={
+                                "x": FromParam("a"),
+                                "y": FromParam("b"),
+                                "z": FromParam("c"),
+                            },
+                            outputs={
+                                "return_value": FromReturnValue(),
+                            },
+                        ),
+                    },
+                ),
+            },
+        ),
     )

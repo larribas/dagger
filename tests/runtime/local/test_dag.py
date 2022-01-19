@@ -55,7 +55,7 @@ def test__invoke_dag__with_missing_input_parameter():
 
     assert (
         str(e.value)
-        == "The parameters supplied to this DAG were supposed to contain the following parameters: ['a']. However, only the following parameters were actually supplied: ['y']. We are missing: ['a']."
+        == "The parameters supplied to this node were supposed to contain the following parameters: ['a']. However, only the following parameters were actually supplied: ['y']. We are missing: ['a']."
     )
 
 
@@ -228,3 +228,68 @@ def test__invoke_dag__with_partitions_but_invalid_outputs():
         str(e.value)
         == "Error when invoking node 'generate-single-number'. We encountered the following error while attempting to serialize the results of this task: Output 'n' was declared as a partitioned output, but the return value was not an iterable (instead, it was of type 'int'). Partitioned outputs should be iterables of values (e.g. lists or sets). Each value in the iterable must be serializable with the serializer defined in the output."
     )
+
+
+def test__invoke_dag__using_default_value():
+    dag = DAG(
+        inputs={
+            "x": FromParam("x", 3),
+        },
+        outputs={
+            "return_value": FromNodeOutput("f", "return_value"),
+        },
+        nodes={
+            "f": Task(
+                lambda a: a,
+                inputs={
+                    "a": FromParam("x"),
+                },
+                outputs={
+                    "return_value": FromReturnValue(),
+                },
+            )
+        },
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        res = invoke_dag(dag, params={}, output_path=tmp)
+        assert deserialized_outputs(res) == {"return_value": 3}
+
+
+def test__invoke_dag__with_nested_dags_with_default_values():
+    dag = DAG(
+        inputs={
+            "a": FromParam("a", default_value=10),
+        },
+        outputs={
+            "return_value": FromNodeOutput("nested-dag", "return_value"),
+        },
+        nodes={
+            "nested-dag": DAG(
+                inputs={
+                    "a": FromParam("a"),
+                    "b": FromParam("_b", default_value=2),
+                    "c": FromParam("_c", default_value=20),
+                },
+                outputs={
+                    "return_value": FromNodeOutput("add", "return_value"),
+                },
+                nodes={
+                    "add": Task(
+                        lambda x, y, z: f"{x}-{y}-{z}",
+                        inputs={
+                            "x": FromParam("a"),
+                            "y": FromParam("b"),
+                            "z": FromParam("c"),
+                        },
+                        outputs={
+                            "return_value": FromReturnValue(),
+                        },
+                    ),
+                },
+            ),
+        },
+    )
+
+    with tempfile.TemporaryDirectory() as tmp:
+        res = invoke_dag(dag, params={}, output_path=tmp)
+        assert deserialized_outputs(res) == {"return_value": "10-2-20"}

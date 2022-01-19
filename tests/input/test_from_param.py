@@ -1,3 +1,4 @@
+from dagger.input.empty_default_value import EmptyDefaultValue
 from dagger.input.from_param import FromParam
 from dagger.input.protocol import Input
 from dagger.serializer import DefaultSerializer
@@ -30,7 +31,22 @@ def test__with_overridden_name():
     assert input_.name == name
 
 
+def test__with_default_value():
+    input_ = FromParam(default_value=10)
+    assert input_.has_default_value()
+    assert input_.default_value == 10
+
+
+def test__without_default_value():
+    input_ = FromParam()
+    assert not input_.has_default_value()
+    assert isinstance(input_.default_value, EmptyDefaultValue)
+
+
 def test__representation():
     serializer = CustomSerializer()
     input_ = FromParam("my-param", serializer=serializer)
-    assert repr(input_) == f"FromParam(name=my-param, serializer={repr(serializer)})"
+    assert (
+        repr(input_)
+        == f"FromParam(name=my-param, default_value='EmptyDefaultValue', serializer={repr(serializer)})"
+    )

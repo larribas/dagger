@@ -19,13 +19,13 @@ pip install py-dagger
 The following piece of code demonstrates how to build a DAG that performs a map-reduce operation on a series of numbers:
 
 ```python
---8<-- "docs/code_snippets/quick_start.py"
+--8<-- "docs/code_snippets/quick_start/quick_start.py"
 ```
 
 Let's take it step by step. First, we use the `dagger.dsl.task` decorator to define different tasks. Tasks in _Dagger_ are just Python functions. In this case, we have 3 tasks:
 
 - `generate_numbers()` returns a list of numbers. The length of the list varies dynamically.
-- `raise_number(n, exponent)` receives a number and an exponent, and returns `n^exponent`.
+- `raise_number(n, exponent)` receives a number and an exponent, which has a default value, 2, and returns `n^exponent`.
 - `sum_numbers(numbers)` receives a list of numbers and returns the sum of all of them.
 
 Next, we use the `dagger.dsl.DAG` decorator on another function that __invokes all the tasks we've defined and connects their inputs/outputs__.
@@ -46,7 +46,7 @@ def map_reduce_pipeline(exponent):
 After defining how our DAG should behave using a function decorated by `dagger.dsl.DAG`, we will need to use `dagger.dsl.build` to __transform it into a `dagger.DAG` data structure__, like this:
 
 ```python
-dag = dsl.build(map_reduce_pipeline)
+--8<-- "docs/code_snippets/quick_start/build_dag.py"
 ```
 
 The variable `dag` now contains our pipeline expressed as a collection of data structures. These data structures validate that our DAG has been built correctly, and allow us to run it using one of the available runtimes.
@@ -59,13 +59,16 @@ The final step will be to test our DAG locally using the `dagger.runtime.local`.
 Just do:
 
 ```python
-from dagger.runtime.local import invoke
-
-result = invoke(dag, params={"seed": 1, "exponent": 2})
-print(f"The final result was {result}")
+--8<-- "docs/code_snippets/quick_start/invoke_dag.py"
 ```
 
-After this, you should see the results of the DAG printed to your screen.
+After this, you should see the results of the DAG printed to your screen. 
+
+Equivalently, because the parameter `exponent` has a default value of 2, you can omit passing the value 2 when invoking the DAG:
+
+```python
+--8<-- "docs/code_snippets/quick_start/invoke_dag_with_defaults.py"
+```
 
 
 ### Other Runtimes
