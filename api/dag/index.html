@@ -658,13 +658,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#validate_parameters" class="md-nav__link">
-    validate_parameters
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#cyclicdependencyerror" class="md-nav__link">
     CyclicDependencyError
   </a>
@@ -881,13 +874,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#validate_parameters" class="md-nav__link">
-    validate_parameters
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#cyclicdependencyerror" class="md-nav__link">
     CyclicDependencyError
   </a>
@@ -928,24 +914,12 @@
 </div>
 
 <h2 id="top-level-objects-exported">Top-level objects exported<a class="headerlink" href="#top-level-objects-exported" title="Permanent link">&para;</a></h2>
-<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="sd">&quot;&quot;&quot;Define workflows/pipelines as Directed Acyclic Graphs (DAGs) of Tasks.&quot;&quot;&quot;</span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="sd">&quot;&quot;&quot;Define workflows/pipelines as Directed Acyclic Graphs (DAGs) of Tasks.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">dagger.dag.dag</span> <span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa</span>
-    <span class="n">DAG</span><span class="p">,</span>
-    <span class="n">Node</span><span class="p">,</span>
-    <span class="n">SupportedInputs</span><span class="p">,</span>
-    <span class="n">SupportedOutputs</span><span class="p">,</span>
-    <span class="n">validate_parameters</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">dagger.dag.dag</span> <span class="kn">import</span> <span class="n">DAG</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">SupportedInputs</span><span class="p">,</span> <span class="n">SupportedOutputs</span>  <span class="c1"># noqa</span>
 <span class="kn">from</span> <span class="nn">dagger.dag.topological_sort</span> <span class="kn">import</span> <span class="n">CyclicDependencyError</span>  <span class="c1"># noqa</span>
 </code></pre></div>
 </td></tr></table>
@@ -1127,52 +1101,6 @@ Each of the executions will only receive one of the partitions of that input.</s
 <li><code class="mkapi-item-name">ValueError</code>
 
 <span class="mkapi-item-dash">&mdash;</span> <span class="mkapi-item-description">If any of the names are invalid, or any of the inputs/outputs point to non-existing nodes.</span></li>
-
-
-</ul></div>
-    </div>
-  </div>
-
-</div>
-
-<h2 id="validate_parameters">validate_parameters<a class="headerlink" href="#validate_parameters" title="Permanent link">&para;</a></h2>
-<div class="mkapi-node" id="dagger.dag.dag.validate_parameters">
-<div class='mkapi-object-container'>
-  <div class="mkapi-object function code top">
-    <div class="mkapi-object-kind function top">function</div>
-    <div class="mkapi-object-body function top"><code class="mkapi-object-prefix">dagger.dag.dag.</code><code class="mkapi-object-name">validate_parameters</code><code class="mkapi-object-parenthesis">(</code><code class="mkapi-object-signature">inputs</code>, <code class="mkapi-object-signature">params</code><code class="mkapi-object-parenthesis">)</code></div>
-  </div>
-  
-</div>
-<div class="mkapi-docstring">
-<div class="mkapi-section">
-      <div class="mkapi-section-body"><p>Validate a series of parameters against the inputs of a DAG.</p></div>
-    </div>
-  <div class="mkapi-section parameters">
-      <div class="mkapi-section-name parameters">
-          <span class="mkapi-section-name-body parameters">Parameters</span> 
-        </div>
-      <div class="mkapi-section-body parameters"><ul class="mkapi-items">
-<li><code class="mkapi-item-name">inputs</code>
-
-<span class="mkapi-item-dash">&mdash;</span> <span class="mkapi-item-description">A mapping of input names to inputs.</span></li>
-
-<li><code class="mkapi-item-name">params</code>
-
-<span class="mkapi-item-dash">&mdash;</span> <span class="mkapi-item-description">A mapping of input names to parameters or input values.
-Input values must be passed in their serialized representation.</span></li>
-
-
-</ul></div>
-    </div>
-  <div class="mkapi-section raises">
-      <div class="mkapi-section-name raises">
-          <span class="mkapi-section-name-body raises">Raises</span> 
-        </div>
-      <div class="mkapi-section-body raises"><ul class="mkapi-items">
-<li><code class="mkapi-item-name">ValueError</code>
-
-<span class="mkapi-item-dash">&mdash;</span> <span class="mkapi-item-description">If the set of parameters does not contain all the required inputs.</span></li>
 
 
 </ul></div>

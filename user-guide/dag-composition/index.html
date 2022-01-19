@@ -932,8 +932,8 @@
 
 
 <span class="nd">@dsl</span><span class="o">.</span><span class="n">task</span><span class="p">()</span>
-<span class="k">def</span> <span class="nf">calculate_moving_average_for_d</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataSet</span><span class="p">:</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">, with moving average for d calculated&quot;</span>
+<span class="k">def</span> <span class="nf">calculate_moving_average_for_d</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">windows</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataSet</span><span class="p">:</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">, with moving average for d calculated using </span><span class="si">{</span><span class="n">windows</span><span class="si">}</span><span class="s2"> windows&quot;</span>
 
 
 <span class="nd">@dsl</span><span class="o">.</span><span class="n">DAG</span><span class="p">()</span>
@@ -1048,8 +1048,8 @@
     <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">, with fields b and c aggregated&quot;</span>
 
 
-<span class="k">def</span> <span class="nf">calculate_moving_average_for_d</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataSet</span><span class="p">:</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">, with moving average for d calculated&quot;</span>
+<span class="k">def</span> <span class="nf">calculate_moving_average_for_d</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">windows</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataSet</span><span class="p">:</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">, with moving average for d calculated using </span><span class="si">{</span><span class="n">windows</span><span class="si">}</span><span class="s2"> windows&quot;</span>
 
 
 <span class="k">def</span> <span class="nf">dataset_transformation_dag</span><span class="p">(</span><span class="n">dataset_input</span><span class="p">:</span> <span class="n">FromNodeOutput</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DAG</span><span class="p">:</span>

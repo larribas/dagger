@@ -935,9 +935,11 @@
 <span class="normal">5</span>
 <span class="normal">6</span>
 <span class="normal">7</span>
-<span class="normal">8</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="sd">&quot;&quot;&quot;Serialization strategies to pass inputs/outputs safely between tasks in a distributed environment.&quot;&quot;&quot;</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="sd">&quot;&quot;&quot;Serialization strategies to pass inputs/outputs safely between tasks in a distributed environment.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">dagger.serializer.as_json</span> <span class="kn">import</span> <span class="n">AsJSON</span>  <span class="c1"># noqa</span>
+<span class="kn">from</span> <span class="nn">dagger.serializer.as_json</span> <span class="kn">import</span> <span class="n">JSONSerializableType</span>  <span class="c1"># noqa</span>
 <span class="kn">from</span> <span class="nn">dagger.serializer.as_pickle</span> <span class="kn">import</span> <span class="n">AsPickle</span>  <span class="c1"># noqa</span>
 <span class="kn">from</span> <span class="nn">dagger.serializer.errors</span> <span class="kn">import</span> <span class="n">DeserializationError</span><span class="p">,</span> <span class="n">SerializationError</span>  <span class="c1"># noqa</span>
 <span class="kn">from</span> <span class="nn">dagger.serializer.protocol</span> <span class="kn">import</span> <span class="n">Serializer</span>  <span class="c1"># noqa</span>

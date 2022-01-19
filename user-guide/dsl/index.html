@@ -394,6 +394,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#default-values-and-hardcoded-values" class="md-nav__link">
+    Default Values and Hardcoded Values
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#capabilities" class="md-nav__link">
     Capabilities
   </a>
@@ -874,6 +881,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#default-values-and-hardcoded-values" class="md-nav__link">
+    Default Values and Hardcoded Values
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#capabilities" class="md-nav__link">
     Capabilities
   </a>
@@ -1048,6 +1062,89 @@
 <p class="admonition-title">Note</p>
 <p>Mixing decorated and undecorated functions may certainly be useful. <strong>What's important is that you are able to distinguish between the things that will happen at build time and the things that will happen at runtime</strong>.</p>
 </div>
+<h2 id="default-values-and-hardcoded-values">Default Values and Hardcoded Values<a class="headerlink" href="#default-values-and-hardcoded-values" title="Permanent link">&para;</a></h2>
+<p>When defining DAGs and tasks, you can make use of python's default values. For example, the input of the DAG shown below has a default value, 1. The task <code>sum</code> has a default value, 2, for its second parameter, <code>b</code>. And this makes the DAG return 3 when invoked, if no arguments are passed.</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dagger</span> <span class="kn">import</span> <span class="n">dsl</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">task</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">sum</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">DAG</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+<p>You can also use hardcoded values for tasks and DAGs. Modifying a bit the previous example, <code>b</code> has now a hardcoded value, 3, which is used in place of its default value, 2. Now, this makes the DAG return 4 when invoked, if no arguments are passed.</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dagger</span> <span class="kn">import</span> <span class="n">dsl</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">task</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">sum</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">DAG</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+<p>A more sophisticated example, a nested DAG with both default and hardcoded values, is shown below. In this case, running the DAG returns the string <code>"10-2-20"</code>.</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dagger</span> <span class="kn">import</span> <span class="n">dsl</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">task</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">y</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">z</span><span class="si">}</span><span class="s2">&quot;</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">DAG</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">nested_d</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">add</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+
+
+<span class="nd">@dsl</span><span class="o">.</span><span class="n">DAG</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">nested_d</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
 <h2 id="capabilities">Capabilities<a class="headerlink" href="#capabilities" title="Permanent link">&para;</a></h2>
 <p>Like with all domain-specific languages, <strong>the number of things you can do inside of a function decorated with <code>dagger.dsl.DAG</code> is limited</strong>. Here goes a short summary:</p>
 <ul>
@@ -1059,13 +1156,13 @@
 <li>Iterate over the results of an invocation to parallelize the execution of a node.</li>
 <li>Add all the results of a partitioned node in a list and pass that list to a fan-in node.</li>
 <li>Return multiple outputs from the DAG by returning a dictionary of <code class="highlight"><span class="nb">str</span> <span class="o">-&gt;</span> <span class="n">node_output</span></code>.</li>
+<li>Parameter defaults for tasks, e.g. <code class="highlight"><span class="k">def</span> <span class="nf">my_task</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span></code> will use the default value <code>2</code> if <code>b</code> is not passed. The same is true for DAG parameters.</li>
 </ul>
 <h2 id="limitations">⛔ Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
 <p>Technically speaking, anything that hasn't been listed as a capability in the previous section can be considered a limitation.</p>
 <p>That said, there are some extra limitations to keep in mind when using the DSL:</p>
 <ul>
 <li>As far as we know, Python is not able to inspect the name of the local variable that holds a value. Therefore, when you assign the output of a task to a variable <code class="highlight"><span class="n">my_var</span> <span class="o">=</span> <span class="n">my_task</span><span class="p">()</span></code> and use it from <code class="highlight"><span class="n">another_task</span><span class="p">(</span><span class="n">my_var</span><span class="p">,</span> <span class="n">my_var</span><span class="p">[</span><span class="s2">&quot;my-key&quot;</span><span class="p">],</span> <span class="n">my_var</span><span class="o">.</span><span class="n">my_attr</span><span class="p">)</span></code>, the DAG you build from the DSL will name the outputs of <code>my_task</code>: <code>"return_value"</code>, <code>"key_my-key"</code> and <code>"property_my_attr"</code>.</li>
-<li><strong>Parameter defaults are ignored by the DSL</strong>. A task with the signature <code class="highlight"><span class="k">def</span> <span class="nf">my_task</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span></code> will still expect <code>b</code> to be passed as a parameter every time it's used. The same is true for DAG parameters. This may change in the future, if <a href="https://github.com/larribas/dagger/issues/35">this feature request</a> is implemented.</li>
 <li><strong>Only the outputs that are used by other tasks will be exported</strong>. The rest will be omitted. If you assign the output of a task to a variable (<code class="highlight"><span class="n">output</span> <span class="o">=</span> <span class="n">my_task</span><span class="p">()</span></code>), but don't use the variable <code>output</code> again, <em>Dagger</em> will assume you don't care about the output of that task. The task will still be executed, of course, but you may find the artifact not being saved in a runtime such as <em>Argo Workflows</em>.</li>
 </ul>
 <h2 id="dsl-implementation">🛠️ DSL Implementation<a class="headerlink" href="#dsl-implementation" title="Permanent link">&para;</a></h2>

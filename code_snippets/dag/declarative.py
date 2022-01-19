@@ -17,9 +17,7 @@ def measure_model_performance(model, test_dataset):
 
 
 dag = DAG(
-    inputs={
-        "sample_size": FromParam(),
-    },
+    inputs={},
     outputs={
         "performance_report": FromNodeOutput(
             "measure-model-performance", "performance_report"
@@ -29,7 +27,7 @@ dag = DAG(
         "prepare-datasets": Task(
             prepare_datasets,
             inputs={
-                "sample_size": FromParam("sample_size"),
+                "sample_size": FromParam("_hardcoded_sample_size", 10000),
             },
             outputs={
                 "training_dataset": FromKey("training"),

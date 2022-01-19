@@ -54,6 +54,8 @@ parallelize
 parallelizing
 parallelization
 json
+JSONSerializableType
+EmptyDefaultValue
 boolean
 CSV
 CSVs

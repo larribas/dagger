@@ -20,8 +20,8 @@ def aggregate_fields_b_and_c(dataset: DataSet) -> DataSet:
 
 
 @dsl.task()
-def calculate_moving_average_for_d(dataset: DataSet) -> DataSet:
-    return f"{dataset}, with moving average for d calculated"
+def calculate_moving_average_for_d(dataset: DataSet, windows: int = 3) -> DataSet:
+    return f"{dataset}, with moving average for d calculated using {windows} windows"
 
 
 @dsl.DAG()
