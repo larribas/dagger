@@ -81,7 +81,7 @@ You can also use hardcoded values for tasks and DAGs. Modifying a bit the previo
 --8<-- "docs/code_snippets/hardcoded_values/imperative.py"
 ```
 
-A more sophisticated example, a nested DAG with both default and hardcoded values, is shown below. In this case, the dag return the string `"10-2-20"`.
+A more sophisticated example, a nested DAG with both default and hardcoded values, is shown below. In this case, running the DAG returns the string `"10-2-20"`.
 
 ```python
 --8<-- "docs/code_snippets/default_hardcoded_values/imperative.py"
